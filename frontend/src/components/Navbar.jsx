@@ -9,7 +9,7 @@ const Navbar = () => {
     // Check login from localStorage
     useEffect(() => {
         const user = localStorage.getItem("user");
-        setIsLoggedIn(!user);
+        setIsLoggedIn(!!user);
     }, []);
 
     // Login click
