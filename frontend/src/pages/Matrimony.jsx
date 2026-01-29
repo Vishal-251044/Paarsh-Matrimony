@@ -1,8 +1,14 @@
 import React from 'react';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 
 const Matrimony = () => {
   return (
-    <div>Matrimony</div>
+    <>
+      <Navbar />
+      <div>Matrimony</div>
+      <Footer />
+    </>
   )
 }
 

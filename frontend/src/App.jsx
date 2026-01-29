@@ -6,7 +6,9 @@ import Profile from "./pages/Profile";
 import Matrimony from "./pages/Matrimony";
 import Watchlist from "./pages/Watchlist";
 import Connected from "./pages/Connected";
-import "./App.css";
+import AboutUs from './pages/AboutUs';
+import TermsOfUse from './pages/TermsOfUse';
+import PrivacyPolicy from './pages/PrivacyPolicy';
 
 function App() {
   return (
@@ -18,6 +20,9 @@ function App() {
         <Route path="/matrimony" element={<Matrimony />} />
         <Route path="/watchlist" element={<Watchlist />} />
         <Route path="/connected" element={<Connected />} />
+        <Route path="/about" element={<AboutUs />} />
+        <Route path="/terms" element={<TermsOfUse />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
       </Routes>
     </BrowserRouter>
   );
