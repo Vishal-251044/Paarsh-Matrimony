@@ -201,7 +201,7 @@ export default function LoginPage() {
 
           {/* Google Login */}
           <div className="w-full flex justify-center">
-            <div className="w-full max-w-[280px]"> {/* Add max-width constraint */}
+            <div className="relative w-full flex justify-center">
               <GoogleLogin
                 onSuccess={handleGoogleSuccess}
                 onError={handleGoogleError}
@@ -210,7 +210,8 @@ export default function LoginPage() {
                   <button
                     onClick={renderProps.onClick}
                     disabled={loading || renderProps.disabled}
-                    className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-white border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-md transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
+                    className="mx-auto flex items-center justify-center gap-3 py-3 px-6 bg-white border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-md transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
+                    style={{ minWidth: "280px" }}
                   >
                     <svg className="w-5 h-5" viewBox="0 0 24 24">
                       <path
