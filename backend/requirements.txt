@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+pydantic
+python-dotenv
+bcrypt
+pyjwt
+motor
+google-auth
+google-auth-oauthlib
+google-auth-httplib2
