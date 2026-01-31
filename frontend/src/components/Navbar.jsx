@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { User } from "lucide-react";
 
 const Navbar = () => {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -167,7 +168,7 @@ const Navbar = () => {
                                   hover:opacity-90 transition
                                 "
                             >
-                                {loading ? "..." : "U"}
+                                {loading ? "..." : <User size={20} />}
                             </button>
                         </>
                     )}
@@ -205,7 +206,7 @@ const Navbar = () => {
                               hover:opacity-90 transition
                             "
                         >
-                            {loading ? "..." : "U"}
+                            {loading ? "..." : <User size={20} />}
                         </button>
                     )}
                 </div>

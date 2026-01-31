@@ -62,7 +62,6 @@ const Home = () => {
         "View Partner Profile Details",
         "Apply Basic Filters",
         "AI Partner Recommendations",
-        "Notifications"
       ]
     },
     {
@@ -71,8 +70,7 @@ const Home = () => {
         "All Free Membership Features",
         "Contact Partner Directly",
         "Plan Meetings and Dates",
-        "Watchlist and Shortlisting",
-        "Block Profiles",
+        "Add to Watchlist for Shortlisting",
         "Marriage Planning Assistance",
         "Feedback and Photo Sharing"
       ],
@@ -158,7 +156,7 @@ const Home = () => {
                     </div>
                     <div>
                       <h3 className="text-xl font-bold text-gray-800 mb-2">Secure Platform</h3>
-                      <p className="text-gray-600">Verified profiles and encrypted communication ensure safe interactions</p>
+                      <p className="text-gray-600">Verified profiles and encrypted data ensure safe interactions</p>
                     </div>
                   </div>
 
