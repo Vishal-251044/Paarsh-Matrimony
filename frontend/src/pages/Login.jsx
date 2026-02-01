@@ -101,7 +101,7 @@ export default function LoginPage() {
 
       <div
         className="min-h-screen flex justify-center items-center px-2 py-16 sm:py-5 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: "url('3.jpg')" }}
+        style={{ backgroundImage: "url('3.6.jpg')" }}
       >
         <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-6 sm:p-8">
           <h1

@@ -9,3 +9,11 @@ motor
 google-auth
 google-auth-oauthlib
 google-auth-httplib2
+
+python-multipart
+pymongo
+python-jose[cryptography]
+passlib[bcrypt]
+cloudinary
+razorpay
+

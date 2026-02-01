@@ -72,7 +72,6 @@ const Home = () => {
         "Plan Meetings and Dates",
         "Add to Watchlist for Shortlisting",
         "Marriage Planning Assistance",
-        "Feedback and Photo Sharing"
       ],
       popular: true
     }
@@ -93,7 +92,7 @@ const Home = () => {
         <section
           className="relative min-h-[90vh] flex items-center justify-center overflow-hidden"
           style={{
-            backgroundImage: "linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('/2.jpg')",
+            backgroundImage: "linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('/3.2.jpg')",
             backgroundSize: "cover",
             backgroundPosition: "center",
             backgroundAttachment: "fixed"
@@ -316,7 +315,7 @@ const Home = () => {
           <div
             className="relative"
             style={{
-              backgroundImage: "linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)), url('/4.jpg')",
+              backgroundImage: "linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)), url('/2.jpg')",
               backgroundSize: "cover",
               backgroundPosition: "center",
               backgroundAttachment: "fixed"

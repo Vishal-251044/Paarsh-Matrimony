@@ -7,7 +7,19 @@ const Watchlist = () => {
     <>
       <Navbar />
       <div>Watchlist</div>
+      <div>Watchlist</div>
+      <div>Watchlist</div>
+      <div>Watchlist</div>
+      <div>Watchlist</div>
+      <div>Watchlist</div>
+      <div>Watchlist</div>
+      <div>Watchlist</div>
+      <div>Watchlist</div>
+      <div>Watchlist</div>
+      <div>Watchlist</div>
+      <div>Watchlist</div>
       <Footer />
+      <div>Watchlist</div>
     </>
   )
 }

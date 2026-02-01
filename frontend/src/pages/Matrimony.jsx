@@ -7,6 +7,19 @@ const Matrimony = () => {
     <>
       <Navbar />
       <div>Matrimony</div>
+      <div>Matrimony</div>
+      <div>Matrimony</div>
+      <div>Matrimony</div>
+      <div>Matrimony</div>
+      <div>Matrimony</div>
+      <div>Matrimony</div>
+      <div>Matrimony</div>
+      <div>Matrimony</div>
+      <div>Matrimony</div>
+      <div>Matrimony</div>
+      <div>Matrimony</div>
+      <div>Matrimony</div>
+      <div>Matrimony</div>
       <Footer />
     </>
   )
