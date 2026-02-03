@@ -10,3 +10,5 @@ DB_NAME = os.getenv("DB_NAME")
 
 mongo_client = AsyncIOMotorClient(MONGO_URI)
 db = mongo_client[DB_NAME]
+
+

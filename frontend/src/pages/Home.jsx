@@ -12,7 +12,14 @@ import {
   Clock,
   Filter,
   Award,
-  Lock
+  Lock,
+  LogIn,
+  UserPlus,
+  CreditCard,
+  Globe,
+  MessageSquare,
+  CalendarHeart,
+  CirclePlay
 } from 'lucide-react';
 import { FaShieldAlt, FaUserCheck } from "react-icons/fa";
 import { GoStopwatch } from "react-icons/go";
@@ -25,12 +32,12 @@ const Home = () => {
     {
       icon: <Search className="w-10 h-10" />,
       title: "Intelligent Matching",
-      description: "Advanced AI algorithms analyze compatibility based on preferences, interests, and lifestyle"
+      description: "Advanced algorithms analyze compatibility based on preferences, interests, and lifestyle"
     },
     {
       icon: <Shield className="w-10 h-10" />,
       title: "Verified Profiles",
-      description: "100% verified profiles with photo validation and background checks for safety"
+      description: "Thorough verification process to ensure genuine and trustworthy user profiles"
     },
     {
       icon: <Filter className="w-10 h-10" />,
@@ -58,10 +65,12 @@ const Home = () => {
     {
       type: "Free Membership",
       features: [
-        "View Partner Images",
-        "View Partner Profile Details",
-        "Apply Basic Filters",
-        "AI Partner Recommendations",
+        "Manage Profile",
+        "Partner Recommendations",
+        "View Limited Partner Details",
+        "Apply Filters",
+        "Give feedbacks",
+        "Limited Features Access",
       ]
     },
     {
@@ -71,6 +80,7 @@ const Home = () => {
         "Contact Partner Directly",
         "Plan Meetings and Dates",
         "Add to Watchlist for Shortlisting",
+        "View all Partner Data",
         "Marriage Planning Assistance",
       ],
       popular: true
@@ -80,8 +90,8 @@ const Home = () => {
   const statistics = [
     { icon: GoStopwatch, label: "Save time & effort" },
     { icon: FaShieldAlt, label: "100% Secure Platform" },
-    { icon: BsStars, label: "AI Based Matching" },
-    { value: "99%", label: "Verified Profiles", icon: FaUserCheck }
+    { icon: BsStars, label: "Based Matching Algorithm" },
+    { value: "99%", label: "Genuine Profiles", icon: FaUserCheck }
   ];
 
   return (
@@ -101,8 +111,8 @@ const Home = () => {
           <div className="relative container mx-auto px-4 py-20">
             <div className="max-w-4xl mx-auto text-center">
               <div className="inline-flex items-center gap-3 bg-white/10 backdrop-blur-sm text-white px-6 py-3 rounded-full mb-8">
-                <Heart className="w-6 h-6" />
-                <span className="text-lg font-semibold">India's Most Trusted Matrimony Platform</span>
+                <Heart className="w-6 h-6 animate-pulse text-red-500" />
+                <span className="text-lg font-semibold">India's Trusted Matrimony Platform</span>
               </div>
 
               <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
@@ -155,7 +165,7 @@ const Home = () => {
                     </div>
                     <div>
                       <h3 className="text-xl font-bold text-gray-800 mb-2">Secure Platform</h3>
-                      <p className="text-gray-600">Verified profiles and encrypted data ensure safe interactions</p>
+                      <p className="text-gray-600">Genuine profiles and secure data ensure safe interactions</p>
                     </div>
                   </div>
 
@@ -165,7 +175,7 @@ const Home = () => {
                     </div>
                     <div>
                       <h3 className="text-xl font-bold text-gray-800 mb-2">Intelligent Matching</h3>
-                      <p className="text-gray-600">AI-powered recommendations based on preferences and compatibility</p>
+                      <p className="text-gray-600">Best recommendations algorithm based on preferences and compatibility</p>
                     </div>
                   </div>
 
@@ -274,7 +284,7 @@ const Home = () => {
                           : 'text-gray-800'
                         }`}
                     >
-                      {plan.type.includes('Free') ? '₹0' : '₹1,999/month'}
+                      {plan.type.includes('Free') ? '₹0' : '₹1,999/lifetime'}
                     </div>
                   </div>
 
@@ -310,12 +320,12 @@ const Home = () => {
           </div>
         </section>
 
-        {/* Technology Stack & Security */}
+        {/* Partner Journey Steps */}
         <section className="py-0">
           <div
             className="relative"
             style={{
-              backgroundImage: "linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)), url('/2.jpg')",
+              backgroundImage: "linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.85)), url('/2.jpg')",
               backgroundSize: "cover",
               backgroundPosition: "center",
               backgroundAttachment: "fixed"
@@ -323,37 +333,166 @@ const Home = () => {
           >
             <div className="container mx-auto px-4 py-20">
               <div className="max-w-6xl mx-auto text-center">
+                <div className="inline-flex items-center gap-3 bg-white/10 backdrop-blur-sm text-white px-6 py-2 rounded-full mb-6">
+                  <div className="w-2 h-2 bg-[oklch(70.4%_0.191_22.216)] rounded-full animate-pulse"></div>
+                  <span className="text-sm font-medium">Find Your Perfect Match</span>
+                </div>
+
                 <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                  Secure & Scalable <span className="text-[oklch(70.4%_0.191_22.216)]">Technology</span>
+                  Your Journey to <span className="text-[oklch(70.4%_0.191_22.216)]">Finding Love</span>
                 </h2>
-                <p className="text-gray-300 mb-12 max-w-2xl mx-auto">
-                  Built with modern technologies for performance, security, and scalability
+                <p className="text-gray-300 mb-12 max-w-2xl mx-auto text-lg">
+                  Simple steps to connect with your ideal life partner
                 </p>
 
-                <div className="grid md:grid-cols-3 gap-8">
-                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-8 border border-white/20">
-                    <div className="w-16 h-16 rounded-full bg-[oklch(70.4%_0.191_22.216)]/20 flex items-center justify-center mx-auto mb-6">
-                      <Shield className="w-8 h-8 text-[oklch(70.4%_0.191_22.216)]" />
-                    </div>
-                    <h3 className="text-xl font-bold text-white mb-3">Secure Authentication</h3>
-                    <p className="text-gray-300">Multi-factor authentication and secure login system</p>
-                  </div>
+                {/* Horizontal Steps Timeline for Desktop */}
+                <div className="hidden md:block relative">
+                  {/* Timeline Line */}
+                  <div className="absolute left-0 right-0 top-12 h-0.5 bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
 
-                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-8 border border-white/20">
-                    <div className="w-16 h-16 rounded-full bg-[oklch(70.4%_0.191_22.216)]/20 flex items-center justify-center mx-auto mb-6">
-                      <Lock className="w-8 h-8 text-[oklch(70.4%_0.191_22.216)]" />
-                    </div>
-                    <h3 className="text-xl font-bold text-white mb-3">Data Protection</h3>
-                    <p className="text-gray-300">End-to-end encryption for all user data and communications</p>
-                  </div>
+                  <div className="grid grid-cols-7 gap-4 relative">
+                    {[
+                      {
+                        step: "01",
+                        icon: <LogIn className="w-7 h-7" />,
+                        title: "Create Account",
+                        desc: "Registration with secure verification"
+                      },
+                      {
+                        step: "02",
+                        icon: <UserPlus className="w-7 h-7" />,
+                        title: "Build Profile",
+                        desc: "Add self, family & partner data"
+                      },
+                      {
+                        step: "03",
+                        icon: <CreditCard className="w-7 h-7" />,
+                        title: "One-Time Payment",
+                        desc: "Single lifetime membership fee"
+                      },
+                      {
+                        step: "04",
+                        icon: <Globe className="w-7 h-7" />,
+                        title: "Go Live",
+                        desc: "Profile becomes visible to matches"
+                      },
+                      {
+                        step: "05",
+                        icon: <Heart className="w-7 h-7" />,
+                        title: "Browse Matches",
+                        desc: "View compatible profiles"
+                      },
+                      {
+                        step: "06",
+                        icon: <MessageSquare className="w-7 h-7" />,
+                        title: "Add to Watchlist",
+                        desc: "Save profiles you're interested in"
+                      },
+                      {
+                        step: "07",
+                        icon: <CalendarHeart className="w-7 h-7" />,
+                        title: "Marriage Support",
+                        desc: "Guidance till your special day"
+                      }
+                    ].map((item, index) => (
+                      <div key={index} className="relative group">
+                        {/* Step Number Circle */}
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[oklch(70.4%_0.191_22.216)] to-[oklch(60%_0.2_22.216)] flex items-center justify-center mx-auto mb-4 relative z-10 group-hover:scale-110 transition-transform duration-300">
+                          <span className="font-bold text-white">{item.step}</span>
+                        </div>
 
-                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-8 border border-white/20">
-                    <div className="w-16 h-16 rounded-full bg-[oklch(70.4%_0.191_22.216)]/20 flex items-center justify-center mx-auto mb-6">
-                      <MapPin className="w-8 h-8 text-[oklch(70.4%_0.191_22.216)]" />
-                    </div>
-                    <h3 className="text-xl font-bold text-white mb-3">Location Services</h3>
-                    <p className="text-gray-300">Geographical matching and location-based partner discovery</p>
+                        {/* Card */}
+                        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20 hover:border-[oklch(70.4%_0.191_22.216)]/50 transition-all duration-300 hover:scale-105 hover:shadow-2xl min-h-[220px]">
+                          <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-4">
+                            <div className="text-[oklch(70.4%_0.191_22.216)]">
+                              {item.icon}
+                            </div>
+                          </div>
+                          <h3 className="text-lg font-bold text-white mb-2">{item.title}</h3>
+                          <p className="text-gray-300 text-sm">{item.desc}</p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
+                </div>
+
+                {/* Vertical Steps for Mobile */}
+                <div className="md:hidden space-y-8">
+                  {[
+                    {
+                      step: "01",
+                      icon: <LogIn className="w-6 h-6" />,
+                      title: "Create Account",
+                      desc: "Registration with secure verification"
+                    },
+                    {
+                      step: "02",
+                      icon: <UserPlus className="w-6 h-6" />,
+                      title: "Build Profile",
+                      desc: "Add self, family & partner data"
+                    },
+                    {
+                      step: "03",
+                      icon: <CreditCard className="w-6 h-6" />,
+                      title: "One-Time Payment",
+                      desc: "Single lifetime membership fee"
+                    },
+                    {
+                      step: "04",
+                      icon: <Globe className="w-6 h-6" />,
+                      title: "Go Live",
+                      desc: "Profile becomes visible to matches"
+                    },
+                    {
+                      step: "05",
+                      icon: <Heart className="w-6 h-6" />,
+                      title: "Browse Matches",
+                      desc: "View compatible profiles, add to watchlist"
+                    },
+                    {
+                      step: "06",
+                      icon: <MessageSquare className="w-6 h-6" />,
+                      title: "Add to Watchlist",
+                      desc: "Save profiles you're interested in"
+                    },
+                    {
+                      step: "07",
+                      icon: <CalendarHeart className="w-6 h-6" />,
+                      title: "Marriage Support",
+                      desc: "Guidance and assistance till marriage"
+                    }
+                  ].map((item, index) => (
+                    <div key={index} className="flex items-start gap-4 bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/20">
+                      {/* Step Number */}
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[oklch(70.4%_0.191_22.216)] to-[oklch(60%_0.2_22.216)] flex items-center justify-center flex-shrink-0">
+                        <span className="font-bold text-white">{item.step}</span>
+                      </div>
+
+                      {/* Content */}
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
+                            <div className="text-[oklch(70.4%_0.191_22.216)]">
+                              {item.icon}
+                            </div>
+                          </div>
+                          <h3 className="text-lg font-bold text-white">{item.title}</h3>
+                        </div>
+                        <p className="text-gray-300 text-sm">{item.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* CTA Button */}
+                <div className="mt-16">
+                  <button className="px-8 py-3 bg-gradient-to-r from-[oklch(70.4%_0.191_22.216)] to-[oklch(60%_0.2_22.216)] text-white rounded-full font-semibold hover:shadow-2xl hover:scale-105 transition-all duration-300 flex items-center gap-2 mx-auto">
+                    <CirclePlay className="w-5 h-5" />
+                    Start Your Journey Today
+                  </button>
+                  <p className="text-gray-400 text-sm mt-4">
+                    Join thousands finding their perfect match
+                  </p>
                 </div>
               </div>
             </div>

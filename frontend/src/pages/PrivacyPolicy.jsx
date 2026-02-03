@@ -132,51 +132,6 @@ const PrivacyPolicy = () => {
               </ul>
             </section>
 
-            {/* Data Security */}
-            <section>
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">
-                Data Security
-              </h2>
-
-              <div className="bg-gray-50 p-5 rounded-lg">
-                <p className="text-gray-600 mb-4">
-                  We implement industry-standard security measures:
-                </p>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-[oklch(70.4%_0.191_22.216)]/20 rounded-full flex items-center justify-center">
-                      <FiLock className="text-[oklch(70.4%_0.191_22.216)]" />
-                    </div>
-                    <span className="text-gray-700">SSL Encryption</span>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-[oklch(70.4%_0.191_22.216)]/20 rounded-full flex items-center justify-center">
-                      <FiShield className="text-[oklch(70.4%_0.191_22.216)]" />
-                    </div>
-                    <span className="text-gray-700">Secure Data Centers</span>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-[oklch(70.4%_0.191_22.216)]/20 rounded-full flex items-center justify-center">
-                      <FiSearch className="text-[oklch(70.4%_0.191_22.216)]" />
-                    </div>
-                    <span className="text-gray-700">Regular Security Audits</span>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-[oklch(70.4%_0.191_22.216)]/20 rounded-full flex items-center justify-center">
-                      <FiEye className="text-[oklch(70.4%_0.191_22.216)]" />
-                    </div>
-                    <span className="text-gray-700">Access Controls</span>
-                  </div>
-
-                </div>
-              </div>
-            </section>
-
             {/* Your Rights */}
             <section>
               <h2 className="text-2xl font-bold text-gray-800 mb-4">

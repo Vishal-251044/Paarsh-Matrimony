@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile";
-import Matrimony from "./pages/Matrimony";
+import Matches from "./pages/Matches";
 import Watchlist from "./pages/Watchlist";
 import Connected from "./pages/Connected";
 import AboutUs from "./pages/AboutUs";
@@ -50,10 +50,10 @@ function App() {
           }
         />
         <Route
-          path="/matrimony"
+          path="/matches"
           element={
             <PrivateRoute>
-              <Matrimony />
+              <Matches />
             </PrivateRoute>
           }
         />

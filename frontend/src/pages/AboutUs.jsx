@@ -82,7 +82,7 @@ const AboutUs = () => {
                                         Intelligent Matching
                                     </h3>
                                     <p className="text-gray-600 text-sm">
-                                        AI-powered recommendations based on compatibility and
+                                        Best recommendations algorithm based on compatibility and
                                         personalized preferences.
                                     </p>
                                 </div>

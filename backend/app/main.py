@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import os
 
-from app.routes import auth_route, profile_route, payment_route, feedback_route
+from app.routes import auth_route, profile_route, payment_route, feedback_route, matches_route
 
 load_dotenv()
 
@@ -16,7 +16,7 @@ app = FastAPI(title="FastAPI Backend")
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[FRONTEND_URL, "http://localhost:5173"],
+    allow_origins=[FRONTEND_URL],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -27,6 +27,8 @@ app.include_router(auth_route.router)
 app.include_router(profile_route.router)
 app.include_router(payment_route.router)
 app.include_router(feedback_route.router)
+app.include_router(matches_route.router)
+# app.include_router(watchlist_route.router)
 
 @app.get("/")
 async def root():

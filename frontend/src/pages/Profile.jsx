@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -8,6 +8,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import Select from "react-select";
 import Swal from 'sweetalert2';
+import { useUserContext } from '../context/UserContext';
 import {
   FiSettings,
   FiEdit2,
@@ -435,6 +436,7 @@ const MembershipCard = ({
 
 const Profile = () => {
   const navigate = useNavigate();
+  const { updateUserProfile } = useUserContext();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
@@ -694,6 +696,12 @@ const Profile = () => {
 
             // Check profile completion
             checkProfileCompletion(profile);
+            // Update user context
+            updateUserProfile({
+              userEmail: parsedUser.email,
+              isProfilePublished: profile.isPublished || false,
+              membershipType: profile.membershipPlan === "premium" ? "premium" : "free"
+            });
           }
         } catch (error) {
           console.log("No existing profile found, starting fresh");
@@ -1218,6 +1226,7 @@ const Profile = () => {
           aboutYourself: trimmedAboutYourself,
           aboutFamily: trimmedAboutFamily,
           membershipPlan: membershipPlan, // Include current membership plan
+          isPublished: isProfilePublished,
           lastUpdated: new Date().toISOString()
         };
 
@@ -1703,7 +1712,21 @@ const Profile = () => {
                   <LoadingButton
                     onClick={() => {
                       setLoadingState('viewMatches', true);
-                      navigate("/matrimony");
+
+                      // Prepare user data
+                      const userData = {
+                        userEmail: user.email,
+                        isProfilePublished: isProfilePublished,
+                        membershipType: membershipPlan === "premium" ? "premium" : "free"
+                      };
+
+                      // Save to global context
+                      updateUserProfile(userData);
+
+                      // Navigate with state
+                      navigate("/matches", {
+                        state: userData
+                      });
                     }}
                     loading={loadingStates.viewMatches}
                     variant="secondary"
@@ -1714,7 +1737,21 @@ const Profile = () => {
                   <LoadingButton
                     onClick={() => {
                       setLoadingState('watchlist', true);
-                      navigate("/watchlist");
+
+                      // Prepare user data
+                      const userData = {
+                        userEmail: user.email,
+                        isProfilePublished: isProfilePublished,
+                        membershipType: membershipPlan === "premium" ? "premium" : "free"
+                      };
+
+                      // Save to global context
+                      updateUserProfile(userData);
+
+                      // Navigate with state
+                      navigate("/watchlist", {
+                        state: userData
+                      });
                     }}
                     loading={loadingStates.watchlist}
                     variant="secondary"
@@ -2028,7 +2065,7 @@ const Profile = () => {
                         </div>
                         <div className="flex-1">
                           <p className="text-gray-600 mb-2">
-                            <span className="font-semibold text-red-500">* Required:</span> Upload a clear profile picture for better matches.
+                            <span className="font-semibold text-red-500">* Required:</span> Upload a clear profile picture for better matches (.jpg, .png).
                           </p>
                           <p className="text-sm text-gray-500 mb-4">
                             Recommended size: 500x500px, Max size: 5MB
@@ -2186,7 +2223,7 @@ const Profile = () => {
                           isEditing={isEditing}
                         />
                         <Input
-                          label="Current Location"
+                          label="Current Town"
                           value={locationInfo.currentLocation}
                           onChange={(val) => setLocationInfo(prev => ({ ...prev, currentLocation: val }))}
                           placeholder="Current location"
@@ -2666,11 +2703,12 @@ const Profile = () => {
                   <MembershipCard
                     type="Free Membership"
                     features={[
-                      "View Partner Images",
-                      "View Partner Profile Details",
-                      "Apply Basic Filters",
-                      "AI Partner Recommendations",
-                      "Limited Daily Matches"
+                      "Manage Profile",
+                      "Partner Recommendations",
+                      "View Limited Partner Details",
+                      "Apply Filters",
+                      "Give feedbacks",
+                      "Limited Features Access",
                     ]}
                     price="0"
                     currentPlan={membershipPlan === "free" ? "Free Membership" :
@@ -2689,6 +2727,7 @@ const Profile = () => {
                       "Contact Partner Directly",
                       "Plan Meetings and Dates",
                       "Add to Watchlist for Shortlisting",
+                      "View all Partner Data",
                       "Marriage Planning Assistance",
                     ]}
                     price="1999"

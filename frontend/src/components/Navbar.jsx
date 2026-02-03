@@ -1,42 +1,69 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useCallback, memo } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { User } from "lucide-react";
 
-const Navbar = () => {
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
+// Memoize the navbar to prevent unnecessary re-renders
+const Navbar = memo(() => {
+    const [isLoggedIn, setIsLoggedIn] = useState(() => {
+        // Initialize from localStorage on component mount
+        return !!localStorage.getItem("user");
+    });
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+    const location = useLocation();
 
-    // Check login from localStorage
-    useEffect(() => {
-        const user = localStorage.getItem("user");
-        setIsLoggedIn(!!user);
-    }, []);
+    // Update auth status on route changes
+    useState(() => {
+        // This runs only once on mount
+        const checkAuth = () => {
+            const user = localStorage.getItem("user");
+            setIsLoggedIn(!!user);
+        };
+        
+        // Check auth on mount
+        checkAuth();
+        
+        // Set up storage event listener for cross-tab sync
+        const handleStorageChange = (e) => {
+            if (e.key === "user") {
+                checkAuth();
+            }
+        };
+        
+        window.addEventListener("storage", handleStorageChange);
+        
+        return () => {
+            window.removeEventListener("storage", handleStorageChange);
+        };
+    });
 
-    // Login click
-    const handleLogin = async () => {
+    // Memoize handlers to prevent re-renders
+    const handleLogin = useCallback(async () => {
         setLoading(true);
         try {
             navigate("/login");
         } finally {
             setLoading(false);
         }
-    };
+    }, [navigate]);
 
-    // Profile click
-    const handleProfile = async () => {
+    const handleProfile = useCallback(async () => {
         setLoading(true);
         try {
             navigate("/profile");
         } finally {
             setLoading(false);
         }
-    };
+    }, [navigate]);
 
-    // Handle navigation to other pages
-    const handlePageNavigation = (page) => {
+    const handlePageNavigation = useCallback((page) => {
         navigate(`/${page.toLowerCase().replace(/\s+/g, '-')}`);
-    };
+    }, [navigate]);
+
+    // Don't re-render if the route changes but auth status is the same
+    const shouldRender = useState(true)[0];
+
+    if (!shouldRender) return null;
 
     return (
         <nav className="w-full bg-white shadow-sm fixed top-0 left-0 z-50">
@@ -58,13 +85,12 @@ const Navbar = () => {
                     Paarsh Matrimony
                 </h1>
 
-                {/* Desktop view - Links section (visible on medium screens and above) */}
+                {/* Desktop view - Links section */}
                 <div className="hidden md:flex items-center space-x-6">
                     {!isLoggedIn ? (
                         <>
-                            {/* About Us link */}
                             <button
-                                onClick={() => handlePageNavigation("/")}
+                                onClick={() => navigate("/")}
                                 className="
                                   text-gray-700 hover:text-[oklch(70.4%_0.191_22.216)]
                                   text-sm font-medium transition-colors
@@ -73,7 +99,7 @@ const Navbar = () => {
                                 Home
                             </button>
                             <button
-                                onClick={() => handlePageNavigation("/about")}
+                                onClick={() => navigate("/about")}
                                 className="
                                   text-gray-700 hover:text-[oklch(70.4%_0.191_22.216)]
                                   text-sm font-medium transition-colors
@@ -82,9 +108,8 @@ const Navbar = () => {
                                 About Us
                             </button>
                             
-                            {/* Terms of Use link */}
                             <button
-                                onClick={() => handlePageNavigation("/terms")}
+                                onClick={() => navigate("/terms")}
                                 className="
                                   text-gray-700 hover:text-[oklch(70.4%_0.191_22.216)]
                                   text-sm font-medium transition-colors
@@ -93,9 +118,8 @@ const Navbar = () => {
                                 Terms of Use
                             </button>
                             
-                            {/* Privacy Policy link */}
                             <button
-                                onClick={() => handlePageNavigation("/privacy")}
+                                onClick={() => navigate("/privacy")}
                                 className="
                                   text-gray-700 hover:text-[oklch(70.4%_0.191_22.216)]
                                   text-sm font-medium transition-colors
@@ -104,7 +128,6 @@ const Navbar = () => {
                                 Privacy Policy
                             </button>
                             
-                            {/* Login button */}
                             <button
                                 onClick={handleLogin}
                                 disabled={loading}
@@ -122,9 +145,8 @@ const Navbar = () => {
                         </>
                     ) : (
                         <>
-                            {/* Watchlist button (desktop view) */}
                             <button
-                                onClick={() => handlePageNavigation("/")}
+                                onClick={() => navigate("/")}
                                 className="
                                   text-gray-700 hover:text-[oklch(70.4%_0.191_22.216)]
                                   text-sm font-medium transition-colors
@@ -143,7 +165,7 @@ const Navbar = () => {
                                 Watchlist
                             </button>
                             <button
-                                onClick={() => navigate("/matrimony")}
+                                onClick={() => navigate("/matches")}
                                 className="
                                   relative  text-sm
                                   text-gray-700 hover:text-[oklch(70.4%_0.191_22.216)]
@@ -153,7 +175,6 @@ const Navbar = () => {
                                 Matches
                             </button>
                             
-                            {/* Profile button (desktop view) */}
                             <button
                                 onClick={handleProfile}
                                 disabled={loading}
@@ -174,7 +195,7 @@ const Navbar = () => {
                     )}
                 </div>
 
-                {/* Mobile view - Only show login/profile button (visible on small screens) */}
+                {/* Mobile view */}
                 <div className="flex md:hidden">
                     {!isLoggedIn ? (
                         <button
@@ -213,6 +234,6 @@ const Navbar = () => {
             </div>
         </nav>
     );
-};
+});
 
 export default Navbar;

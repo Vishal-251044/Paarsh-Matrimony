@@ -12,15 +12,14 @@ router = APIRouter()
 RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET")
 
-# Initialize Razorpay client
-client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
-
 # Database collection
 profile_collection = db["profiles"]
 
 @router.post("/create-order")
 async def create_payment_order(data: dict):
     try:
+        client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
+        
         amount = data.get("amount")
         currency = data.get("currency", "INR")
         receipt = data.get("receipt")

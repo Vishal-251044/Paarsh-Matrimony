@@ -1,7 +1,7 @@
 # app/models/Profile.py
 from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel, EmailStr, Field, validator
+from pydantic import BaseModel, EmailStr, Field, validator, ConfigDict
 
 class PersonalInfo(BaseModel):
     profileImg: Optional[str] = ""
@@ -84,6 +84,23 @@ class PartnerInfo(BaseModel):
     lookingFor: Optional[str] = ""
 
 class Profile(BaseModel):
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "email": "user@example.com",
+                "personalInfo": {
+                    "fullName": "Vishal Chavan",
+                    "gender": "Male",
+                    "dob": "2004-02-24",
+                    "age": "22",
+                    "maritalStatus": "Never Married",
+                    "contactNumber": "9999999999",
+                    "whatsappNumber": "9999999999"
+                }
+            }
+        }
+    )
+    
     email: EmailStr
     personalInfo: PersonalInfo = PersonalInfo()
     locationInfo: LocationInfo = LocationInfo()
@@ -99,19 +116,3 @@ class Profile(BaseModel):
     publishedDate: Optional[str] = ""
     createdDate: Optional[str] = Field(default_factory=lambda: datetime.now().isoformat())
     lastUpdated: Optional[str] = Field(default_factory=lambda: datetime.now().isoformat())
-    
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "email": "user@example.com",
-                "personalInfo": {
-                    "fullName": "Vishal Chavan",
-                    "gender": "Male",
-                    "dob": "2004-02-24",
-                    "age": "22",
-                    "maritalStatus": "Never Married",
-                    "contactNumber": "9999999999",
-                    "whatsappNumber": "9999999999"
-                }
-            }
-        }
