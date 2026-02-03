@@ -341,7 +341,7 @@ const Watchlist = () => {
                     {/* Premium Features Grid */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                       {[
-                        { icon: Heart, title: "Smart Matches", desc: "AI-powered partner suggestions" },
+                        { icon: Heart, title: "View All Details", desc: "View complete profile details of interested partners" },
                         { icon: Calendar, title: "Date Planning", desc: "Schedule meetings with matches" },
                         { icon: Sparkles, title: "Marriage Help", desc: "Expert guidance through process" },
                         { icon: Filter, title: "Advanced Filters", desc: "Precise search filters" },
