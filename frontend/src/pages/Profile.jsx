@@ -1597,7 +1597,7 @@ const Profile = () => {
     setLoadingState('deleteProfile', true);
     try {
       await axios.delete(
-        `${BACKEND_URL}/profile/delete/${user.email}`,
+        `${BACKEND_URL}/api/profile/delete/${user.email}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       toast.success("Profile permanently deleted successfully!");
@@ -2084,7 +2084,7 @@ const Profile = () => {
                     <div>
                       <h4 className="font-semibold text-red-800 mb-1">Warning: This action cannot be undone!</h4>
                       <p className="text-red-700 text-sm">
-                        All your profile data, matches, watchlist, and preferences will be permanently deleted.
+                        All your profile data, matches, plan, watchlist, and preferences will be permanently deleted.
                         You will need to create a new account if you want to use the service again.
                       </p>
                     </div>

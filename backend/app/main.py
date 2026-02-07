@@ -3,7 +3,18 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import os
 
-from app.routes import auth_route, profile_route, payment_route, feedback_route, matches_route, showFeedback_route, contact_route, watchlist_route, watchlistData_route
+from app.routes import (
+    auth_route,
+    profile_route,
+    payment_route,
+    feedback_route,
+    matches_route,
+    showFeedback_route,
+    contact_route,
+    watchlist_route,
+    watchlistData_route,
+    delete_route
+)
 
 load_dotenv()
 
@@ -29,6 +40,7 @@ app.include_router(showFeedback_route.router)
 app.include_router(contact_route.router)
 app.include_router(watchlist_route.router)
 app.include_router(watchlistData_route.router, prefix="/api")
+app.include_router(delete_route.router, prefix="/api", tags=["Delete"])
 
 @app.get("/")
 async def root():

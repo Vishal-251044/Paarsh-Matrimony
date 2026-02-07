@@ -27,7 +27,6 @@ if all([CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET]):
             api_secret=CLOUDINARY_API_SECRET
         )
         cloudinary_configured = True
-        print("Cloudinary configured successfully")
     except Exception as e:
         print(f"Error configuring Cloudinary: {str(e)}")
         cloudinary_configured = False

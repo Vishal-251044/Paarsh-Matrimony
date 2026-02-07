@@ -34,7 +34,8 @@ import {
   FiTarget,
   FiBarChart2,
   FiTrash2,
-  FiCalendar
+  FiCalendar,
+  FiTag
 } from "react-icons/fi";
 import {
   FaVenusMars,
@@ -556,7 +557,7 @@ const Watchlist = () => {
     const timeoutId = setTimeout(() => {
       applyFilters();
     }, 300); // Debounce for 300ms
-    
+
     return () => clearTimeout(timeoutId);
   }, [activeFilters, partners, applyFilters]);
 
@@ -1148,29 +1149,43 @@ const Watchlist = () => {
                 <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
                   <FaBirthdayCake className="text-[#D25353]" /> Age Range
                 </h4>
+
                 <div className="grid grid-cols-2 gap-3">
+                  {/* Min Age */}
                   <div>
                     <label className="block text-xs text-gray-600 mb-1">Min Age</label>
                     <input
                       type="number"
-                      min="18"
-                      max="100"
                       value={localFilters.minAge}
-                      onChange={(e) => handleLocalFilterChange('minAge', e.target.value)}
+                      onChange={(e) => {
+                        let val = e.target.value.replace(/\D/g, ""); // digits only
+                        if (Number(val) > 100) val = "100";
+                        handleLocalFilterChange("minAge", val.slice(0, 3));
+                      }}
                       className="w-full px-3 py-2 border border-[#FFEAD3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EA7B7B] focus:border-transparent"
                       placeholder="18"
+                      min={0}
+                      max={100}
+                      maxLength={3}
                     />
                   </div>
+
+                  {/* Max Age */}
                   <div>
                     <label className="block text-xs text-gray-600 mb-1">Max Age</label>
                     <input
                       type="number"
-                      min="18"
-                      max="100"
                       value={localFilters.maxAge}
-                      onChange={(e) => handleLocalFilterChange('maxAge', e.target.value)}
+                      onChange={(e) => {
+                        let val = e.target.value.replace(/\D/g, "");
+                        if (Number(val) > 100) val = "100";
+                        handleLocalFilterChange("maxAge", val.slice(0, 3));
+                      }}
                       className="w-full px-3 py-2 border border-[#FFEAD3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EA7B7B] focus:border-transparent"
                       placeholder="100"
+                      min={0}
+                      max={100}
+                      maxLength={3}
                     />
                   </div>
                 </div>
@@ -1181,29 +1196,43 @@ const Watchlist = () => {
                 <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
                   <FiUser className="text-[#D25353]" /> Height (cm)
                 </h4>
+
                 <div className="grid grid-cols-2 gap-3">
+                  {/* Min Height */}
                   <div>
                     <label className="block text-xs text-gray-600 mb-1">Min Height</label>
                     <input
                       type="number"
-                      min="100"
-                      max="250"
                       value={localFilters.minHeight}
-                      onChange={(e) => handleLocalFilterChange('minHeight', e.target.value)}
+                      onChange={(e) => {
+                        let val = e.target.value.replace(/\D/g, ""); // only digits
+                        if (Number(val) > 250) val = "250"; // cap
+                        handleLocalFilterChange("minHeight", val.slice(0, 3));
+                      }}
                       className="w-full px-3 py-2 border border-[#FFEAD3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EA7B7B] focus:border-transparent"
                       placeholder="140"
+                      min={0}
+                      max={250}
+                      maxLength={3}
                     />
                   </div>
+
+                  {/* Max Height */}
                   <div>
                     <label className="block text-xs text-gray-600 mb-1">Max Height</label>
                     <input
                       type="number"
-                      min="100"
-                      max="250"
                       value={localFilters.maxHeight}
-                      onChange={(e) => handleLocalFilterChange('maxHeight', e.target.value)}
+                      onChange={(e) => {
+                        let val = e.target.value.replace(/\D/g, "");
+                        if (Number(val) > 250) val = "250";
+                        handleLocalFilterChange("maxHeight", val.slice(0, 3));
+                      }}
                       className="w-full px-3 py-2 border border-[#FFEAD3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EA7B7B] focus:border-transparent"
                       placeholder="200"
+                      min={0}
+                      max={250}
+                      maxLength={3}
                     />
                   </div>
                 </div>
@@ -1214,29 +1243,43 @@ const Watchlist = () => {
                 <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
                   <FiUser className="text-[#D25353]" /> Weight (kg)
                 </h4>
+
                 <div className="grid grid-cols-2 gap-3">
+                  {/* Min Weight */}
                   <div>
                     <label className="block text-xs text-gray-600 mb-1">Min Weight</label>
                     <input
                       type="number"
-                      min="30"
-                      max="200"
                       value={localFilters.minWeight}
-                      onChange={(e) => handleLocalFilterChange('minWeight', e.target.value)}
+                      onChange={(e) => {
+                        let val = e.target.value.replace(/\D/g, ""); // digits only
+                        if (Number(val) > 200) val = "200"; // cap max
+                        handleLocalFilterChange("minWeight", val.slice(0, 3));
+                      }}
                       className="w-full px-3 py-2 border border-[#FFEAD3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EA7B7B] focus:border-transparent"
                       placeholder="40"
+                      min={0}
+                      max={200}
+                      maxLength={3}
                     />
                   </div>
+
+                  {/* Max Weight */}
                   <div>
                     <label className="block text-xs text-gray-600 mb-1">Max Weight</label>
                     <input
                       type="number"
-                      min="30"
-                      max="200"
                       value={localFilters.maxWeight}
-                      onChange={(e) => handleLocalFilterChange('maxWeight', e.target.value)}
+                      onChange={(e) => {
+                        let val = e.target.value.replace(/\D/g, "");
+                        if (Number(val) > 200) val = "200";
+                        handleLocalFilterChange("maxWeight", val.slice(0, 3));
+                      }}
                       className="w-full px-3 py-2 border border-[#FFEAD3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EA7B7B] focus:border-transparent"
                       placeholder="120"
+                      min={0}
+                      max={200}
+                      maxLength={3}
                     />
                   </div>
                 </div>
@@ -1345,6 +1388,8 @@ const Watchlist = () => {
               {/* Home City & Current Town */}
               <div className="bg-gradient-to-br from-[#FFEAD3]/30 to-white p-4 rounded-xl border border-[#FFEAD3]">
                 <div className="space-y-5">
+
+                  {/* Home City */}
                   <div>
                     <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
                       <FiHome className="text-[#D25353]" /> Home City
@@ -1352,12 +1397,22 @@ const Watchlist = () => {
                     <input
                       type="text"
                       value={localFilters.homeCity}
-                      onChange={(e) => handleLocalFilterChange("homeCity", e.target.value)}
+                      onChange={(e) => {
+                        let val = e.target.value;
+                        val = val.replace(/[^a-zA-Z\s]/g, ""); // letters + space
+                        val = val.replace(/\s{2,}/g, " ");     // single space only
+                        val = val.replace(/^\s/, "");          // no start space
+                        handleLocalFilterChange("homeCity", val);
+                      }}
+                      onBlur={(e) =>
+                        handleLocalFilterChange("homeCity", e.target.value.trim())
+                      } // remove end space
                       className="w-full px-3 py-2 border border-[#FFEAD3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EA7B7B] focus:border-transparent text-sm"
                       placeholder="Enter city name..."
                     />
                   </div>
 
+                  {/* Current Town */}
                   <div>
                     <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
                       <FiMapPin className="text-[#D25353]" /> Current Town
@@ -1365,7 +1420,16 @@ const Watchlist = () => {
                     <input
                       type="text"
                       value={localFilters.currentCity}
-                      onChange={(e) => handleLocalFilterChange("currentCity", e.target.value)}
+                      onChange={(e) => {
+                        let val = e.target.value;
+                        val = val.replace(/[^a-zA-Z\s]/g, "");
+                        val = val.replace(/\s{2,}/g, " ");
+                        val = val.replace(/^\s/, "");
+                        handleLocalFilterChange("currentCity", val);
+                      }}
+                      onBlur={(e) =>
+                        handleLocalFilterChange("currentCity", e.target.value.trim())
+                      }
                       className="w-full px-3 py-2 border border-[#FFEAD3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EA7B7B] focus:border-transparent text-sm"
                       placeholder="Enter town name..."
                     />
@@ -1663,7 +1727,7 @@ const Watchlist = () => {
                         { icon: FiHeart, title: "View All Details", desc: "View complete profile details of interested partners" },
                         { icon: FiCalendar, title: "Date Planning", desc: "Schedule meetings with matches" },
                         { icon: HiOutlineSparkles, title: "Marriage Help", desc: "Expert guidance through process" },
-                        { icon: FiFilter, title: "Advanced Filters", desc: "Precise search filters" },
+                        { icon: FiTag, title: "Extra Discounts", desc: "Up to 15% off on our locations" },
                       ].map((feature, index) => (
                         <motion.div
                           key={index}
@@ -1732,7 +1796,7 @@ const Watchlist = () => {
 
                 {/* Active Filters Display */}
                 {getActiveFilterCount() > 0 && (
-                  <div className="mb-6 p-4 bg-gradient-to-r from-[#FFEAD3] to-white border border-[#FFEAD3] rounded-xl">
+                  <div className="mb-6 p-4 bg-[#FFEAD3] border border-[#FFEAD3] rounded-xl">
                     <div className="flex flex-wrap gap-2">
                       <span className="text-sm font-medium text-gray-700">Active filters:</span>
                       {Object.keys(activeFilters).map(key => {
@@ -2035,19 +2099,16 @@ const Watchlist = () => {
                           icon: FiBookmark,
                           title: "Watchlist Access",
                           description: "Save and manage profiles",
-                          features: ["Unlimited saves", "Priority sorting"],
                         },
                         {
                           icon: FiCalendar,
                           title: "Date Planning",
                           description: "Schedule meetings",
-                          features: ["Calendar sync", "Location sharing"],
                         },
                         {
                           icon: HiOutlineSparkles,
                           title: "Marriage Planning",
                           description: "Proper guidance",
-                          features: ["Checklists", "Vendor access"],
                         }
                       ].map((feature, index) => (
                         <motion.div
@@ -2063,12 +2124,6 @@ const Watchlist = () => {
                           <h3 className="font-bold text-gray-800 text-lg sm:text-xl mb-2">{feature.title}</h3>
                           <p className="text-gray-600 text-sm sm:text-base mb-3 sm:mb-4">{feature.description}</p>
                           <ul className="space-y-1 sm:space-y-2">
-                            {feature.features.map((item, i) => (
-                              <li key={i} className="flex items-center gap-2 text-xs sm:text-sm text-gray-700">
-                                <div className="w-1.5 h-1.5 rounded-full" style={{ background: primaryColor }} />
-                                {item}
-                              </li>
-                            ))}
                           </ul>
                         </motion.div>
                       ))}

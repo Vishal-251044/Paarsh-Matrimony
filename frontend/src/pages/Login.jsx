@@ -62,7 +62,7 @@ export default function LoginPage() {
       }
 
       const response = await axios.post(`${BACKEND_URL}/auth/google`, {
-        credential: credentialResponse.credential, 
+        credential: credentialResponse.credential,
       });
 
       localStorage.setItem("user", JSON.stringify(response.data.user));
@@ -96,8 +96,12 @@ export default function LoginPage() {
       <ToastContainer position="top-right" />
 
       <div
-        className="min-h-screen flex justify-center items-center px-2 py-16 sm:py-5 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: "url('3.jpg')" }}
+        className="
+    min-h-screen flex justify-center items-center px-2 py-16 sm:py-5
+    bg-cover bg-center bg-no-repeat
+    bg-[url('/3.0.jpg')] 
+    sm:bg-[url('/3.jpg')]
+  "
       >
         <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-6 sm:p-8">
           <h1
@@ -205,9 +209,9 @@ export default function LoginPage() {
                   useOneTap={false}
                   shape="circle"
                   size="large"
-                  width="280" 
+                  width="280"
                   logo_alignment="left"
-                  text="signin_with" 
+                  text="signin_with"
                   render={(renderProps) => (
                     <button
                       onClick={renderProps.onClick}
