@@ -2,6 +2,9 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useUserContext } from '../context/UserContext';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import { toast, ToastContainer } from 'react-toastify';
+import PremiumUpgradeNotification from '../components/PremiumUpgradeNotification';
+import 'react-toastify/dist/ReactToastify.css';
 import {
   FiEdit2,
   FiAlertCircle,
@@ -53,14 +56,13 @@ const Matches = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedMatch, setSelectedMatch] = useState(null);
   const [showMatchModal, setShowMatchModal] = useState(false);
-  const [watchlist, setWatchlist] = useState([]);
+  const [watchlistEmails, setWatchlistEmails] = useState([]);
   const [isStatsExpanded, setIsStatsExpanded] = useState(false);
   const [isUserInfoExpanded, setIsUserInfoExpanded] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [activeFilters, setActiveFilters] = useState({
     maritalStatus: [],
     education: [],
-    bloodGroup: [],
     profession: [],
     annualPackage: [],
     employmentType: [],
@@ -88,7 +90,6 @@ const Matches = () => {
       "PhD",
       "Post Doctorate"
     ],
-    bloodGroup: ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-", "Other"],
     profession: [
       "Engineer",
       "Doctor",
@@ -103,7 +104,6 @@ const Matches = () => {
     employmentType: ["Private", "Government", "Business", "Self-employed", "Unemployed"]
   };
 
-  // Color theme with CSS variables for proper Tailwind usage
   const colors = {
     primary: 'rgb(234, 123, 123)',
     primaryDark: 'rgb(210, 83, 83)',
@@ -121,13 +121,12 @@ const Matches = () => {
     membershipType: 'free'
   };
 
-  // Load watchlist from localStorage
+  // Fetch watchlist on component mount
   useEffect(() => {
-    const savedWatchlist = localStorage.getItem('matrimony_watchlist');
-    if (savedWatchlist) {
-      setWatchlist(JSON.parse(savedWatchlist));
+    if (finalData.userEmail) {
+      fetchWatchlist();
     }
-  }, []);
+  }, [finalData.userEmail]);
 
   // Extract unique cities from matches
   useEffect(() => {
@@ -145,6 +144,40 @@ const Matches = () => {
   useEffect(() => {
     applyFilters();
   }, [activeFilters, matches]);
+
+  // Fetch watchlist from backend
+  const fetchWatchlist = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.log("No token found");
+        return;
+      }
+
+      // Use the new endpoint that returns just partner emails
+      const response = await axios.get(
+        `${BACKEND_URL}/api/watchlist/partners/${finalData.userEmail}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data.success) {
+        // Extract partner emails from response
+        const emails = response.data.partners || [];
+        setWatchlistEmails(emails);
+      }
+    } catch (err) {
+      console.error("Error fetching watchlist:", err);
+      // If 404, it means user has no watchlist yet (which is fine)
+      if (err.response && err.response.status === 404) {
+        setWatchlistEmails([]);
+      }
+    }
+  };
 
   const applyFilters = () => {
     if (matches.length === 0) {
@@ -170,19 +203,13 @@ const Matches = () => {
         return false;
       }
 
-      // Blood Group filter
-      if (activeFilters.bloodGroup.length > 0 &&
-        !activeFilters.bloodGroup.includes(match.bloodGroup)) {
-        return false;
-      }
-
       // Profession filter
       if (activeFilters.profession.length > 0 &&
         !activeFilters.profession.some(prof => match.profession?.includes(prof))) {
         return false;
       }
 
-      // Annual Package filter (parse range)
+      // Annual Package filter
       if (activeFilters.annualPackage.length > 0 && match.annualIncome) {
         const matchIncome = parseIncome(match.annualIncome);
         let passesIncome = false;
@@ -201,18 +228,22 @@ const Matches = () => {
         return false;
       }
 
-      // Home City filter (case-insensitive, trimmed)
+      // Home City filter
       if (activeFilters.homeCity && activeFilters.homeCity.trim() !== '') {
         const searchCity = activeFilters.homeCity.trim().toLowerCase();
         const matchCity = match.location ? match.location.trim().toLowerCase() : '';
-        if (!matchCity.includes(searchCity)) return false;
+        if (!matchCity.includes(searchCity)) {
+          return false;
+        }
       }
 
-      // Current City filter (case-insensitive, trimmed)
+      // Current Town filter
       if (activeFilters.currentCity && activeFilters.currentCity.trim() !== '') {
         const searchCity = activeFilters.currentCity.trim().toLowerCase();
         const matchCity = match.currentLocation ? match.currentLocation.trim().toLowerCase() : '';
-        if (!matchCity.includes(searchCity)) return false;
+        if (!matchCity.includes(searchCity)) {
+          return false;
+        }
       }
 
       // Height filter
@@ -220,7 +251,6 @@ const Matches = () => {
         const heightInCm = parseHeightToCm(match.height);
         const minHeight = parseInt(activeFilters.minHeight) || 0;
         const maxHeight = parseInt(activeFilters.maxHeight) || 999;
-
         if (activeFilters.minHeight && heightInCm < minHeight) return false;
         if (activeFilters.maxHeight && heightInCm > maxHeight) return false;
       }
@@ -260,21 +290,16 @@ const Matches = () => {
     return [0, 0];
   };
 
-  // Update the parseHeightToCm function:
-
+  // Parse height to cm
   const parseHeightToCm = (heightStr) => {
     if (!heightStr) return 0;
-
-    // Convert to string and lowercase
     const height = heightStr.toString().toLowerCase().trim();
 
-    // If already in cm format (e.g., "170 cm" or "170cm")
     const cmMatch = height.match(/(\d+(?:\.\d+)?)\s*cm/);
     if (cmMatch) {
       return Math.round(parseFloat(cmMatch[1]));
     }
 
-    // If in feet'inches format (e.g., "5'8", "5'8"", "5 ft 8 in")
     const feetInchesMatch = height.match(/(\d+(?:\.\d+)?)\s*(?:['\u2032ft])\s*(\d+(?:\.\d+)?)?\s*(?:["\u2033in]?)?/);
     if (feetInchesMatch) {
       const feet = parseFloat(feetInchesMatch[1]);
@@ -282,17 +307,14 @@ const Matches = () => {
       return Math.round((feet * 30.48) + (inches * 2.54));
     }
 
-    // If just a number, assume it's cm
     const justNumber = height.match(/^(\d+(?:\.\d+)?)$/);
     if (justNumber) {
       const num = parseFloat(justNumber[1]);
-      // If number is likely in feet (e.g., 5.5 for 5'6")
       if (num < 10) {
         const feet = Math.floor(num);
         const inches = (num - feet) * 12;
         return Math.round((feet * 30.48) + (inches * 2.54));
       }
-      // Otherwise assume cm
       return Math.round(num);
     }
 
@@ -318,37 +340,33 @@ const Matches = () => {
         return;
       }
 
-      console.log("Fetching matches for:", finalData.userEmail);
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError("Authentication required. Please log in again.");
+        setTimeout(() => {
+          logout();
+          navigate('/login');
+        }, 2000);
+        setLoading(false);
+        return;
+      }
 
       const response = await axios.get(
         `${BACKEND_URL}/api/matches/recommended/${finalData.userEmail}`,
         {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           },
-          timeout: 30000 // 30 second timeout
+          timeout: 30000
         }
       );
 
-      console.log("Matches API response:", response.data);
-
       if (response.data.success) {
-        // Ensure matches array exists
         const matchesData = response.data.matches || [];
-
-        // Add debug logging
-        if (matchesData.length > 0) {
-          console.log(`Received ${matchesData.length} matches`);
-          console.log("First match sample:", matchesData[0]);
-        } else {
-          console.log("No matches found");
-        }
-
         setMatches(matchesData);
         setFilteredMatches(matchesData);
       } else {
-        // Handle API success but no matches
         if (response.data.error && response.data.error.includes("No matches")) {
           setMatches([]);
           setFilteredMatches([]);
@@ -359,7 +377,6 @@ const Matches = () => {
     } catch (err) {
       console.error("Error fetching matches:", err);
 
-      // More detailed error handling
       if (err.code === 'ECONNABORTED') {
         setError("Request timeout. Please try again.");
       } else if (err.response) {
@@ -412,33 +429,101 @@ const Matches = () => {
     fetchMatches();
   };
 
-  const handleAddToWatchlist = (match) => {
-    if (finalData.membershipType === 'free') {
-      // Show upgrade modal
-      setSelectedMatch(match);
-      return;
-    }
+  // Add/remove from watchlist
+  const handleAddToWatchlist = async (match) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error("Please login to add to watchlist");
+        return;
+      }
 
-    const isInWatchlist = watchlist.some(item => item.email === match.email);
+      const userEmail = finalData.userEmail;
+      if (!userEmail) {
+        toast.error("User email not found");
+        return;
+      }
 
-    if (isInWatchlist) {
-      // Remove from watchlist
-      const updatedWatchlist = watchlist.filter(item => item.email !== match.email);
-      setWatchlist(updatedWatchlist);
-      localStorage.setItem('matrimony_watchlist', JSON.stringify(updatedWatchlist));
-    } else {
-      // Add to watchlist
-      const updatedWatchlist = [...watchlist, { ...match, addedAt: new Date().toISOString() }];
-      setWatchlist(updatedWatchlist);
-      localStorage.setItem('matrimony_watchlist', JSON.stringify(updatedWatchlist));
+      const isAlreadyInWatchlist = watchlistEmails.includes(match.email);
+
+      if (isAlreadyInWatchlist) {
+        // Remove from watchlist
+
+        const response = await axios.delete(
+          `${BACKEND_URL}/api/watchlist/remove?user_email=${encodeURIComponent(userEmail)}&partner_email=${encodeURIComponent(match.email)}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+
+        if (response.data.success) {
+          setWatchlistEmails(prev => prev.filter(email => email !== match.email));
+          toast.success("Removed from watchlist!");
+        } else {
+          throw new Error(response.data.error || "Failed to remove from watchlist");
+        }
+      } else {
+        // Add to watchlist
+        const matchScore = parseFloat(formatMatchScore(match));
+
+        // Validate matchScore
+        if (isNaN(matchScore) || matchScore < 0 || matchScore > 100) {
+          toast.error("Invalid match score. Please try again.");
+          return;
+        }
+
+        // Prepare request data
+        const requestData = {
+          user_email: userEmail,
+          partner_email: match.email,
+          match_score: matchScore
+        };
+
+        const response = await axios.post(
+          `${BACKEND_URL}/api/watchlist/add`,
+          requestData,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+
+        // Check if partner was added (either new response or existing structure)
+        if (response.data && (response.data.id || response.data._id ||
+          (response.data.partners && response.data.partners.some(p => p.partner_email === match.email)))) {
+          setWatchlistEmails(prev => [...prev, match.email]);
+          toast.success("Added to watchlist!");
+        } else {
+          throw new Error("Failed to add to watchlist");
+        }
+      }
+    } catch (error) {
+      console.error("Watchlist error:", error);
+
+      if (error.response) {
+        if (error.response.status === 400) {
+          toast.error(error.response.data.detail || "Already in watchlist");
+        } else if (error.response.status === 422) {
+          toast.error("Invalid data format");
+        } else {
+          toast.error(error.response.data?.error || "Failed to update watchlist");
+        }
+      } else {
+        toast.error("Failed to update watchlist");
+      }
     }
   };
 
   const handleUpgradePlan = () => {
-    navigate('/profile');
+    navigate('/profile#plan');
   };
 
-  // Get match score color class using provided color theme
+  // Get match score color class
   const getScoreColor = (score) => {
     if (score >= 90) return 'from-[#9E3B3B] to-[#7A2F2F]';
     if (score >= 80) return 'from-[#D25353] to-[#9E3B3B]';
@@ -447,14 +532,24 @@ const Matches = () => {
     return 'from-[#EA7B7B]/60 to-[#D25353]/60';
   };
 
-  // Format match score display
+  // Format match score display - ensure it returns a number
   const formatMatchScore = (match) => {
-    return match.enhancedScore || match.matchScore || 0;
+    const score = match.enhancedScore || match.matchScore || 0;
+
+    // If it's a string with percentage, remove it
+    if (typeof score === 'string') {
+      const cleaned = score.replace('%', '').trim();
+      const num = parseFloat(cleaned);
+      return isNaN(num) ? 0 : num;
+    }
+
+    // If it's already a number, return it
+    return typeof score === 'number' ? score : parseFloat(score) || 0;
   };
 
   // Check if match is in watchlist
   const isInWatchlist = (match) => {
-    return watchlist.some(item => item.email === match.email);
+    return watchlistEmails.includes(match.email);
   };
 
   // Calculate match percentage details
@@ -469,7 +564,6 @@ const Matches = () => {
   const handleFilterChange = (filterType, value) => {
     setActiveFilters(prev => {
       if (Array.isArray(prev[filterType])) {
-        // For array filters (checkboxes)
         const currentArray = prev[filterType];
         if (currentArray.includes(value)) {
           return {
@@ -483,7 +577,6 @@ const Matches = () => {
           };
         }
       } else {
-        // For string filters (input fields)
         return {
           ...prev,
           [filterType]: value
@@ -496,7 +589,6 @@ const Matches = () => {
     setActiveFilters({
       maritalStatus: [],
       education: [],
-      bloodGroup: [],
       profession: [],
       annualPackage: [],
       employmentType: [],
@@ -532,14 +624,12 @@ const Matches = () => {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center p-0 md:p-4 z-50 overflow-y-auto">
         <div className="bg-white rounded-none md:rounded-2xl w-full md:max-w-6xl md:w-full max-h-screen md:max-h-[90vh] overflow-hidden shadow-2xl md:my-8">
-          {/* Fixed Header with close button and match score - MOBILE OPTIMIZED */}
+          {/* Fixed Header */}
           <div className="sticky top-0 z-10 bg-gradient-to-r from-[#FFEAD3] to-white p-3 md:p-6 border-b border-[#FFEAD3]/30">
             <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-3">
-              {/* Left side - Profile info */}
               <div className="flex-1">
                 <div className="flex justify-between items-start md:block">
                   <h2 className="text-xl md:text-3xl font-bold text-gray-900 mb-1 md:mb-2 truncate pr-2">{match.fullName}</h2>
-                  {/* Mobile-only match score */}
                   <div className="md:hidden">
                     <div className={`px-3 py-1 rounded-full font-bold shadow-lg bg-gradient-to-r ${getScoreColor(formatMatchScore(match))} text-white text-center`}>
                       <div className="flex items-center justify-center text-xs">
@@ -561,9 +651,7 @@ const Matches = () => {
                 </div>
               </div>
 
-              {/* Right side - Close button and match score */}
               <div className="flex md:flex-col items-center md:items-end justify-between md:justify-start gap-2 md:gap-4">
-                {/* Close button */}
                 <button
                   onClick={onClose}
                   className="w-8 h-8 md:w-10 md:h-10 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition shadow-lg flex-shrink-0 order-1 md:order-1"
@@ -571,7 +659,6 @@ const Matches = () => {
                   <FiX className="text-[#D25353] text-lg md:text-xl" />
                 </button>
 
-                {/* Desktop match score - hidden on mobile */}
                 <div className="hidden md:block">
                   <div className={`px-10 py-2 rounded-full font-bold shadow-lg bg-gradient-to-r ${getScoreColor(formatMatchScore(match))} text-white text-center`}>
                     <div className="flex items-center justify-center">
@@ -586,7 +673,7 @@ const Matches = () => {
             </div>
           </div>
 
-          {/* Scrollable Main Content - UNCHANGED */}
+          {/* Scrollable Main Content */}
           <div className="overflow-y-auto max-h-[calc(100vh-140px)] md:max-h-[calc(90vh-140px)]">
             <div className="px-4 md:px-8 pb-6 md:pb-8 pt-6">
               <div className="flex flex-col lg:flex-row gap-6 md:gap-8">
@@ -777,14 +864,6 @@ const Matches = () => {
                             </span>
                             <span className="font-medium text-[#9E3B3B] text-sm md:text-base">{match.currentLocation}</span>
                           </div>
-                          {match.nativePlace && (
-                            <div className="flex justify-between items-center py-2">
-                              <span className="text-gray-600 flex items-center gap-2 text-sm md:text-base">
-                                <FiHome className="text-[#EA7B7B] flex-shrink-0" /> Native Place
-                              </span>
-                              <span className="font-medium text-[#9E3B3B] text-sm md:text-base">{match.nativePlace}</span>
-                            </div>
-                          )}
                         </div>
                       </div>
                     </div>
@@ -804,7 +883,12 @@ const Matches = () => {
                                 </div>
                                 <div className="min-w-0">
                                   <div className="font-medium text-gray-800 text-sm md:text-base">Phone Number</div>
-                                  <div className="text-lg font-bold text-[#9E3B3B] mt-1 truncate">{match.contactNumber}</div>
+                                  <a
+                                    href={`tel:${match.contactNumber}`}
+                                    className="text-lg font-bold text-[#9E3B3B] mt-1 truncate hover:underline"
+                                  >
+                                    {match.contactNumber}
+                                  </a>
                                 </div>
                               </div>
                             </div>
@@ -817,7 +901,14 @@ const Matches = () => {
                                 </div>
                                 <div className="min-w-0">
                                   <div className="font-medium text-gray-800 text-sm md:text-base">WhatsApp Number</div>
-                                  <div className="text-lg font-bold text-[#9E3B3B] mt-1 truncate">{match.whatsappNumber}</div>
+                                  <a
+                                    href={`https://wa.me/91${match.whatsappNumber}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-lg font-bold text-[#9E3B3B] mt-1 truncate hover:underline"
+                                  >
+                                    {match.whatsappNumber}
+                                  </a>
                                 </div>
                               </div>
                             </div>
@@ -869,7 +960,7 @@ const Matches = () => {
             <div className="relative inline-block">
               <div className="animate-spin rounded-full h-24 w-24 border-4 border-[#EA7B7B] border-t-transparent mx-auto"></div>
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="h-16 w-16 bg-gradient-to-r from-[#EA7B7B] to-[#D25353] rounded-full animate-pulse"></div>
+                <div className="h-16 w-16 bg-[#EA7B7B] rounded-full animate-pulse"></div>
               </div>
             </div>
             <p className="mt-8 text-gray-700 text-lg font-medium flex items-center justify-center gap-2">
@@ -908,11 +999,22 @@ const Matches = () => {
   return (
     <>
       <Navbar />
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
       <div className="min-h-screen pt-16">
         <div className="container mx-auto px-4 py-6 md:py-8">
           {/* User Info Banner */}
           <div className="bg-gradient-to-r from-[#EA7B7B] to-[#D25353] rounded-2xl shadow-xl mb-6 md:mb-8 text-white overflow-hidden">
-            {/* Collapsible Header */}
             <button
               onClick={() => setIsUserInfoExpanded(!isUserInfoExpanded)}
               className="w-full px-4 md:px-6 py-4 flex justify-between items-center transition-colors"
@@ -922,7 +1024,6 @@ const Matches = () => {
                 <h1 className="text-xl md:text-2xl font-bold">Your Matches</h1>
               </div>
               <div className="flex items-center gap-3">
-                {/* Arrow Icon */}
                 <div className={`transform transition-transform duration-300 ${isUserInfoExpanded ? 'rotate-180' : 'rotate-0'}`}>
                   <svg className="w-5 h-5 md:w-6 md:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -931,7 +1032,6 @@ const Matches = () => {
               </div>
             </button>
 
-            {/* Collapsible Content */}
             <div className={`transition-all duration-300 ease-in-out ${isUserInfoExpanded ? 'max-h-96' : 'max-h-0 overflow-hidden'}`}>
               <div className="px-4 md:px-6 pb-4 md:pb-6">
                 <div className="flex flex-col md:flex-row md:items-center justify-between">
@@ -970,7 +1070,7 @@ const Matches = () => {
                   <div className="flex flex-wrap gap-2">
                     {!finalData.isProfilePublished ? (
                       <button
-                        onClick={() => navigate('/profile')}
+                        onClick={() => navigate('/profile#plan')}
                         className="inline-flex items-center gap-2 px-4 md:px-5 py-2 bg-white text-[#D25353] rounded-lg hover:shadow-lg transition-all font-medium shadow-md text-sm md:text-base"
                       >
                         <FiEdit2 /> Complete Profile
@@ -1010,7 +1110,7 @@ const Matches = () => {
           </div>
 
           {/* Watchlist Info */}
-          {finalData.membershipType === 'premium' && watchlist.length > 0 && (
+          {finalData.membershipType === 'premium' && watchlistEmails.length > 0 && (
             <div className="mb-6 p-4 md:p-5 bg-white border border-[#FFEAD3] rounded-xl">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 md:gap-4">
@@ -1019,7 +1119,7 @@ const Matches = () => {
                   </div>
                   <div>
                     <h3 className="font-bold text-gray-800 text-sm md:text-base">Your Watchlist</h3>
-                    <p className="text-xs md:text-sm text-gray-600">{watchlist.length} profile(s) saved</p>
+                    <p className="text-xs md:text-sm text-gray-600">{watchlistEmails.length} profile(s) saved</p>
                   </div>
                 </div>
                 <button
@@ -1034,7 +1134,6 @@ const Matches = () => {
 
           {/* Statistics - Collapsible */}
           <div className="mt-6 md:mt-8 bg-#FFEAD3 rounded-2xl border border-[#EA7B7B] overflow-hidden">
-            {/* Collapsible Header */}
             <button
               onClick={() => setIsStatsExpanded(!isStatsExpanded)}
               className="w-full px-4 md:px-6 py-4 flex justify-between items-center hover:bg-[#FFEAD3]/30 transition-colors"
@@ -1044,7 +1143,6 @@ const Matches = () => {
                 <h3 className="text-lg md:text-xl font-bold text-gray-800">Match Insights</h3>
               </div>
               <div className="flex items-center gap-3">
-                {/* Arrow Icon */}
                 <div className={`transform transition-transform duration-300 ${isStatsExpanded ? 'rotate-180' : 'rotate-0'}`}>
                   <svg className="w-5 h-5 md:w-6 md:h-6 text-[#9E3B3B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -1053,7 +1151,6 @@ const Matches = () => {
               </div>
             </button>
 
-            {/* Collapsible Content */}
             <div className={`transition-all duration-300 ease-in-out ${isStatsExpanded ? 'max-h-96' : 'max-h-0 overflow-hidden'}`}>
               <div className="px-4 md:px-6 pb-4 md:pb-6">
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
@@ -1119,7 +1216,7 @@ const Matches = () => {
                   className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#EA7B7B] to-[#D25353] text-white rounded-lg hover:opacity-90 transition font-medium shadow-md"
                 >
                   <FiFilter className="text-sm md:text-base" />
-                  <span className="text-sm md:text-base">Enhanced Filters</span>
+                  <span className="text-sm md:text-base">Filters</span>
                   {getActiveFilterCount() > 0 && (
                     <span className="bg-white text-[#D25353] text-xs font-bold px-2 py-0.5 rounded-full">
                       {getActiveFilterCount()}
@@ -1133,7 +1230,6 @@ const Matches = () => {
             {showFilters && (
               <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
                 <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-                  {/* Header */}
                   <div className="sticky top-0 bg-gradient-to-r from-[#EA7B7B] to-[#D25353] text-white p-4 md:p-6">
                     <div className="flex justify-between items-center">
                       <div className="flex items-center gap-3">
@@ -1154,7 +1250,6 @@ const Matches = () => {
                     )}
                   </div>
 
-                  {/* Scrollable Content */}
                   <div className="overflow-y-auto flex-1 p-4 md:p-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                       {/* Age Range */}
@@ -1296,26 +1391,6 @@ const Matches = () => {
                         </div>
                       </div>
 
-                      {/* Blood Group */}
-                      <div className="bg-gradient-to-br from-[#FFEAD3]/30 to-white p-4 rounded-xl border border-[#FFEAD3]">
-                        <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                          <FiAlertCircle className="text-[#D25353]" /> Blood Group
-                        </h4>
-                        <div className="grid grid-cols-2 gap-2">
-                          {filterOptions.bloodGroup.map(group => (
-                            <label key={group} className="flex items-center gap-2 cursor-pointer">
-                              <input
-                                type="checkbox"
-                                checked={activeFilters.bloodGroup.includes(group)}
-                                onChange={() => handleFilterChange('bloodGroup', group)}
-                                className="rounded border-[#FFEAD3] text-[#D25353] focus:ring-[#EA7B7B]"
-                              />
-                              <span className="text-sm text-gray-700">{group}</span>
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-
                       {/* Profession */}
                       <div className="bg-gradient-to-br from-[#FFEAD3]/30 to-white p-4 rounded-xl border border-[#FFEAD3]">
                         <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
@@ -1376,33 +1451,45 @@ const Matches = () => {
                         </div>
                       </div>
 
-                      {/* Home City */}
-                      {/* Home City - Replace the dropdown with input field */}
+                      {/* Home City & Current Town */}
                       <div className="bg-gradient-to-br from-[#FFEAD3]/30 to-white p-4 rounded-xl border border-[#FFEAD3]">
-                        <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                          <FiHome className="text-[#D25353]" /> Home City
-                        </h4>
-                        <input
-                          type="text"
-                          value={activeFilters.homeCity}
-                          onChange={(e) => handleFilterChange('homeCity', e.target.value)}
-                          className="w-full px-3 py-2 border border-[#FFEAD3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EA7B7B] focus:border-transparent text-sm"
-                          placeholder="Enter city name..."
-                        />
-                      </div>
+                        <div className="space-y-5">
+                          <div>
+                            <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                              <FiHome className="text-[#D25353]" /> Home City
+                            </h4>
+                            <input
+                              type="text"
+                              value={activeFilters.homeCity}
+                              onChange={(e) => {
+                                const safeValue = e.target.value
+                                  .replace(/[^a-zA-Z\s]/g, "")
+                                  .replace(/\s{2,}/g, " ");
+                                handleFilterChange("homeCity", safeValue);
+                              }}
+                              className="w-full px-3 py-2 border border-[#FFEAD3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EA7B7B] focus:border-transparent text-sm"
+                              placeholder="Enter city name..."
+                            />
+                          </div>
 
-                      {/* Current City - Replace the dropdown with input field */}
-                      <div className="bg-gradient-to-br from-[#FFEAD3]/30 to-white p-4 rounded-xl border border-[#FFEAD3]">
-                        <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                          <FiMapPin className="text-[#D25353]" /> Current Town
-                        </h4>
-                        <input
-                          type="text"
-                          value={activeFilters.currentCity}
-                          onChange={(e) => handleFilterChange('currentCity', e.target.value)}
-                          className="w-full px-3 py-2 border border-[#FFEAD3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EA7B7B] focus:border-transparent text-sm"
-                          placeholder="Enter town name..."
-                        />
+                          <div>
+                            <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                              <FiMapPin className="text-[#D25353]" /> Current Town
+                            </h4>
+                            <input
+                              type="text"
+                              value={activeFilters.currentCity}
+                              onChange={(e) => {
+                                const safeValue = e.target.value
+                                  .replace(/[^a-zA-Z\s]/g, "")
+                                  .replace(/\s{2,}/g, " ");
+                                handleFilterChange("currentCity", safeValue);
+                              }}
+                              className="w-full px-3 py-2 border border-[#FFEAD3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EA7B7B] focus:border-transparent text-sm"
+                              placeholder="Enter town name..."
+                            />
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1445,7 +1532,6 @@ const Matches = () => {
                         </span>
                       ));
                     } else if (activeFilters[key]) {
-                      // Format display names for better readability
                       const displayKey = key === 'minAge' ? 'Min Age' :
                         key === 'maxAge' ? 'Max Age' :
                           key === 'minHeight' ? 'Min Height' :
@@ -1696,7 +1782,7 @@ const Matches = () => {
                     Publish your profile to start seeing matches based on your preferences.
                   </p>
                   <button
-                    onClick={() => navigate('/profile')}
+                    onClick={() => navigate('/profile#plan')}
                     className="inline-flex items-center gap-2 md:gap-3 px-6 md:px-8 py-2.5 md:py-3.5 bg-gradient-to-r from-[#EA7B7B] to-[#D25353] text-white rounded-lg md:rounded-xl hover:shadow-lg md:hover:shadow-xl transition-all font-medium text-sm md:text-lg"
                   >
                     <FiEdit2 /> Publish Your Profile
@@ -1766,6 +1852,12 @@ const Matches = () => {
           </div>
         </div>
       )}
+      <PremiumUpgradeNotification
+        userMembershipType={finalData?.membershipType || 'free'}
+        isProfilePublished={finalData?.isProfilePublished || false}
+        onUpgrade={handleUpgradePlan}
+        onClose={() => { }}
+      />
     </>
   );
 };

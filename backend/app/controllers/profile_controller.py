@@ -1,4 +1,3 @@
-# app/controllers/profile_controller.py
 import cloudinary
 import cloudinary.uploader
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form
@@ -153,13 +152,13 @@ async def upload_profile_image(
         if not email:
             raise HTTPException(status_code=400, detail="Email is required")
         
-        # Check file size (max 5MB)
+        # Check file size (max 2MB)
         file.file.seek(0, 2)  # Seek to end
         file_size = file.file.tell()  # Get size
         file.file.seek(0)  # Reset to beginning
         
-        if file_size > 5 * 1024 * 1024:  # 5MB
-            raise HTTPException(status_code=400, detail="File size exceeds 5MB limit")
+        if file_size > 2 * 1024 * 1024:  # 2MB
+            raise HTTPException(status_code=400, detail="File size exceeds 2MB limit")
         
         # Check file type
         allowed_types = ["image/jpeg", "image/png", "image/jpg", "image/gif"]

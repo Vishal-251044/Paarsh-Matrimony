@@ -9,6 +9,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import Select from "react-select";
 import Swal from 'sweetalert2';
 import { useUserContext } from '../context/UserContext';
+
 import {
   FiSettings,
   FiEdit2,
@@ -290,10 +291,30 @@ const Section = ({ title, children }) => (
 );
 
 // FormBox component
-const FormBox = ({ title, children, isEditing, setIsEditing, loadingSaveProfile }) => (
+const FormBox = ({ title, children, isEditing, setIsEditing, loadingSaveProfile, sectionProgress, requiredFields = [], optionalFields = [] }) => (
   <div className="bg-white rounded-xl shadow-md p-4 md:p-6 mb-6">
-    <div className="flex justify-between items-center mb-6">
-      <h2 className="text-xl font-bold text-gray-800">{title}</h2>
+    <div className="flex justify-between items-start mb-6">
+      <div>
+        <h2 className="text-xl font-bold text-gray-800">{title}</h2>
+        {sectionProgress !== undefined && (
+          <div className="mt-2">
+            <div className="flex items-center gap-2 mb-1">
+              <div className="w-32 bg-gray-200 rounded-full h-3">
+                <div
+                  className={`h-3 rounded-full transition-all duration-300 ${sectionProgress >= 80 ? 'bg-green-500' : sectionProgress >= 50 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                  style={{ width: `${Math.min(sectionProgress, 100)}%` }}
+                ></div>
+              </div>
+              <span className={`text-sm font-semibold ${sectionProgress >= 80 ? 'text-green-600' : sectionProgress >= 50 ? 'text-yellow-600' : 'text-red-600'}`}>
+                {sectionProgress}%
+              </span>
+            </div>
+            <p className="text-xs text-gray-500">
+              {sectionProgress >= 80 ? '✓ Ready to save' : `⚠ Need ${80 - sectionProgress}% more`}
+            </p>
+          </div>
+        )}
+      </div>
       <button
         onClick={() => setIsEditing(!isEditing)}
         className="flex items-center gap-2 px-4 py-2 text-[oklch(70.4%_0.191_22.216)] hover:bg-[oklch(70.4%_0.191_22.216)]/10 rounded-lg transition disabled:opacity-50"
@@ -312,12 +333,12 @@ const FormBox = ({ title, children, isEditing, setIsEditing, loadingSaveProfile 
 );
 
 // SubmitButton component
-const SubmitButton = ({ text, onClick, loading = false }) => (
+const SubmitButton = ({ text, onClick, loading = false, disabled = false }) => (
   <div className="mt-4 flex justify-center">
     <button
       onClick={onClick}
       className="px-6 py-3 bg-[oklch(70.4%_0.191_22.216)] text-white rounded-lg font-medium hover:opacity-90 transition disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 min-w-[180px]"
-      disabled={loading}
+      disabled={loading || disabled}
     >
       {loading ? (
         <>
@@ -360,11 +381,22 @@ const MembershipCard = ({
   currentPlan,
   handlePayment,
   loadingPayment,
-  handleSubmit
+  handleSubmit,
+  membershipDates = {}
 }) => {
 
   // Check if user is premium (when current plan is premium)
   const isPremiumUser = currentPlan === "Premium Membership";
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    });
+  };
 
   return (
     <div className={`relative border rounded-xl p-6 ${popular ? 'border-[oklch(70.4%_0.191_22.216)]' : 'border-gray-200'}`}>
@@ -389,7 +421,7 @@ const MembershipCard = ({
           <span className="text-2xl font-bold">
             {type === "Free Membership" ? "₹0" : `₹${price}`}
           </span>
-          <span className="text-gray-500">/lifetime</span>
+          <span className="text-gray-500">/year</span>
         </div>
       </div>
       <ul className="space-y-3 mb-6">
@@ -506,8 +538,6 @@ const Profile = () => {
     religion: "",
     caste: "",
     motherTongue: "",
-    gothra: "",
-    rashi: "",
   });
 
   const [educationInfo, setEducationInfo] = useState({
@@ -556,6 +586,166 @@ const Profile = () => {
   const [aboutYourself, setAboutYourself] = useState("");
   const [aboutFamily, setAboutFamily] = useState("");
   const [membershipPlan, setMembershipPlan] = useState("free");
+  const [membershipDates, setMembershipDates] = useState({
+    membershipStartDate: "",
+    membershipExpiryDate: ""
+  });
+
+  // Function to calculate section completion
+  const calculateSectionCompletion = (section) => {
+    let filledFields = 0;
+    let totalWeight = 0;
+
+    // Define weights: required fields = 2, optional fields = 1
+    const REQUIRED_WEIGHT = 2;
+    const OPTIONAL_WEIGHT = 1;
+
+    switch (section) {
+      case 'self':
+        // Self section fields with weights
+        const selfFields = [
+          { value: personalInfo.profileImg?.trim(), required: true, weight: REQUIRED_WEIGHT },
+          { value: personalInfo.fullName?.trim(), required: true, weight: REQUIRED_WEIGHT },
+          { value: personalInfo.gender, required: true, weight: REQUIRED_WEIGHT },
+          { value: personalInfo.dob, required: true, weight: REQUIRED_WEIGHT },
+          { value: personalInfo.age?.toString()?.trim(), required: true, weight: REQUIRED_WEIGHT },
+          { value: personalInfo.maritalStatus, required: true, weight: REQUIRED_WEIGHT },
+          { value: personalInfo.contactNumber?.toString()?.trim(), required: true, weight: REQUIRED_WEIGHT, validation: (val) => val?.length === 10 },
+          { value: locationInfo.country, required: true, weight: REQUIRED_WEIGHT },
+          { value: locationInfo.state?.trim(), required: true, weight: REQUIRED_WEIGHT },
+          { value: locationInfo.city?.trim(), required: true, weight: REQUIRED_WEIGHT },
+          { value: religionInfo.religion, required: true, weight: REQUIRED_WEIGHT },
+          { value: religionInfo.caste?.trim(), required: true, weight: REQUIRED_WEIGHT },
+          { value: educationInfo.highestEducation, required: true, weight: REQUIRED_WEIGHT },
+          { value: careerInfo.profession, required: true, weight: REQUIRED_WEIGHT },
+          { value: careerInfo.employmentType, required: true, weight: REQUIRED_WEIGHT },
+          { value: careerInfo.annualIncome, required: true, weight: REQUIRED_WEIGHT },
+
+          // Optional fields (weight = 1)
+          { value: personalInfo.height?.toString()?.trim(), required: false, weight: OPTIONAL_WEIGHT },
+          { value: personalInfo.weight?.toString()?.trim(), required: false, weight: OPTIONAL_WEIGHT },
+          { value: personalInfo.bloodGroup, required: false, weight: OPTIONAL_WEIGHT },
+          { value: personalInfo.disability, required: false, weight: OPTIONAL_WEIGHT },
+          { value: personalInfo.whatsappNumber?.toString()?.trim(), required: false, weight: OPTIONAL_WEIGHT },
+          { value: locationInfo.pinCode?.trim(), required: false, weight: OPTIONAL_WEIGHT },
+          { value: locationInfo.currentLocation?.trim(), required: false, weight: OPTIONAL_WEIGHT },
+          { value: locationInfo.permanentAddress?.trim(), required: false, weight: OPTIONAL_WEIGHT },
+          { value: religionInfo.motherTongue, required: false, weight: OPTIONAL_WEIGHT },
+          { value: educationInfo.yearOfPassing, required: false, weight: OPTIONAL_WEIGHT },
+          { value: educationInfo.university?.trim(), required: false, weight: OPTIONAL_WEIGHT },
+          { value: careerInfo.jobTitle?.trim(), required: false, weight: OPTIONAL_WEIGHT },
+          { value: careerInfo.companyName?.trim(), required: false, weight: OPTIONAL_WEIGHT },
+          { value: careerInfo.workLocation?.trim(), required: false, weight: OPTIONAL_WEIGHT },
+          { value: aboutYourself?.trim(), required: false, weight: OPTIONAL_WEIGHT },
+        ];
+
+        selfFields.forEach(field => {
+          totalWeight += field.weight;
+
+          if (field.value && field.value !== '' && field.value !== '0') {
+            if (field.validation) {
+              if (field.validation(field.value)) filledFields += field.weight;
+            } else {
+              filledFields += field.weight;
+            }
+          }
+        });
+        break;
+
+      case 'family':
+        // Family section fields with weights
+        const familyFields = [
+          { value: familyInfo.fatherName?.trim(), required: true, weight: REQUIRED_WEIGHT },
+          { value: familyInfo.fatherOccupation?.trim(), required: true, weight: REQUIRED_WEIGHT },
+          { value: familyInfo.motherName?.trim(), required: true, weight: REQUIRED_WEIGHT },
+          { value: familyInfo.familyType, required: true, weight: REQUIRED_WEIGHT },
+          { value: familyInfo.familyStatus, required: true, weight: REQUIRED_WEIGHT },
+
+          // Optional fields
+          { value: familyInfo.motherOccupation?.trim(), required: false, weight: OPTIONAL_WEIGHT },
+          { value: familyInfo.brothers?.toString()?.trim(), required: false, weight: OPTIONAL_WEIGHT },
+          { value: familyInfo.sisters?.toString()?.trim(), required: false, weight: OPTIONAL_WEIGHT },
+          { value: familyInfo.familyLocation?.trim(), required: false, weight: OPTIONAL_WEIGHT },
+          { value: familyInfo.nativePlace?.trim(), required: false, weight: OPTIONAL_WEIGHT },
+          { value: aboutFamily?.trim(), required: false, weight: OPTIONAL_WEIGHT },
+        ];
+
+        familyFields.forEach(field => {
+          totalWeight += field.weight;
+          if (field.value && field.value !== '') {
+            filledFields += field.weight;
+          }
+        });
+        break;
+
+      case 'partner':
+        // Partner section fields with weights
+        const partnerFields = [
+          { value: partnerInfo.preferredAgeRange, required: true, weight: REQUIRED_WEIGHT },
+          { value: partnerInfo.preferredMaritalStatus, required: true, weight: REQUIRED_WEIGHT },
+          { value: partnerInfo.preferredReligion, required: true, weight: REQUIRED_WEIGHT },
+          { value: partnerInfo.preferredCaste?.trim(), required: true, weight: REQUIRED_WEIGHT },
+          { value: partnerInfo.preferredEducation, required: true, weight: REQUIRED_WEIGHT },
+          { value: partnerInfo.preferredProfession, required: true, weight: REQUIRED_WEIGHT },
+          { value: partnerInfo.preferredIncome, required: true, weight: REQUIRED_WEIGHT },
+          { value: partnerInfo.preferredLocation?.trim(), required: true, weight: REQUIRED_WEIGHT },
+
+          // Optional fields
+          { value: partnerInfo.preferredHeight?.toString()?.trim(), required: false, weight: OPTIONAL_WEIGHT },
+          { value: partnerInfo.preferredMotherTongue, required: false, weight: OPTIONAL_WEIGHT },
+          { value: partnerInfo.settledIn, required: false, weight: OPTIONAL_WEIGHT },
+          { value: partnerInfo.lookingFor?.trim(), required: false, weight: OPTIONAL_WEIGHT },
+        ];
+
+        partnerFields.forEach(field => {
+          totalWeight += field.weight;
+          if (field.value && field.value !== '' && field.value !== '0') {
+            filledFields += field.weight;
+          }
+        });
+        break;
+    }
+
+    return totalWeight > 0 ? Math.round((filledFields / totalWeight) * 100) : 0;
+  };
+
+  // Calculate all section progress
+  const calculateAllProgress = () => {
+    const selfProgress = calculateSectionCompletion('self');
+    const familyProgress = calculateSectionCompletion('family');
+    const partnerProgress = calculateSectionCompletion('partner');
+
+    const progress = {
+      self: selfProgress,
+      family: familyProgress,
+      partner: partnerProgress
+    };
+
+    setProfileProgress(progress);
+
+    // Check if all sections are at least 80% complete
+    const allComplete = Object.values(progress).every(p => p >= 80);
+    setProfileCompleted(allComplete);
+
+    return { progress, allComplete };
+  };
+
+  // Update progress when form data changes
+  useEffect(() => {
+    if (user) {
+      calculateAllProgress();
+    }
+  }, [
+    personalInfo,
+    locationInfo,
+    religionInfo,
+    educationInfo,
+    careerInfo,
+    familyInfo,
+    partnerInfo,
+    aboutYourself,
+    aboutFamily
+  ]);
 
   const checkMembershipStatus = async () => {
     try {
@@ -578,6 +768,15 @@ const Profile = () => {
       checkMembershipStatus();
     }
   }, [user]);
+
+  useEffect(() => {
+    const hash = window.location.hash;
+
+    if (hash === '#plan') {
+      setActiveSection('plan');
+      window.history.replaceState(null, '', '/profile');
+    }
+  }, []);
 
   // Simple function to update membership plan (just for switching to free plan)
   const updateMembershipPlanInProfile = async (planType) => {
@@ -694,8 +893,15 @@ const Profile = () => {
             setIsProfilePublished(profile.isPublished || false);
             setMembershipPlan(profile.membershipPlan || "free");
 
-            // Check profile completion
-            checkProfileCompletion(profile);
+            if (profile.membershipStartDate) {
+              setMembershipDates({
+                membershipStartDate: profile.membershipStartDate,
+                membershipExpiryDate: profile.membershipExpiryDate || ""
+              });
+            }
+
+            // Calculate initial profile completion
+            calculateAllProgress();
             // Update user context
             updateUserProfile({
               userEmail: parsedUser.email,
@@ -717,60 +923,6 @@ const Profile = () => {
 
     loadProfile();
   }, [navigate]);
-
-  // Check profile completion percentage
-  const checkProfileCompletion = (profile) => {
-    const sections = ['self', 'family', 'partner'];
-    const progress = {};
-
-    sections.forEach(section => {
-      let filledFields = 0;
-      let totalFields = 0;
-
-      switch (section) {
-        case 'self':
-          const selfFields = {
-            ...profile.personalInfo,
-            ...profile.locationInfo,
-            ...profile.religionInfo,
-            ...profile.educationInfo,
-            ...profile.careerInfo,
-            aboutYourself: profile.aboutYourself
-          };
-          totalFields = Object.keys(selfFields).length;
-          filledFields = Object.values(selfFields).filter(val =>
-            val !== undefined && val !== null && val !== '' && val !== 0
-          ).length;
-          break;
-
-        case 'family':
-          const familyFields = {
-            ...profile.familyInfo,
-            aboutFamily: profile.aboutFamily
-          };
-          totalFields = Object.keys(familyFields).length;
-          filledFields = Object.values(familyFields).filter(val =>
-            val !== undefined && val !== null && val !== '' && val !== 0
-          ).length;
-          break;
-
-        case 'partner':
-          totalFields = Object.keys(profile.partnerInfo || {}).length;
-          filledFields = Object.values(profile.partnerInfo || {}).filter(val =>
-            val !== undefined && val !== null && val !== '' && val !== 0
-          ).length;
-          break;
-      }
-
-      progress[section] = totalFields > 0 ? Math.round((filledFields / totalFields) * 100) : 0;
-    });
-
-    setProfileProgress(progress);
-
-    // Check if all sections are at least 80% complete
-    const allComplete = Object.values(progress).every(p => p >= 80);
-    setProfileCompleted(allComplete);
-  };
 
   const handleFeedbackSubmit = async () => {
     // Trim all feedback fields
@@ -868,8 +1020,8 @@ const Profile = () => {
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error("Image size should be less than 5MB");
+      if (file.size > 2 * 1024 * 1024) {
+        toast.error("Image size should be less than 2MB");
         return;
       }
 
@@ -904,7 +1056,7 @@ const Profile = () => {
     }
   };
 
-  // Validation functions for each section
+  // Validation functions for each section - returns true/false and error message
   const validateSelfInfo = () => {
     // Trim all fields before validation
     const trimmedPersonalInfo = {
@@ -926,8 +1078,6 @@ const Profile = () => {
     const trimmedReligionInfo = {
       ...religionInfo,
       caste: religionInfo.caste?.trim(),
-      gothra: religionInfo.gothra?.trim(),
-      rashi: religionInfo.rashi?.trim()
     };
 
     const trimmedEducationInfo = {
@@ -963,37 +1113,71 @@ const Profile = () => {
     const missingFields = requiredFields.filter(item => !item.field || item.field.toString().trim() === "");
 
     // Check if profile image is uploaded
-    if (!personalInfo.profileImg || personalInfo.profileImg.trim() === "") {
-      toast.error("Please upload a profile image");
-      return false;
+    if (!personalInfo.profileImg ||
+      personalInfo.profileImg.trim() === "" ||
+      personalInfo.profileImg === "data:," ||
+      personalInfo.profileImg.includes("data:image/") && personalInfo.profileImg.length < 100 ||
+      personalInfo.profileImg.includes("placeholder")) {
+      return { isValid: false, message: "Valid profile image is required. Please upload a clear profile picture." };
     }
 
     if (missingFields.length > 0) {
       const fieldNames = missingFields.map(item => item.name).join(", ");
-      toast.error(`Please fill in required fields: ${fieldNames}`);
-      return false;
+      return { isValid: false, message: `Missing required fields: ${fieldNames}` };
     }
 
     // Validate contact number
-    if (trimmedPersonalInfo.contactNumber && trimmedPersonalInfo.contactNumber.length !== 10) {
-      toast.error("Contact number must be 10 digits");
-      return false;
+    if (!trimmedPersonalInfo.contactNumber || trimmedPersonalInfo.contactNumber.length !== 10) {
+      return { isValid: false, message: "Contact number must be exactly 10 digits" };
     }
 
     // Validate whatsapp number if provided
     if (trimmedPersonalInfo.whatsappNumber && trimmedPersonalInfo.whatsappNumber.length !== 10) {
-      toast.error("WhatsApp number must be 10 digits");
-      return false;
+      return { isValid: false, message: "WhatsApp number must be 10 digits" };
+    }
+
+    if (trimmedPersonalInfo.contactNumber) {
+      const firstDigit = trimmedPersonalInfo.contactNumber.charAt(0);
+      if (!['6', '7', '8', '9'].includes(firstDigit)) {
+        return { isValid: false, message: "Mobile number should start with 6, 7, 8, or 9" };
+      }
     }
 
     // Validate age
     const ageNum = parseInt(trimmedPersonalInfo.age);
     if (isNaN(ageNum) || ageNum < 18 || ageNum > 100) {
-      toast.error("Age must be between 18 and 100");
-      return false;
+      return { isValid: false, message: "Age must be between 18 and 100" };
     }
 
-    return true;
+    if (trimmedPersonalInfo.dob) {
+      const dobDate = new Date(trimmedPersonalInfo.dob);
+      const today = new Date();
+
+      // Calculate age from DOB
+      let calculatedAge = today.getFullYear() - dobDate.getFullYear();
+      const monthDiff = today.getMonth() - dobDate.getMonth();
+
+      // Adjust if birthday hasn't occurred this year yet
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dobDate.getDate())) {
+        calculatedAge--;
+      }
+
+      // Allow 1 year difference tolerance
+      if (Math.abs(calculatedAge - ageNum) > 1) {
+        return {
+          isValid: false,
+          message: `Age (${ageNum}) doesn't match Date of Birth (would be ${calculatedAge} years old)`
+        };
+      }
+    }
+
+    // Check if self section is at least 80% complete
+    const selfProgress = calculateSectionCompletion('self');
+    if (selfProgress < 80) {
+      return { isValid: false, message: `Self information only ${selfProgress}% complete` };
+    }
+
+    return { isValid: true, message: "Validation successful" };
   };
 
   const validateFamilyInfo = () => {
@@ -1020,22 +1204,25 @@ const Profile = () => {
 
     if (missingFields.length > 0) {
       const fieldNames = missingFields.map(item => item.name).join(", ");
-      toast.error(`Please fill in required fields: ${fieldNames}`);
-      return false;
+      return { isValid: false, message: `Missing required fields: ${fieldNames}` };
     }
 
     // Validate brothers and sisters are numbers
     if (isNaN(trimmedFamilyInfo.brothers) || trimmedFamilyInfo.brothers < 0) {
-      toast.error("Number of brothers must be a valid number");
-      return false;
+      return { isValid: false, message: "Invalid number of brothers" };
     }
 
     if (isNaN(trimmedFamilyInfo.sisters) || trimmedFamilyInfo.sisters < 0) {
-      toast.error("Number of sisters must be a valid number");
-      return false;
+      return { isValid: false, message: "Invalid number of sisters" };
     }
 
-    return true;
+    // Check if family section is at least 80% complete
+    const familyProgress = calculateSectionCompletion('family');
+    if (familyProgress < 80) {
+      return { isValid: false, message: `Family information only ${familyProgress}% complete` };
+    }
+
+    return { isValid: true, message: "Validation successful" };
   };
 
   const validatePartnerInfo = () => {
@@ -1062,17 +1249,21 @@ const Profile = () => {
 
     if (missingFields.length > 0) {
       const fieldNames = missingFields.map(item => item.name).join(", ");
-      toast.error(`Please fill in required fields: ${fieldNames}`);
-      return false;
+      return { isValid: false, message: `Missing required fields: ${fieldNames}` };
     }
 
     // Validate preferred height if provided
     if (trimmedPartnerInfo.preferredHeight && (isNaN(trimmedPartnerInfo.preferredHeight) || trimmedPartnerInfo.preferredHeight < 100 || trimmedPartnerInfo.preferredHeight > 250)) {
-      toast.error("Preferred height must be between 100cm and 250cm");
-      return false;
+      return { isValid: false, message: "Preferred height must be between 100cm and 250cm" };
     }
 
-    return true;
+    // Check if partner section is at least 80% complete
+    const partnerProgress = calculateSectionCompletion('partner');
+    if (partnerProgress < 80) {
+      return { isValid: false, message: `Partner preferences only ${partnerProgress}% complete` };
+    }
+
+    return { isValid: true, message: "Validation successful" };
   };
 
   const handleSubmit = async (section) => {
@@ -1103,8 +1294,6 @@ const Profile = () => {
     const trimmedReligionInfo = {
       ...religionInfo,
       caste: religionInfo.caste?.trim(),
-      gothra: religionInfo.gothra?.trim(),
-      rashi: religionInfo.rashi?.trim()
     };
 
     const trimmedEducationInfo = {
@@ -1140,20 +1329,21 @@ const Profile = () => {
     const trimmedAboutFamily = aboutFamily?.trim() || "";
 
     // Validate based on section
-    let isValid = false;
+    let validationResult = { isValid: false, message: "" };
 
     if (section === "Self") {
-      isValid = validateSelfInfo();
+      validationResult = validateSelfInfo();
     } else if (section === "Family") {
-      isValid = validateFamilyInfo();
+      validationResult = validateFamilyInfo();
     } else if (section === "Partner Preferences") {
-      isValid = validatePartnerInfo();
+      validationResult = validatePartnerInfo();
     } else if (section === "Membership Plan") {
       // No validation needed for membership plan
-      isValid = true;
+      validationResult = { isValid: true, message: "Validation successful" };
     }
 
-    if (!isValid) {
+    if (!validationResult.isValid) {
+      toast.error(`Cannot save ${section}: ${validationResult.message}`);
       return; // Stop if validation fails
     }
 
@@ -1251,8 +1441,8 @@ const Profile = () => {
         setAboutYourself(trimmedAboutYourself);
         setAboutFamily(trimmedAboutFamily);
 
-        // Update completion status
-        checkProfileCompletion(profileData);
+        // Recalculate completion status
+        calculateAllProgress();
       }
 
     } catch (err) {
@@ -1270,15 +1460,41 @@ const Profile = () => {
   };
 
   const handlePostProfile = async () => {
-    if (!profileCompleted) {
-      toast.error(
-        "Please complete your profile before publishing. All sections must be at least 80% complete."
-      );
+    // Calculate current completion status
+    const { progress, allComplete } = calculateAllProgress();
+
+    // First check if all sections have enough data (at least 80%)
+    if (!allComplete) {
+      const incompleteSections = [];
+      if (progress.self < 80) incompleteSections.push(`Self (${progress.self}%)`);
+      if (progress.family < 80) incompleteSections.push(`Family (${progress.family}%)`);
+      if (progress.partner < 80) incompleteSections.push(`Partner (${progress.partner}%)`);
+
+      toast.error(`Profile is incomplete. The following sections need at least 80%: ${incompleteSections.join(', ')}`);
+      return;
+    }
+
+    // Then validate required fields
+    const selfValidation = validateSelfInfo();
+    const familyValidation = validateFamilyInfo();
+    const partnerValidation = validatePartnerInfo();
+
+    if (!selfValidation.isValid || !familyValidation.isValid || !partnerValidation.isValid) {
+      toast.error("Cannot publish profile. Please complete all required fields.");
+      return;
+    }
+
+    // Double-check all sections are at least 80%
+    if (progress.self < 80 || progress.family < 80 || progress.partner < 80) {
+      toast.error(`Profile completion insufficient: Self ${progress.self}%, Family ${progress.family}%, Partner ${progress.partner}%. All sections need at least 80%.`);
       return;
     }
 
     setLoadingState('postProfile', true);
     try {
+      // Show publishing message
+      toast.info("Publishing profile...", { autoClose: false, toastId: "publishing" });
+
       // Final save before publishing
       const profileData = {
         email: user.email,
@@ -1303,11 +1519,28 @@ const Profile = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
+      // Remove the "publishing" toast
+      toast.dismiss("publishing");
+
       setIsProfilePublished(true);
-      toast.success("Profile published successfully! Now visible to other members.");
+      toast.success("🎉 Profile published successfully! Now visible to other members.");
+
     } catch (err) {
-      console.error(err);
-      toast.error(err.response?.data?.detail || "Failed to publish profile");
+      console.error("Publish error:", err);
+
+      // Remove the "publishing" toast
+      toast.dismiss("publishing");
+
+      // Check if it's a validation error from backend
+      if (err.response?.status === 400) {
+        toast.error("Data is insufficient. Please check all required fields.");
+      } else if (err.response?.status === 401) {
+        toast.error("Session expired. Please login again.");
+      } else if (err.message === "Network Error") {
+        toast.error("Network error. Please check your connection.");
+      } else {
+        toast.error("Failed to publish profile. Please try again.");
+      }
     } finally {
       setLoadingState('postProfile', false);
     }
@@ -1411,9 +1644,9 @@ const Profile = () => {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_SAV5YlU6Yyoefc",
         amount: order.amount,
         currency: order.currency,
-        name: "Matrimony Service",
+        name: "Paarsh Matrimony",
         description: `${planType} Membership`,
-        image: "https://example.com/your_logo.jpg",
+        image: "/logo.png",
         order_id: order.id,
         handler: async function (response) {
           try {
@@ -1577,8 +1810,14 @@ const Profile = () => {
             {/* Settings Icon - Top Right Corner */}
             <div className="absolute top-4 right-4 z-10">
               <FiSettings
-                size={28}
-                className="cursor-pointer text-gray-600 hover:text-[oklch(70.4%_0.191_22.216)] transition"
+                className="
+    w-7 h-7
+    cursor-pointer
+    text-gray-600
+    hover:text-[oklch(70.4%_0.191_22.216)]
+    transition
+    flex-shrink-0
+  "
                 onClick={() => setShowSettings(!showSettings)}
               />
               {showSettings && (
@@ -1681,7 +1920,7 @@ const Profile = () => {
                   {user.email}
                 </p>
 
-                {/* Profile Completion Status */}
+                {/* Profile Completion Status - Always shows real-time calculation */}
                 <div className="mb-4">
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-sm font-medium text-gray-700">
@@ -1851,7 +2090,9 @@ const Profile = () => {
                     </div>
                   </div>
                   <p className="text-gray-600 mb-4">
-                    If you only want to hide your profile from other members temporarily, use the "Hide Profile" option instead.
+                    {isProfilePublished ?
+                      "If you only want to hide your profile from other members temporarily, use the \"Hide Profile\" option instead." :
+                      "Your profile is currently hidden and not visible to other members. You can publish it anytime to make it visible."}
                   </p>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3">
@@ -1914,7 +2155,12 @@ const Profile = () => {
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
                       rows={3}
                       value={feedback.experience}
-                      onChange={(e) => setFeedback({ ...feedback, experience: e.target.value })}
+                      onChange={(e) => {
+                        const safeValue = e.target.value
+                          .replace(/[^a-zA-Z0-9\s.,'-]/g, "")
+                          .replace(/\s{2,}/g, " ");
+                        setFeedback({ ...feedback, experience: safeValue });
+                      }}
                       onBlur={(e) => {
                         const trimmedValue = e.target.value.trim();
                         if (trimmedValue !== e.target.value) {
@@ -1940,7 +2186,7 @@ const Profile = () => {
                           disabled={loadingStates.feedbackSubmit}
                         >
                           {star <= feedback.rating ? (
-                            <FiStar className="fill-yellow-400 text-yellow-400" />
+                            <FiStar className="fill-red-400 text-red-400" />
                           ) : (
                             <FiStar className="text-gray-300 hover:text-yellow-400" />
                           )}
@@ -1960,7 +2206,12 @@ const Profile = () => {
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
                       rows={2}
                       value={feedback.suggestions}
-                      onChange={(e) => setFeedback({ ...feedback, suggestions: e.target.value })}
+                      onChange={(e) => {
+                        const safeValue = e.target.value
+                          .replace(/[^a-zA-Z0-9\s.,'-]/g, "")
+                          .replace(/\s{2,}/g, " ");
+                        setFeedback({ ...feedback, suggestions: safeValue });
+                      }}
                       onBlur={(e) => {
                         const trimmedValue = e.target.value.trim();
                         if (trimmedValue !== e.target.value) {
@@ -2006,7 +2257,11 @@ const Profile = () => {
             {["self", "family", "partner", "plan", "post"].map((tab) => (
               <button
                 key={tab}
-                onClick={() => setActiveSection(tab)}
+                onClick={() => {
+                  setActiveSection(tab);
+                  // Update URL hash without page reload
+                  window.location.hash = tab;
+                }}
                 className={`px-4 md:px-6 py-2 md:py-3 rounded-lg font-medium transition whitespace-nowrap text-sm md:text-base ${activeSection === tab
                   ? "bg-[oklch(70.4%_0.191_22.216)] text-white"
                   : "bg-white text-gray-700 hover:bg-gray-100"
@@ -2030,6 +2285,7 @@ const Profile = () => {
                 isEditing={isEditing}
                 setIsEditing={setIsEditing}
                 loadingSaveProfile={loadingStates.saveProfile}
+                sectionProgress={profileProgress.self}
               >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Profile Image Upload */}
@@ -2068,7 +2324,7 @@ const Profile = () => {
                             <span className="font-semibold text-red-500">* Required:</span> Upload a clear profile picture for better matches (.jpg, .png).
                           </p>
                           <p className="text-sm text-gray-500 mb-4">
-                            Recommended size: 500x500px, Max size: 5MB
+                            Recommended size: 500x500px, Max size: 2MB
                           </p>
                           {isEditing && (
                             <>
@@ -2105,9 +2361,16 @@ const Profile = () => {
                       <Input
                         label="Full Name *"
                         value={personalInfo.fullName}
-                        onChange={(val) => setPersonalInfo(prev => ({ ...prev, fullName: val }))}
+                        onChange={(val) => {
+                          const safeValue = val
+                            .replace(/\s{2,}/g, " ")
+                            .slice(0, 50);
+
+                          setPersonalInfo(prev => ({ ...prev, fullName: safeValue }));
+                        }}
                         placeholder="Enter your full name"
                         isEditing={isEditing}
+                        maxLength={50}
                       />
                       <Input
                         label="Gender *"
@@ -2128,9 +2391,14 @@ const Profile = () => {
                         label="Age *"
                         type="number"
                         value={personalInfo.age}
-                        onChange={(val) => setPersonalInfo(prev => ({ ...prev, age: val }))}
+                        onChange={(val) => {
+                          const safeValue = val.replace(/\D/g, "").slice(0, 3); // only digits, max 3
+                          setPersonalInfo(prev => ({ ...prev, age: safeValue }));
+                        }}
                         placeholder="Enter your age"
                         isEditing={isEditing}
+                        min={0}
+                        maxLength={3}
                       />
                       <Input
                         label="Marital Status *"
@@ -2144,16 +2412,24 @@ const Profile = () => {
                         <Input
                           label="Height (cm)"
                           value={personalInfo.height}
-                          onChange={(val) => setPersonalInfo(prev => ({ ...prev, height: val }))}
+                          onChange={(val) => {
+                            const safeValue = val.replace(/\D/g, "").slice(0, 3); // only numbers, max 3 digits
+                            setPersonalInfo(prev => ({ ...prev, height: safeValue }));
+                          }}
                           placeholder="Height in cm"
                           isEditing={isEditing}
+                          maxLength={3}
                         />
                         <Input
                           label="Weight (kg)"
                           value={personalInfo.weight}
-                          onChange={(val) => setPersonalInfo(prev => ({ ...prev, weight: val }))}
+                          onChange={(val) => {
+                            const safeValue = val.replace(/\D/g, "").slice(0, 3); // only numbers, max 3 digits
+                            setPersonalInfo(prev => ({ ...prev, weight: safeValue }));
+                          }}
                           placeholder="Weight in kg"
                           isEditing={isEditing}
+                          maxLength={3}
                         />
                       </div>
                       <Input
@@ -2204,35 +2480,59 @@ const Profile = () => {
                         <Input
                           label="State *"
                           value={locationInfo.state}
-                          onChange={(val) => setLocationInfo(prev => ({ ...prev, state: val }))}
+                          onChange={(val) => {
+                            const safeValue = val
+                              .replace(/[^a-zA-Z\s]/g, "")
+                              .replace(/\s{2,}/g, " ");
+                            setLocationInfo(prev => ({ ...prev, state: safeValue }));
+                          }}
                           placeholder="Enter your state"
                           isEditing={isEditing}
                         />
                         <Input
                           label="City *"
                           value={locationInfo.city}
-                          onChange={(val) => setLocationInfo(prev => ({ ...prev, city: val }))}
+                          onChange={(val) => {
+                            const safeValue = val
+                              .replace(/[^a-zA-Z\s]/g, "")
+                              .replace(/\s{2,}/g, " ");
+                            setLocationInfo(prev => ({ ...prev, city: safeValue }));
+                          }}
                           placeholder="Enter your city"
                           isEditing={isEditing}
                         />
                         <Input
                           label="Pin Code"
                           value={locationInfo.pinCode}
-                          onChange={(val) => setLocationInfo(prev => ({ ...prev, pinCode: val }))}
+                          onChange={(val) => {
+                            const safeValue = val.replace(/\D/g, "").slice(0, 6);
+                            setLocationInfo(prev => ({ ...prev, pinCode: safeValue }));
+                          }}
                           placeholder="Enter pin code"
                           isEditing={isEditing}
+                          maxLength={6}
                         />
                         <Input
                           label="Current Town"
                           value={locationInfo.currentLocation}
-                          onChange={(val) => setLocationInfo(prev => ({ ...prev, currentLocation: val }))}
+                          onChange={(val) => {
+                            const safeValue = val
+                              .replace(/[^a-zA-Z\s]/g, "")
+                              .replace(/\s{2,}/g, " ");
+                            setLocationInfo(prev => ({ ...prev, currentLocation: safeValue }));
+                          }}
                           placeholder="Current location"
                           isEditing={isEditing}
                         />
                         <Textarea
                           label="Permanent Address"
                           value={locationInfo.permanentAddress}
-                          onChange={(val) => setLocationInfo(prev => ({ ...prev, permanentAddress: val }))}
+                          onChange={(val) => {
+                            const safeValue = val
+                              .replace(/[^a-zA-Z0-9\s,./-]/g, "")
+                              .replace(/\s{2,}/g, " ");
+                            setLocationInfo(prev => ({ ...prev, permanentAddress: safeValue }));
+                          }}
                           rows={3}
                           placeholder="Enter your permanent address..."
                           isEditing={isEditing}
@@ -2254,30 +2554,23 @@ const Profile = () => {
                         <Input
                           label="Caste *"
                           value={religionInfo.caste}
-                          onChange={(val) => setReligionInfo(prev => ({ ...prev, caste: val }))}
+                          onChange={(val) => {
+                            const safeValue = val
+                              .replace(/[^a-zA-Z\s]/g, "")
+                              .replace(/\s{2,}/g, " ");
+
+                            setReligionInfo(prev => ({ ...prev, caste: safeValue }));
+                          }}
                           placeholder="Enter your caste"
                           isEditing={isEditing}
                         />
+
                         <Input
                           label="Mother Tongue"
                           type="select"
                           options={["Marathi", "Hindi", "English", "Gujarati", "Tamil", "Telugu", "Bengali", "Other"]}
                           value={religionInfo.motherTongue}
                           onChange={(val) => setReligionInfo(prev => ({ ...prev, motherTongue: val }))}
-                          isEditing={isEditing}
-                        />
-                        <Input
-                          label="Gothra"
-                          value={religionInfo.gothra}
-                          onChange={(val) => setReligionInfo(prev => ({ ...prev, gothra: val }))}
-                          placeholder="Enter your gothra"
-                          isEditing={isEditing}
-                        />
-                        <Input
-                          label="Rashi / Nakshatra"
-                          value={religionInfo.rashi}
-                          onChange={(val) => setReligionInfo(prev => ({ ...prev, rashi: val }))}
-                          placeholder="Enter your rashi/nakshatra"
                           isEditing={isEditing}
                         />
                       </div>
@@ -2312,10 +2605,17 @@ const Profile = () => {
                       <Input
                         label="University/College"
                         value={educationInfo.university}
-                        onChange={(val) => setEducationInfo(prev => ({ ...prev, university: val }))}
+                        onChange={(val) => {
+                          const safeValue = val
+                            .replace(/[^a-zA-Z\s.&-]/g, "")
+                            .replace(/\s{2,}/g, " ");
+
+                          setEducationInfo(prev => ({ ...prev, university: safeValue }));
+                        }}
                         placeholder="Enter university/college name"
                         isEditing={isEditing}
                       />
+
                     </div>
                   </Section>
 
@@ -2342,14 +2642,24 @@ const Profile = () => {
                       <Input
                         label="Job Title"
                         value={careerInfo.jobTitle}
-                        onChange={(val) => setCareerInfo(prev => ({ ...prev, jobTitle: val }))}
+                        onChange={(val) => {
+                          const safeValue = val
+                            .replace(/[^a-zA-Z\s.&/-]/g, "")
+                            .replace(/\s{2,}/g, " ");
+                          setCareerInfo(prev => ({ ...prev, jobTitle: safeValue }));
+                        }}
                         placeholder="Enter your job title"
                         isEditing={isEditing}
                       />
                       <Input
                         label="Company Name"
                         value={careerInfo.companyName}
-                        onChange={(val) => setCareerInfo(prev => ({ ...prev, companyName: val }))}
+                        onChange={(val) => {
+                          const safeValue = val
+                            .replace(/[^a-zA-Z\s.&/-]/g, "")
+                            .replace(/\s{2,}/g, " ");
+                          setCareerInfo(prev => ({ ...prev, companyName: safeValue }));
+                        }}
                         placeholder="Enter company name"
                         isEditing={isEditing}
                       />
@@ -2372,7 +2682,12 @@ const Profile = () => {
                       <Input
                         label="Work Location"
                         value={careerInfo.workLocation}
-                        onChange={(val) => setCareerInfo(prev => ({ ...prev, workLocation: val }))}
+                        onChange={(val) => {
+                          const safeValue = val
+                            .replace(/[^a-zA-Z\s.-]/g, "")
+                            .replace(/\s{2,}/g, " ");
+                          setCareerInfo(prev => ({ ...prev, workLocation: safeValue }));
+                        }}
                         placeholder="Enter work location"
                         isEditing={isEditing}
                       />
@@ -2384,7 +2699,12 @@ const Profile = () => {
                     <Textarea
                       label="About Yourself"
                       value={aboutYourself}
-                      onChange={setAboutYourself}
+                      onChange={(val) => {
+                        const safeValue = val
+                          .replace(/[^a-zA-Z0-9\s.,'-]/g, "")
+                          .replace(/\s{2,}/g, " ");
+                        setAboutYourself(safeValue);
+                      }}
                       rows={5}
                       placeholder="Tell us about yourself, your interests, hobbies, and personality..."
                       isEditing={isEditing}
@@ -2395,7 +2715,13 @@ const Profile = () => {
                   text="Save Self Information"
                   onClick={() => handleSubmit("Self")}
                   loading={loadingStates.saveProfile}
+                  disabled={profileProgress.self < 80}
                 />
+                {profileProgress.self < 80 && (
+                  <p className="text-center text-red-500 text-sm mt-2">
+                    Self information must be at least 80% complete to save. Current: {profileProgress.self}%
+                  </p>
+                )}
               </FormBox>
             )}
 
@@ -2405,6 +2731,7 @@ const Profile = () => {
                 isEditing={isEditing}
                 setIsEditing={setIsEditing}
                 loadingSaveProfile={loadingStates.saveProfile}
+                sectionProgress={profileProgress.family}
               >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-6">
@@ -2413,28 +2740,48 @@ const Profile = () => {
                         <Input
                           label="Father's Name *"
                           value={familyInfo.fatherName}
-                          onChange={(val) => setFamilyInfo(prev => ({ ...prev, fatherName: val }))}
+                          onChange={(val) => {
+                            const safeValue = val
+                              .replace(/[^a-zA-Z\s.'-]/g, "")
+                              .replace(/\s{2,}/g, " ");
+                            setFamilyInfo(prev => ({ ...prev, fatherName: safeValue }));
+                          }}
                           placeholder="Enter father's name"
                           isEditing={isEditing}
                         />
                         <Input
                           label="Father's Occupation *"
                           value={familyInfo.fatherOccupation}
-                          onChange={(val) => setFamilyInfo(prev => ({ ...prev, fatherOccupation: val }))}
+                          onChange={(val) => {
+                            const safeValue = val
+                              .replace(/[^a-zA-Z\s.'-]/g, "")
+                              .replace(/\s{2,}/g, " ");
+                            setFamilyInfo(prev => ({ ...prev, fatherOccupation: safeValue }));
+                          }}
                           placeholder="Enter father's occupation"
                           isEditing={isEditing}
                         />
                         <Input
                           label="Mother's Name *"
                           value={familyInfo.motherName}
-                          onChange={(val) => setFamilyInfo(prev => ({ ...prev, motherName: val }))}
+                          onChange={(val) => {
+                            const safeValue = val
+                              .replace(/[^a-zA-Z\s.'-]/g, "")
+                              .replace(/\s{2,}/g, " ");
+                            setFamilyInfo(prev => ({ ...prev, motherName: safeValue }));
+                          }}
                           placeholder="Enter mother's name"
                           isEditing={isEditing}
                         />
                         <Input
                           label="Mother's Occupation"
                           value={familyInfo.motherOccupation}
-                          onChange={(val) => setFamilyInfo(prev => ({ ...prev, motherOccupation: val }))}
+                          onChange={(val) => {
+                            const safeValue = val
+                              .replace(/[^a-zA-Z\s.'-]/g, "")
+                              .replace(/\s{2,}/g, " ");
+                            setFamilyInfo(prev => ({ ...prev, motherOccupation: safeValue }));
+                          }}
                           placeholder="Enter mother's occupation"
                           isEditing={isEditing}
                         />
@@ -2448,17 +2795,27 @@ const Profile = () => {
                             label="Number of Brothers"
                             type="number"
                             value={familyInfo.brothers}
-                            onChange={(val) => setFamilyInfo(prev => ({ ...prev, brothers: parseInt(val) || 0 }))}
+                            onChange={(val) => {
+                              const safeValue = val.replace(/\D/g, "").slice(0, 2); // only digits, max 2
+                              setFamilyInfo(prev => ({ ...prev, brothers: safeValue }));
+                            }}
                             placeholder="0"
                             isEditing={isEditing}
+                            min={0}
+                            maxLength={2}
                           />
                           <Input
                             label="Number of Sisters"
                             type="number"
                             value={familyInfo.sisters}
-                            onChange={(val) => setFamilyInfo(prev => ({ ...prev, sisters: parseInt(val) || 0 }))}
+                            onChange={(val) => {
+                              const safeValue = val.replace(/\D/g, "").slice(0, 2); // only digits, max 2
+                              setFamilyInfo(prev => ({ ...prev, sisters: safeValue }));
+                            }}
                             placeholder="0"
                             isEditing={isEditing}
+                            min={0}
+                            maxLength={2}
                           />
                         </div>
                       </div>
@@ -2487,14 +2844,24 @@ const Profile = () => {
                         <Input
                           label="Family Location"
                           value={familyInfo.familyLocation}
-                          onChange={(val) => setFamilyInfo(prev => ({ ...prev, familyLocation: val }))}
+                          onChange={(val) => {
+                            const safeValue = val
+                              .replace(/[^a-zA-Z\s]/g, "")
+                              .replace(/\s{2,}/g, " ");
+                            setFamilyInfo(prev => ({ ...prev, familyLocation: safeValue }));
+                          }}
                           placeholder="Enter family location"
                           isEditing={isEditing}
                         />
                         <Input
                           label="Native Place"
                           value={familyInfo.nativePlace}
-                          onChange={(val) => setFamilyInfo(prev => ({ ...prev, nativePlace: val }))}
+                          onChange={(val) => {
+                            const safeValue = val
+                              .replace(/[^a-zA-Z\s]/g, "")
+                              .replace(/\s{2,}/g, " ");
+                            setFamilyInfo(prev => ({ ...prev, nativePlace: safeValue }));
+                          }}
                           placeholder="Enter native place"
                           isEditing={isEditing}
                         />
@@ -2506,7 +2873,12 @@ const Profile = () => {
                     <Textarea
                       label="About Family"
                       value={aboutFamily}
-                      onChange={setAboutFamily}
+                      onChange={(val) => {
+                        const safeValue = val
+                          .replace(/[^a-zA-Z0-9\s.,'-]/g, "")
+                          .replace(/\s{2,}/g, " ");
+                        setAboutFamily(safeValue);
+                      }}
                       rows={5}
                       placeholder="Tell us about your family background, values, and traditions..."
                       isEditing={isEditing}
@@ -2517,7 +2889,13 @@ const Profile = () => {
                   text="Save Family Information"
                   onClick={() => handleSubmit("Family")}
                   loading={loadingStates.saveProfile}
+                  disabled={profileProgress.family < 80}
                 />
+                {profileProgress.family < 80 && (
+                  <p className="text-center text-red-500 text-sm mt-2">
+                    Family information must be at least 80% complete to save. Current: {profileProgress.family}%
+                  </p>
+                )}
               </FormBox>
             )}
 
@@ -2527,6 +2905,7 @@ const Profile = () => {
                 isEditing={isEditing}
                 setIsEditing={setIsEditing}
                 loadingSaveProfile={loadingStates.saveProfile}
+                sectionProgress={profileProgress.partner}
               >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-6">
@@ -2543,9 +2922,14 @@ const Profile = () => {
                         <Input
                           label="Preferred Height (cm)"
                           value={partnerInfo.preferredHeight}
-                          onChange={(val) => setPartnerInfo(prev => ({ ...prev, preferredHeight: val }))}
+                          onChange={(val) => {
+                            const safeValue = val.replace(/\D/g, "").slice(0, 3);
+                            setPartnerInfo(prev => ({ ...prev, preferredHeight: safeValue }));
+                          }}
                           placeholder="Preferred height in cm"
                           isEditing={isEditing}
+                          maxLength={3}
+                          min={0}
                         />
                         <Input
                           label="Preferred Marital Status *"
@@ -2571,7 +2955,12 @@ const Profile = () => {
                         <Input
                           label="Preferred Caste *"
                           value={partnerInfo.preferredCaste}
-                          onChange={(val) => setPartnerInfo(prev => ({ ...prev, preferredCaste: val }))}
+                          onChange={(val) => {
+                            const safeValue = val
+                              .replace(/[^a-zA-Z\s]/g, "")
+                              .replace(/\s{2,}/g, " ");
+                            setPartnerInfo(prev => ({ ...prev, preferredCaste: safeValue }));
+                          }}
                           placeholder="Enter preferred caste"
                           isEditing={isEditing}
                         />
@@ -2644,7 +3033,12 @@ const Profile = () => {
                         <Input
                           label="Preferred Location *"
                           value={partnerInfo.preferredLocation}
-                          onChange={(val) => setPartnerInfo(prev => ({ ...prev, preferredLocation: val }))}
+                          onChange={(val) => {
+                            const safeValue = val
+                              .replace(/[^a-zA-Z\s.-]/g, "")
+                              .replace(/\s{2,}/g, " ");
+                            setPartnerInfo(prev => ({ ...prev, preferredLocation: safeValue }));
+                          }}
                           placeholder="Enter preferred location"
                           isEditing={isEditing}
                         />
@@ -2664,7 +3058,12 @@ const Profile = () => {
                     <Textarea
                       label="What are you looking for in a partner?"
                       value={partnerInfo.lookingFor}
-                      onChange={(val) => setPartnerInfo(prev => ({ ...prev, lookingFor: val }))}
+                      onChange={(val) => {
+                        const safeValue = val
+                          .replace(/[^a-zA-Z0-9\s.,'-]/g, "")
+                          .replace(/\s{2,}/g, " ");
+                        setPartnerInfo(prev => ({ ...prev, lookingFor: safeValue }));
+                      }}
                       rows={5}
                       placeholder="Describe the qualities and characteristics you are looking for in a partner..."
                       isEditing={isEditing}
@@ -2675,7 +3074,13 @@ const Profile = () => {
                   text="Save Partner Preferences"
                   onClick={() => handleSubmit("Partner Preferences")}
                   loading={loadingStates.saveProfile}
+                  disabled={profileProgress.partner < 80}
                 />
+                {profileProgress.partner < 80 && (
+                  <p className="text-center text-red-500 text-sm mt-2">
+                    Partner preferences must be at least 80% complete to save. Current: {profileProgress.partner}%
+                  </p>
+                )}
               </FormBox>
             )}
 
@@ -2694,6 +3099,32 @@ const Profile = () => {
                       <div className="text-sm">
                         <p className="text-blue-800 font-medium">You are a Premium Member</p>
                         <p className="text-blue-700">You have access to all premium features. Free plan is no longer available.</p>
+                        {/* ADD THIS SECTION to show membership dates */}
+                        {membershipDates.membershipStartDate && (
+                          <div className="mt-2 text-blue-800 bg-blue-100/50 p-2 rounded-lg">
+                            <p className="font-medium">Your Membership Details:</p>
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4 mt-1 text-xs">
+                              <div className="flex items-center gap-1">
+                                <FiCalendar className="text-green-500" size={12} />
+                                <span>Started: {new Date(membershipDates.membershipStartDate).toLocaleDateString('en-IN', {
+                                  day: '2-digit',
+                                  month: 'short',
+                                  year: 'numeric'
+                                })}</span>
+                              </div>
+                              {membershipDates.membershipExpiryDate && (
+                                <div className="flex items-center gap-1">
+                                  <FiCalendar className="text-orange-500" size={12} />
+                                  <span>Expires: {new Date(membershipDates.membershipExpiryDate).toLocaleDateString('en-IN', {
+                                    day: '2-digit',
+                                    month: 'short',
+                                    year: 'numeric'
+                                  })}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -2719,6 +3150,7 @@ const Profile = () => {
                       setMembershipPlan("free");
                       updateMembershipPlanInProfile("free");
                     }}
+                    membershipDates={membershipDates}
                   />
                   <MembershipCard
                     type="Premium Membership"
@@ -2738,6 +3170,7 @@ const Profile = () => {
                     handleSubmit={() => {
                       // Not used for premium - handled by handlePayment
                     }}
+                    membershipDates={membershipDates}
                   />
                 </div>
               </div>
@@ -2750,44 +3183,79 @@ const Profile = () => {
                   <h2 className="text-xl font-bold text-gray-800">Profile Publishing</h2>
                 </div>
 
-                {/* Profile Completion Check */}
-                {!profileCompleted && (
-                  <div className="bg-yellow-50 border border-yellow-100 rounded-xl p-6 mb-6">
-                    <div className="flex items-start gap-4">
-                      <div className="p-3 bg-yellow-100 rounded-lg">
-                        <MdWarning className="text-yellow-600 text-2xl" />
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                          Profile Incomplete
-                        </h3>
-                        <p className="text-gray-600 mb-3">
-                          Your profile must be at least 80% complete in all sections before publishing.
-                        </p>
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <span>Self Information</span>
-                            <span className={`px-2 py-1 rounded text-sm ${profileProgress.self >= 80 ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                {/* Always show completion status, even if published */}
+                <div className="bg-blue-50 border border-blue-100 rounded-xl p-6 mb-6">
+                  <div className="flex items-start gap-4">
+                    <div className="p-3 bg-blue-100 rounded-lg">
+                      <FiInfo className="text-blue-600 text-2xl" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                        Profile Completion Status
+                      </h3>
+                      <div className="space-y-3">
+                        <div>
+                          <div className="flex justify-between mb-1">
+                            <span className="text-sm font-medium text-gray-700">Self Information</span>
+                            <span className={`text-sm font-semibold ${profileProgress.self >= 80 ? 'text-green-600' : 'text-yellow-600'}`}>
                               {profileProgress.self}%
                             </span>
                           </div>
-                          <div className="flex items-center justify-between">
-                            <span>Family Information</span>
-                            <span className={`px-2 py-1 rounded text-sm ${profileProgress.family >= 80 ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div
+                              className={`h-2 rounded-full ${profileProgress.self >= 80 ? 'bg-green-500' : 'bg-yellow-500'}`}
+                              style={{ width: `${profileProgress.self}%` }}
+                            ></div>
+                          </div>
+                        </div>
+
+                        <div>
+                          <div className="flex justify-between mb-1">
+                            <span className="text-sm font-medium text-gray-700">Family Information</span>
+                            <span className={`text-sm font-semibold ${profileProgress.family >= 80 ? 'text-green-600' : 'text-yellow-600'}`}>
                               {profileProgress.family}%
                             </span>
                           </div>
-                          <div className="flex items-center justify-between">
-                            <span>Partner Preferences</span>
-                            <span className={`px-2 py-1 rounded text-sm ${profileProgress.partner >= 80 ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div
+                              className={`h-2 rounded-full ${profileProgress.family >= 80 ? 'bg-green-500' : 'bg-yellow-500'}`}
+                              style={{ width: `${profileProgress.family}%` }}
+                            ></div>
+                          </div>
+                        </div>
+
+                        <div>
+                          <div className="flex justify-between mb-1">
+                            <span className="text-sm font-medium text-gray-700">Partner Preferences</span>
+                            <span className={`text-sm font-semibold ${profileProgress.partner >= 80 ? 'text-green-600' : 'text-yellow-600'}`}>
                               {profileProgress.partner}%
                             </span>
                           </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div
+                              className={`h-2 rounded-full ${profileProgress.partner >= 80 ? 'bg-green-500' : 'bg-yellow-500'}`}
+                              style={{ width: `${profileProgress.partner}%` }}
+                            ></div>
+                          </div>
+                        </div>
+
+                        <div className="pt-3 border-t">
+                          <div className="flex justify-between">
+                            <span className="font-medium text-gray-800">Overall Progress</span>
+                            <span className={`font-bold ${profileCompleted ? 'text-green-600' : 'text-yellow-600'}`}>
+                              {Math.round((profileProgress.self + profileProgress.family + profileProgress.partner) / 3)}%
+                            </span>
+                          </div>
+                          <p className={`text-sm mt-1 ${profileCompleted ? 'text-green-700' : 'text-yellow-700'}`}>
+                            {profileCompleted
+                              ? "✓ All sections have at least 80% completion. Ready to publish!"
+                              : `⚠ Need at least 80% in all sections. Current: Self ${profileProgress.self}%, Family ${profileProgress.family}%, Partner ${profileProgress.partner}%`}
+                          </p>
                         </div>
                       </div>
                     </div>
                   </div>
-                )}
+                </div>
 
                 {/* Information Section */}
                 <div className="bg-blue-50 border border-blue-100 rounded-xl p-6 mb-6">
@@ -2825,26 +3293,55 @@ const Profile = () => {
                   </div>
                 </div>
 
-                {/* Publish Button */}
+                {/* Publish/Unpublish Button */}
                 <div className="flex justify-center">
-                  <button
-                    onClick={handlePostProfile}
-                    disabled={!profileCompleted || isProfilePublished || loadingStates.postProfile}
-                    className={`px-6 py-3 rounded-lg font-medium transition ${!profileCompleted || isProfilePublished || loadingStates.postProfile
-                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                      : 'bg-[oklch(70.4%_0.191_22.216)] text-white hover:opacity-90'
-                      }`}
-                  >
-                    {loadingStates.postProfile ? (
-                      <>
-                        <FiLoader className="animate-spin inline mr-2" />
-                        Publishing...
-                      </>
-                    ) : (
-                      isProfilePublished ? "Profile Already Published" : "Publish Profile"
-                    )}
-                  </button>
+                  {isProfilePublished ? (
+                    <div className="text-center">
+                      <p className="text-green-600 font-medium mb-4">
+                        ✓ Your profile is currently published and visible to other members.
+                      </p>
+                      <div className="flex gap-4 justify-center">
+                        <button
+                          onClick={handleRemoveProfile}
+                          disabled={loadingStates.removeProfile}
+                          className="px-6 py-3 bg-yellow-500 text-white rounded-lg font-medium hover:opacity-90 transition disabled:opacity-70 disabled:cursor-not-allowed"
+                        >
+                          {loadingStates.removeProfile ? (
+                            <>
+                              <FiLoader className="animate-spin inline mr-2" />
+                              Hiding...
+                            </>
+                          ) : (
+                            "Hide Profile"
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={handlePostProfile}
+                      disabled={!profileCompleted || loadingStates.postProfile}
+                      className={`px-6 py-3 rounded-lg font-medium transition ${!profileCompleted || loadingStates.postProfile
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        : 'bg-[oklch(70.4%_0.191_22.216)] text-white hover:opacity-90'
+                        }`}
+                    >
+                      {loadingStates.postProfile ? (
+                        <>
+                          <FiLoader className="animate-spin inline mr-2" />
+                          Publishing...
+                        </>
+                      ) : (
+                        "Publish Profile"
+                      )}
+                    </button>
+                  )}
                 </div>
+                {!profileCompleted && !isProfilePublished && (
+                  <p className="text-center text-red-500 text-sm mt-4">
+                    Cannot publish profile. All sections must be at least 80% complete.
+                  </p>
+                )}
               </div>
             )}
           </div>

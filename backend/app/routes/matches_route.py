@@ -1,4 +1,3 @@
-# In app/routes/matches_route.py - UPDATE the import and controller initialization
 from fastapi import APIRouter, HTTPException, Depends
 from app.controllers.matches_controller import MatchesController
 from typing import List, Dict

@@ -21,9 +21,7 @@ export default function LoginPage() {
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
-  // ============================
   // Email / Password Login & Signup
-  // ============================
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -64,7 +62,7 @@ export default function LoginPage() {
       }
 
       const response = await axios.post(`${BACKEND_URL}/auth/google`, {
-        credential: credentialResponse.credential, // Send as credential
+        credential: credentialResponse.credential, 
       });
 
       localStorage.setItem("user", JSON.stringify(response.data.user));
@@ -75,7 +73,6 @@ export default function LoginPage() {
     } catch (err) {
       console.error("Full Google login error:", err);
 
-      // More detailed error messages
       if (err.response?.status === 401) {
         toast.error("Google authentication failed. Please try again.");
       } else if (err.response?.data?.detail) {
@@ -88,7 +85,6 @@ export default function LoginPage() {
     }
   };
 
-  // Also add error handler for Google button
   const handleGoogleError = () => {
     console.error("Google button error");
     toast.error("Failed to initialize Google login. Check your console.");
@@ -207,16 +203,16 @@ export default function LoginPage() {
                   onSuccess={handleGoogleSuccess}
                   onError={handleGoogleError}
                   useOneTap={false}
-                  shape="rectangular"
+                  shape="circle"
                   size="large"
-                  width="280" // Fixed width
+                  width="280" 
                   logo_alignment="left"
-                  text="signin_with" // Use standard "Sign in with Google" text
+                  text="signin_with" 
                   render={(renderProps) => (
                     <button
                       onClick={renderProps.onClick}
                       disabled={loading || renderProps.disabled}
-                      className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-white border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-md transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
+                      className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-red border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-md transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
                     >
                       <svg className="w-5 h-5" viewBox="0 0 24 24">
                         <path
@@ -253,7 +249,7 @@ export default function LoginPage() {
                 Already have an account?{" "}
                 <span
                   onClick={() => setIsSignup(false)}
-                  className="cursor-pointer"
+                  className="cursor-pointer text-red-400 relative after:content-[''] after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[1.5px] after:bg-red-400 after:transition-all after:duration-300 hover:after:w-full"
                   style={{ color: gold }}
                 >
                   Sign in
@@ -264,7 +260,7 @@ export default function LoginPage() {
                 Don&apos;t have an account?{" "}
                 <span
                   onClick={() => setIsSignup(true)}
-                  className="cursor-pointer"
+                  className="cursor-pointer text-red-400 relative after:content-[''] after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[1.5px] after:bg-red-400 after:transition-all after:duration-300 hover:after:w-full"
                   style={{ color: gold }}
                 >
                   Sign up

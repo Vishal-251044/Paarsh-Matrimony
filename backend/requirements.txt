@@ -18,4 +18,5 @@ cloudinary
 razorpay
 
 numpy
+textblob
 

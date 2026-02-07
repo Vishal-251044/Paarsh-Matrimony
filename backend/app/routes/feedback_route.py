@@ -1,4 +1,3 @@
-# app/routes/feedback_route.py
 from fastapi import APIRouter, HTTPException, status
 from app.controllers.feedback_controller import feedback_controller
 from app.models.Feedback import Feedback

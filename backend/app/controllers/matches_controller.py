@@ -1,10 +1,8 @@
-# app/controllers/matches_controller.py - FINAL VERSION
 from typing import List, Dict, Any, Optional, Tuple
 import re
 from datetime import datetime
 import numpy as np
 
-# Import the database directly
 from app.database import db
 
 class MatchesController:
@@ -212,18 +210,6 @@ class MatchesController:
         
         # Ensure score doesn't exceed 100
         final_score = min(100.0, max(0.0, round(final_score, 2)))
-        
-        # DEBUG logging (uncomment for testing)
-        # print(f"\n=== MATCH SCORE CALCULATION ===")
-        # print(f"User: {user_profile.get('personalInfo', {}).get('fullName', 'Unknown')}")
-        # print(f"Match: {other_profile.get('personalInfo', {}).get('fullName', 'Unknown')}")
-        # print(f"Location Score: {location_score} (User pref: '{user_pref_location}' vs Other current: '{other_current_location}')")
-        # print(f"Age Score: {age_score} (User: {user_age}, Other: {other_age}, Pref: {user_pref_age_range})")
-        # print(f"Height Score: {height_score} (User pref: {user_pref_height}, Other: {other_height})")
-        # print(f"Education Score: {education_score} (User pref: {user_pref_education}, Other: {other_education})")
-        # print(f"Profession Score: {profession_score} (User pref: {user_pref_profession}, Other: {other_profession})")
-        # print(f"Marital Score: {marital_score} (User pref: {user_pref_marital}, Other: {other_marital})")
-        # print(f"Final Score: {final_score}")
         
         return final_score
     
@@ -1027,28 +1013,47 @@ class MatchesController:
     def _calculate_blood_score(self, user_blood: str, other_blood: str) -> float:
         """Calculate blood group compatibility score (0-1)"""
         if not user_blood or not other_blood:
-            return 0.5
+            return 0.6
         
+        user_blood = user_blood.upper()
+        other_blood = other_blood.upper()
+        
+        # Same blood group
         if user_blood == other_blood:
-            return 1.0
+            return 0.9
         
-        # Blood compatibility for marriage/children
-        compatible_pairs = {
-            'A+': ['A+', 'AB+'],
-            'A-': ['A-', 'A+', 'AB+', 'AB-'],
-            'B+': ['B+', 'AB+'],
-            'B-': ['B-', 'B+', 'AB+', 'AB-'],
-            'O+': ['A+', 'B+', 'AB+', 'O+'],
-            'O-': ['A-', 'A+', 'B-', 'B+', 'AB-', 'AB+', 'O-', 'O+'],
-            'AB+': ['AB+'],
-            'AB-': ['AB-', 'AB+']
+        # Extract ABO type and Rh factor
+        user_type = user_blood[:2] if len(user_blood) > 1 else user_blood[0]
+        other_type = other_blood[:2] if len(other_blood) > 1 else other_blood[0]
+        user_rh = '+' if '+' in user_blood else '-' if '-' in user_blood else ''
+        other_rh = '+' if '+' in other_blood else '-' if '-' in other_blood else ''
+        
+        # Compatible blood types (simplified)
+        compatible_types = {
+            'O': ['O', 'A', 'B', 'AB'],
+            'A': ['A', 'AB'],
+            'B': ['B', 'AB'],
+            'AB': ['AB']
         }
         
-        if user_blood in compatible_pairs:
-            if other_blood in compatible_pairs[user_blood]:
-                return 0.8  # Compatible
+        # Check compatibility
+        if user_type in compatible_types and other_type in compatible_types[user_type]:
+            type_score = 0.8
+        else:
+            type_score = 0.4
         
-        return 0.5  # Not particularly compatible
+        # Rh factor compatibility
+        if user_rh == other_rh:
+            rh_score = 0.9
+        elif user_rh == '+' and other_rh == '-':
+            rh_score = 0.7  # Positive can receive from negative
+        elif user_rh == '-' and other_rh == '+':
+            rh_score = 0.5  # Negative receiving from positive may have issues
+        else:
+            rh_score = 0.6
+        
+        # Combine scores
+        return (type_score * 0.6) + (rh_score * 0.4)
     
     def _calculate_disability_score(self, user_disability: str, other_disability: str) -> float:
         """Calculate disability compatibility score (0-1)"""

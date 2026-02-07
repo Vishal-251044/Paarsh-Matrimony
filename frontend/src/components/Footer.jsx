@@ -98,6 +98,14 @@ const Footer = () => {
                                     Privacy Policy
                                 </Link>
                             </li>
+                            <li>
+                                <Link
+                                    to="/contact"
+                                    className="hover:text-[oklch(70.4%_0.191_22.216)] cursor-pointer"
+                                >
+                                    Contact Us
+                                </Link>
+                            </li>
                         </ul>
                     </div>
 

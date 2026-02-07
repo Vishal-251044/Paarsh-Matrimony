@@ -11,8 +11,8 @@ class UserCreate(BaseModel):
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
-                "name": "John Doe",
-                "email": "john@example.com",
+                "name": "xyz",
+                "email": "xyz@example.com",
                 "password": "securepassword123",
                 "google_id": "google_123456"
             }
@@ -26,7 +26,7 @@ class UserLogin(BaseModel):
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
-                "email": "john@example.com",
+                "email": "xyz@example.com",
                 "password": "securepassword123"
             }
         }
@@ -42,8 +42,8 @@ class UserOut(BaseModel):
         json_schema_extra={
             "example": {
                 "id": "507f1f77bcf86cd799439011",
-                "name": "John Doe",
-                "email": "john@example.com",
+                "name": "xyz",
+                "email": "xyz@example.com",
                 "google_id": "google_123456"
             }
         }

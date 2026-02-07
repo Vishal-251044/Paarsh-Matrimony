@@ -1,4 +1,3 @@
-# app/controllers/feedback_controller.py
 from fastapi import HTTPException, status
 from app.models.Feedback import Feedback
 from app.database import db

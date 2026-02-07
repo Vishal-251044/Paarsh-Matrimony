@@ -1,34 +1,34 @@
-# app/main.py
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import os
 
-from app.routes import auth_route, profile_route, payment_route, feedback_route, matches_route
+from app.routes import auth_route, profile_route, payment_route, feedback_route, matches_route, showFeedback_route, contact_route, watchlist_route, watchlistData_route
 
 load_dotenv()
 
 PORT = int(os.getenv("PORT", 5000))
-FRONTEND_URL = os.getenv("FRONTEND_URL")
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 
 app = FastAPI(title="FastAPI Backend")
 
-# CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[FRONTEND_URL],
+    allow_origins=[FRONTEND_URL, "http://127.0.0.1:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Routes
 app.include_router(auth_route.router)
 app.include_router(profile_route.router)
 app.include_router(payment_route.router)
 app.include_router(feedback_route.router)
 app.include_router(matches_route.router)
-# app.include_router(watchlist_route.router)
+app.include_router(showFeedback_route.router)
+app.include_router(contact_route.router)
+app.include_router(watchlist_route.router)
+app.include_router(watchlistData_route.router, prefix="/api")
 
 @app.get("/")
 async def root():

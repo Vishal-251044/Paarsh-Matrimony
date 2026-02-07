@@ -1,10 +1,8 @@
 // src/context/UserContext.jsx
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 
-// Create context
 const UserContext = createContext();
 
-// Custom hook to use the context
 export const useUserContext = () => {
   const context = useContext(UserContext);
   if (!context) {
@@ -13,7 +11,6 @@ export const useUserContext = () => {
   return context;
 };
 
-// Provider component
 export const UserProvider = ({ children }) => {
   const [userProfile, setUserProfile] = useState({
     userEmail: '',
@@ -23,58 +20,102 @@ export const UserProvider = ({ children }) => {
 
   const [isLoading, setIsLoading] = useState(false);
 
-  // Load from localStorage on mount
-  useEffect(() => {
-    const savedData = localStorage.getItem('userProfileContext');
-    if (savedData) {
-      try {
-        const parsedData = JSON.parse(savedData);
-        setUserProfile(parsedData);
-      } catch (error) {
-        console.error('Error parsing saved user data:', error);
+  // Enhanced function to get user from localStorage
+  const getUserFromStorage = useCallback(() => {
+    try {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        const parsed = JSON.parse(storedUser);
+        return parsed;
       }
+    } catch (error) {
+      console.error('Error parsing user from localStorage:', error);
     }
+    return null;
   }, []);
+
+  // Load from localStorage on mount - FIXED VERSION
+  useEffect(() => {
+    const loadInitialData = () => {
+      try {
+        // First try to get from context storage
+        const savedContext = localStorage.getItem('userProfileContext');
+        let contextData = {
+          userEmail: '',
+          isProfilePublished: false,
+          membershipType: 'free'
+        };
+
+        if (savedContext) {
+          try {
+            contextData = JSON.parse(savedContext);
+          } catch (e) {
+            console.error('Error parsing userProfileContext:', e);
+          }
+        }
+
+        // Get user from main user storage
+        const user = getUserFromStorage();
+        
+        // ALWAYS prioritize the email from 'user' storage
+        if (user?.email) {
+          setUserProfile({
+            userEmail: user.email, // <-- CRITICAL: Always use email from 'user'
+            isProfilePublished: contextData.isProfilePublished || false,
+            membershipType: contextData.membershipType || 'free'
+          });
+        } else if (contextData.userEmail) {
+          // Fallback to context data
+          setUserProfile(contextData);
+        }
+        // If neither has email, keep default empty state
+      } catch (error) {
+        console.error('Error loading initial user data:', error);
+      }
+    };
+
+    loadInitialData();
+  }, [getUserFromStorage]);
 
   // Save to localStorage when updated
   useEffect(() => {
-    localStorage.setItem('userProfileContext', JSON.stringify(userProfile));
+    if (userProfile.userEmail) { // Only save if we have email
+      localStorage.setItem('userProfileContext', JSON.stringify(userProfile));
+    }
   }, [userProfile]);
 
-  // Update user profile data
-  const updateUserProfile = (newData) => {
-    setUserProfile(prev => ({
-      ...prev,
-      ...newData
-    }));
-  };
+  // Update user profile data - ENHANCED
+  const updateUserProfile = useCallback((newData) => {
+    setUserProfile(prev => {
+      const updated = {
+        ...prev,
+        ...newData
+      };
+      
+      // Ensure email is always from 'user' storage if available
+      const user = getUserFromStorage();
+      if (user?.email && user.email !== updated.userEmail) {
+        updated.userEmail = user.email;
+      }
+      
+      return updated;
+    });
+  }, [getUserFromStorage]);
 
   // Clear user data (on logout)
-  const clearUserProfile = () => {
+  const clearUserProfile = useCallback(() => {
     setUserProfile({
       userEmail: '',
       isProfilePublished: false,
       membershipType: 'free'
     });
     localStorage.removeItem('userProfileContext');
-  };
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
+  }, []);
 
-  // Get user data from localStorage
-  const getUserFromStorage = () => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      try {
-        return JSON.parse(storedUser);
-      } catch (error) {
-        console.error('Error parsing user from localStorage:', error);
-        return null;
-      }
-    }
-    return null;
-  };
-
-  // Refresh user data from backend (optional)
-  const refreshUserData = async (backendUrl, token) => {
+  // Refresh user data from backend
+  const refreshUserData = useCallback(async (backendUrl, token) => {
     try {
       setIsLoading(true);
       const user = getUserFromStorage();
@@ -83,10 +124,6 @@ export const UserProvider = ({ children }) => {
         return null;
       }
 
-      // You can add backend API call here if needed
-      // const response = await axios.get(`${backendUrl}/profile/get/${user.email}`);
-      
-      // For now, just return stored data
       return user;
     } catch (error) {
       console.error('Error refreshing user data:', error);
@@ -94,22 +131,40 @@ export const UserProvider = ({ children }) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [getUserFromStorage]);
 
   // Check if user is authenticated
-  const isAuthenticated = () => {
-    return !!getUserFromStorage();
-  };
+  const isAuthenticated = useCallback(() => {
+    const token = localStorage.getItem('token');
+    const user = getUserFromStorage();
+    return !!(token && user?.email);
+  }, [getUserFromStorage]);
 
   // Check if user is premium
-  const isPremiumUser = () => {
+  const isPremiumUser = useCallback(() => {
     return userProfile.membershipType === 'premium';
-  };
+  }, [userProfile.membershipType]);
 
   // Check if profile is published
-  const isProfilePublished = () => {
+  const isProfilePublished = useCallback(() => {
     return userProfile.isProfilePublished;
-  };
+  }, [userProfile.isProfilePublished]);
+
+  // Get user email with fallback
+  const getUserEmail = useCallback(() => {
+    if (userProfile.userEmail) {
+      return userProfile.userEmail;
+    }
+    
+    const user = getUserFromStorage();
+    if (user?.email) {
+      // Update context if email was found in storage
+      updateUserProfile({ userEmail: user.email });
+      return user.email;
+    }
+    
+    return '';
+  }, [userProfile.userEmail, getUserFromStorage, updateUserProfile]);
 
   return (
     <UserContext.Provider
@@ -122,7 +177,8 @@ export const UserProvider = ({ children }) => {
         isPremiumUser,
         isProfilePublished,
         isLoading,
-        getUserFromStorage
+        getUserFromStorage,
+        getUserEmail
       }}
     >
       {children}

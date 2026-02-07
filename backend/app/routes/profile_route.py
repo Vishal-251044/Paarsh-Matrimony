@@ -1,4 +1,3 @@
-# app/routes/profile.py
 from fastapi import APIRouter
 from app.controllers.profile_controller import router
 

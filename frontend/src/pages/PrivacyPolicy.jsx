@@ -18,16 +18,16 @@ const PrivacyPolicy = () => {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
 
           {/* Header */}
-          <div className="text-center mb-12">
+          <div className="text-center mb-16">
             <h1
-              className="text-[oklch(70.4%_0.191_22.216)] text-4xl sm:text-5xl mb-4 select-none"
+              className="text-[oklch(70.4%_0.191_22.216)] text-5xl sm:text-6xl mb-6 select-none relative"
               style={{ fontFamily: "'Great Vibes', cursive" }}
             >
-              Privacy Policy
+              <span className="relative inline-block">
+                Privacy Policy
+                <span className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-32 h-1 bg-gradient-to-r from-transparent via-[oklch(70.4%_0.191_22.216)] to-transparent"></span>
+              </span>
             </h1>
-            <p className="text-gray-600">
-              Protecting your privacy is our commitment
-            </p>
           </div>
 
           {/* Content */}
@@ -157,23 +157,25 @@ const PrivacyPolicy = () => {
               </div>
             </section>
 
-            {/* Footer Info */}
-            <section className="border-t pt-6">
-              <div className="flex flex-col sm:flex-row justify-between gap-4">
+            {/* Additional Info Banner */}
+            <div className="mt-10 bg-gradient-to-r from-[oklch(70.4%_0.191_22.216)]/20 to-pink-500/20 rounded-2xl p-6 border border-white/50">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div>
-                  <h3 className="font-bold text-gray-800 mb-1">
-                    Questions or Concerns?
+                  <h3 className="font-bold text-gray-800 text-lg mb-1">
+                    Need Further Clarification?
                   </h3>
-                  <p className="text-gray-600 text-sm">
-                    Contact our Privacy Team at info@paarshinfotech.com
+                  <p className="text-gray-700">
+                    Our legal team is available to answer any questions about our terms.
                   </p>
                 </div>
-                <div className="text-sm text-gray-500">
-                  <p>Last Updated: {new Date().toLocaleDateString()}</p>
-                </div>
+                <a
+                  href='/contact'
+                  className="bg-[oklch(70.4%_0.191_22.216)] text-white px-6 py-3 rounded-xl font-medium hover:opacity-90 transition-opacity whitespace-nowrap"
+                >
+                  Contact Legal Support
+                </a>
               </div>
-            </section>
-
+            </div>
           </div>
         </div>
       </div>

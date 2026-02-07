@@ -5,6 +5,10 @@ from datetime import datetime
 import hmac
 import hashlib
 from app.database import db
+from datetime import datetime, timedelta
+
+start_date = datetime.now()
+expiry_date = start_date + timedelta(days=365)
 
 router = APIRouter()
 
@@ -84,9 +88,11 @@ async def verify_payment(data: dict):
             {
                 "$set": {
                     "membershipPlan": plan,
+                    "membershipStartDate": start_date.isoformat(),
+                    "membershipExpiryDate": expiry_date.isoformat(),
                     "lastUpdated": datetime.now().isoformat()
-                }
-            }
+              }
+           }
         )
         
         return {
@@ -104,15 +110,37 @@ async def verify_payment(data: dict):
 async def check_membership(email: str):
     try:
         profile = await profile_collection.find_one({"email": email})
-        
+
         if not profile:
             raise HTTPException(status_code=404, detail="Profile not found")
-        
+
+        plan = profile.get("membershipPlan", "free")
+        expiry_str = profile.get("membershipExpiryDate")
+
+        # If premium, check expiry
+        if plan != "free" and expiry_str:
+            expiry_date = datetime.fromisoformat(expiry_str)
+
+            if datetime.now() > expiry_date:
+                # downgrade to free
+                await profile_collection.update_one(
+                    {"email": email},
+                    {
+                        "$set": {
+                            "membershipPlan": "free",
+                            "membershipStartDate": "",
+                            "membershipExpiryDate": "",
+                            "lastUpdated": datetime.now().isoformat()
+                        }
+                    }
+                )
+                plan = "free"
+
         return {
-            "membership_plan": profile.get("membershipPlan", "free"),
-            "is_premium": profile.get("membershipPlan") == "premium"
+            "membership_plan": plan,
+            "is_premium": plan != "free"
         }
-        
+
     except Exception as e:
         print(f"Error checking membership: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))

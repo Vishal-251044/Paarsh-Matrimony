@@ -5,8 +5,8 @@ from app.database import db
 import bcrypt
 import os
 import time
-from datetime import datetime  # Add this
-from pydantic import BaseModel  # Add this
+from datetime import datetime  
+from pydantic import BaseModel  
 from google.oauth2 import id_token
 from google.auth.transport import requests
 
@@ -17,9 +17,7 @@ GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 class GoogleToken(BaseModel):
     credential: str
 
-# =========================
 # Manual Signup
-# =========================
 async def signup(user: UserCreate):
     if await db.users.find_one({"email": user.email}):
         raise HTTPException(400, "Email already registered")
@@ -51,9 +49,7 @@ async def signup(user: UserCreate):
     }
 
 
-# =========================
 # Manual Login
-# =========================
 async def login(user: UserLogin):
     existing = await db.users.find_one({"email": user.email})
     if not existing:
@@ -84,9 +80,7 @@ async def login(user: UserLogin):
     }
 
 
-# =========================
-# Google Login (UPDATED)
-# =========================
+# Google Login
 async def google_login(google_token: GoogleToken):
     token = google_token.credential
     
@@ -159,9 +153,7 @@ async def google_login(google_token: GoogleToken):
     }
 
 
-# =========================
 # Set Password (Frontend Profile)
-# =========================
 async def set_password(email: str, new_password: str):
     user = await db.users.find_one({"email": email})
     if not user:

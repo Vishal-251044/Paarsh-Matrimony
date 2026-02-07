@@ -1,4 +1,3 @@
-# app/models/Profile.py
 from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel, EmailStr, Field, validator, ConfigDict
@@ -41,8 +40,6 @@ class ReligionInfo(BaseModel):
     religion: Optional[str] = ""
     caste: Optional[str] = ""
     motherTongue: Optional[str] = ""
-    gothra: Optional[str] = ""
-    rashi: Optional[str] = ""
 
 class EducationInfo(BaseModel):
     highestEducation: Optional[str] = ""
@@ -112,6 +109,8 @@ class Profile(BaseModel):
     aboutYourself: Optional[str] = ""
     aboutFamily: Optional[str] = ""
     membershipPlan: Optional[str] = "free"
+    membershipStartDate: Optional[str] = ""
+    membershipExpiryDate: Optional[str] = ""
     isPublished: Optional[bool] = False
     publishedDate: Optional[str] = ""
     createdDate: Optional[str] = Field(default_factory=lambda: datetime.now().isoformat())
