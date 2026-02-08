@@ -19,4 +19,5 @@ razorpay
 
 numpy
 textblob
-
+google-genai
+httpx

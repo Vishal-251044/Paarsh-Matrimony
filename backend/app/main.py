@@ -13,7 +13,8 @@ from app.routes import (
     contact_route,
     watchlist_route,
     watchlistData_route,
-    delete_route
+    delete_route,
+    marriageAssistance_route
 )
 
 load_dotenv()
@@ -41,6 +42,7 @@ app.include_router(contact_route.router)
 app.include_router(watchlist_route.router)
 app.include_router(watchlistData_route.router, prefix="/api")
 app.include_router(delete_route.router, prefix="/api", tags=["Delete"])
+app.include_router(marriageAssistance_route.router, prefix="/api", tags=["Marriage Assistance"])
 
 @app.get("/")
 async def root():

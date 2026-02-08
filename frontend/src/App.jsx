@@ -1,4 +1,11 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useNavigate,
+  useLocation,
+} from "react-router-dom";
 import { useEffect } from "react";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
@@ -10,23 +17,69 @@ import TermsOfUse from "./pages/TermsOfUse";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import NotFound from "./pages/NotFound";
 import Contact from "./pages/Contact";
+import Admin from "./pages/Admin";
+import { FiSettings } from "react-icons/fi";
 
-// check login
+/* ---------------- AUTH HELPERS ---------------- */
 const isAuthenticated = () => {
   return localStorage.getItem("user");
 };
 
-// Private Route
+const getUserEmail = () => {
+  const user = localStorage.getItem("user");
+  try {
+    return user ? JSON.parse(user).email : null;
+  } catch {
+    return null;
+  }
+};
+
+const isAdmin = () => {
+  const adminEmail = import.meta.env.VITE_ADMIN_EMAIL;
+  return getUserEmail() === adminEmail;
+};
+
+/* ---------------- ROUTES ---------------- */
 const PrivateRoute = ({ children }) => {
   return isAuthenticated() ? children : <Navigate to="/login" replace />;
 };
 
-// Public Route
 const PublicRoute = ({ children }) => {
   return !isAuthenticated() ? children : <Navigate to="/" replace />;
 };
 
-function App() {
+const AdminRoute = ({ children }) => {
+  return isAuthenticated() && isAdmin() ? (
+    children
+  ) : (
+    <Navigate to="/" replace />
+  );
+};
+
+/* ---------------- ADMIN FLOAT BUTTON ---------------- */
+const AdminFloatingButton = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Only admin user
+  if (!isAdmin()) return null;
+
+  // Hide button on admin page
+  if (location.pathname === "/admin") return null;
+
+  return (
+    <button
+      onClick={() => navigate("/admin")}
+      className="fixed bottom-6 right-6 z-50 bg-red-400 hover:bg-red-500 text-white p-4 rounded-full shadow-lg transition-all duration-300 hover:scale-110"
+      title="Admin Panel"
+    >
+      <FiSettings size={22} />
+    </button>
+  );
+};
+
+/* ---------------- MAIN APP WRAPPER ---------------- */
+const AppContent = () => {
   /* ---------------- ZOOM CONTROL ---------------- */
   useEffect(() => {
     const disableZoomKeys = (event) => {
@@ -121,7 +174,9 @@ function App() {
   }, []);
 
   return (
-    <BrowserRouter>
+    <>
+      <AdminFloatingButton />
+
       <Routes>
         {/* Public */}
         <Route path="/" element={<Home />} />
@@ -160,6 +215,16 @@ function App() {
           }
         />
 
+        {/* Admin */}
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute>
+              <Admin />
+            </AdminRoute>
+          }
+        />
+
         {/* Static */}
         <Route path="/contact" element={<Contact />} />
         <Route path="/about" element={<AboutUs />} />
@@ -169,6 +234,15 @@ function App() {
         {/* 404 */}
         <Route path="*" element={<NotFound />} />
       </Routes>
+    </>
+  );
+};
+
+/* ---------------- ROOT APP ---------------- */
+function App() {
+  return (
+    <BrowserRouter>
+      <AppContent />
     </BrowserRouter>
   );
 }

@@ -1774,11 +1774,9 @@ const Watchlist = () => {
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             transition={{ delay: index * 0.15, duration: 0.4 }}
                             whileHover={{
-                              y: -8,
-                              scale: 1.02,
                               boxShadow: `0 20px 40px -15px color-mix(in oklch, ${primaryColor} 25%, transparent)`
                             }}
-                            className="relative bg-white p-5 sm:p-6 md:p-7 rounded-2xl border-2 border-gray-100 shadow-lg hover:shadow-2xl transition-all duration-500 group overflow-hidden"
+                            className="relative bg-white p-3 sm:p-4 md:p-5 rounded-xl border-2 border-gray-100 shadow-lg hover:shadow-2xl transition-all duration-500 group overflow-hidden"
                             style={{
                               background: `linear-gradient(135deg, color-mix(in oklch, ${primaryColor} 10%, white), color-mix(in oklch, ${primaryColor} 5%, white))`
                             }}
@@ -1844,36 +1842,33 @@ const Watchlist = () => {
                         ))}
                       </div>
 
-                      {/* Enhanced Large Modals with Theme */}
+                      {/* Compact Modal Version */}
                       {openMarriage && (
-                        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4 md:p-6">
+                        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4">
                           <motion.div
-                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            transition={{ duration: 0.3 }}
-                            className="bg-white w-full max-w-5xl rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden"
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.2 }}
+                            className="bg-white w-full max-w-3xl rounded-xl shadow-2xl overflow-hidden"
                           >
-                            {/* Modal Header with Theme Gradient */}
-                            <div className="p-4 sm:p-6 border-b" style={{
-                              background: `linear-gradient(135deg, color-mix(in oklch, ${primaryColor} 8%, white), white)`
-                            }}>
+                            {/* Compact Header */}
+                            <div className="p-3 border-b border-gray-200 bg-gradient-to-r from-[#FFEAD3] to-#FFEAD3">
                               <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                  <div className="p-2 rounded-lg" style={{ background: primaryColor }}>
-                                    <HiOutlineSparkles className="text-white" size={20} />
+                                <div className="flex items-center gap-2">
+                                  <div className="p-1.5 rounded-md bg-[#EA7B7B]">
+                                    <HiOutlineSparkles className="text-white text-sm" />
                                   </div>
-                                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Marriage Planning Assistant</h2>
+                                  <h2 className="text-base sm:text-lg font-bold text-gray-900">Marriage Financial Planner</h2>
                                 </div>
                                 <button
                                   onClick={() => setOpenMarriage(false)}
-                                  className="p-2 rounded-full hover:bg-gray-200 transition-colors duration-200"
-                                  style={{ color: primaryColor }}
+                                  className="p-1 rounded-full hover:bg-gray-100 transition-colors"
                                 >
-                                  <FiX size={24} />
+                                  <FiX size={16} className="text-gray-500" />
                                 </button>
                               </div>
                             </div>
-                            <div className="max-h-[75vh] overflow-y-auto p-0">
+                            <div className="max-h-[65vh] sm:max-h-[60vh] overflow-y-auto">
                               <Marriage />
                             </div>
                           </motion.div>
@@ -1881,65 +1876,36 @@ const Watchlist = () => {
                       )}
 
                       {openWedding && (
-                        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4 md:p-6">
+                        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4">
                           <motion.div
-                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            transition={{ duration: 0.3 }}
-                            className="bg-white w-full max-w-5xl rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden"
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.2 }}
+                            className="bg-white w-full max-w-3xl rounded-xl shadow-2xl overflow-hidden"
                           >
-                            {/* Modal Header with Theme Gradient */}
-                            <div className="p-4 sm:p-6 border-b" style={{
-                              background: `linear-gradient(135deg, color-mix(in oklch, ${primaryColor} 8%, white), white)`
-                            }}>
+                            {/* Compact Header */}
+                            <div className="p-3 border-b border-gray-200 bg-gradient-to-r from-[#FFEAD3] to-#FFEAD3">
                               <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                  <div className="p-2 rounded-lg" style={{ background: primaryColor }}>
-                                    <FiTag className="text-white" size={20} />
+                                <div className="flex items-center gap-2">
+                                  <div className="p-1.5 rounded-md bg-[#EA7B7B]">
+                                    <FiTag className="text-white text-sm" />
                                   </div>
-                                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Wedding Services & Discounts</h2>
+                                  <h2 className="text-base sm:text-lg font-bold text-gray-900">Wedding Services & Discounts</h2>
                                 </div>
                                 <button
                                   onClick={() => setOpenWedding(false)}
-                                  className="p-2 rounded-full hover:bg-gray-200 transition-colors duration-200"
-                                  style={{ color: primaryColor }}
+                                  className="p-1 rounded-full hover:bg-gray-100 transition-colors"
                                 >
-                                  <FiX size={24} />
+                                  <FiX size={16} className="text-gray-500" />
                                 </button>
                               </div>
                             </div>
-                            <div className="max-h-[75vh] overflow-y-auto p-0">
+                            <div className="max-h-[65vh] sm:max-h-[60vh] overflow-y-auto">
                               <WeddingServices />
                             </div>
                           </motion.div>
                         </div>
                       )}
-
-                      {/* Additional Theme Info Banner */}
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.5 }}
-                        className="mt-6 sm:mt-8 p-4 sm:p-6 rounded-xl flex items-center justify-between"
-                        style={{
-                          background: `linear-gradient(135deg, color-mix(in oklch, ${primaryColor} 5%, white), white)`,
-                          border: `2px solid color-mix(in oklch, ${primaryColor} 15%, transparent)`
-                        }}
-                      >
-                        <div className="flex items-center gap-3 sm:gap-4">
-                          <div className="p-2 sm:p-3 rounded-lg" style={{ background: `color-mix(in oklch, ${primaryColor} 15%, transparent)` }}>
-                            <FiInfo style={{ color: primaryColor }} size={20} />
-                          </div>
-                          <div>
-                            <h4 className="font-bold text-gray-900 text-sm sm:text-base">All Premium Features Active</h4>
-                            <p className="text-gray-600 text-xs sm:text-sm">Your subscription includes full access to all premium matrimonial services</p>
-                          </div>
-                        </div>
-                        <div className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-bold text-white"
-                          style={{ background: primaryColor }}>
-                          VALID
-                        </div>
-                      </motion.div>
 
                     </div>
                   </motion.div>
