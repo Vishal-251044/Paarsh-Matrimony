@@ -3,6 +3,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useUserContext } from '../context/UserContext';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import Marriage from "../components/MarriageAssistance";
+import WeddingServices from "../components/WeddingServices";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -35,7 +37,10 @@ import {
   FiBarChart2,
   FiTrash2,
   FiCalendar,
-  FiTag
+  FiTag,
+  FiInfo,
+  FiCheckCircle,
+  FiArrowRight
 } from "react-icons/fi";
 import {
   FaVenusMars,
@@ -63,6 +68,8 @@ const Watchlist = () => {
   const [selectedPartner, setSelectedPartner] = useState(null);
   const [showPartnerModal, setShowPartnerModal] = useState(false);
   const [watchlistEmails, setWatchlistEmails] = useState([]);
+  const [openMarriage, setOpenMarriage] = useState(false);
+  const [openWedding, setOpenWedding] = useState(false);
   const [activeFilters, setActiveFilters] = useState({
     maritalStatus: [],
     education: [],
@@ -111,6 +118,11 @@ const Watchlist = () => {
     primaryDark: 'rgb(210, 83, 83)',
     primaryDarker: 'rgb(158, 59, 59)',
     light: 'rgb(255, 234, 211)'
+  };
+
+  // Helper function for primary gradient
+  const getPrimaryGradient = (direction = 'to right') => {
+    return `linear-gradient(${direction}, ${colors.primary}, ${colors.primaryDark})`;
   };
 
   // Priority: 1. location.state, 2. userProfile context, 3. localStorage
@@ -352,7 +364,7 @@ const Watchlist = () => {
       setLoadingPartners(true);
       const token = localStorage.getItem('token');
 
-      // First fetch watchlist emails (like Matches.jsx)
+      // First fetch watchlist emails
       const watchlistResponse = await axios.get(
         `${BACKEND_URL}/api/watchlist/partners/${userData.userEmail}`,
         {
@@ -392,7 +404,6 @@ const Watchlist = () => {
       }
     } catch (err) {
       console.error("Watchlist error:", err);
-      // If 404, it means user has no watchlist yet (which is fine)
       if (err.response && err.response.status === 404) {
         setPartners([]);
         setFilteredPartners([]);
@@ -407,20 +418,15 @@ const Watchlist = () => {
     }
   };
 
-  // Remove from watchlist - FIXED with proper parameters
+  // Remove from watchlist
   const handleRemoveFromWatchlist = async (partnerEmail) => {
-    // CRITICAL FIX: Validate parameter first
     if (!partnerEmail || partnerEmail === "undefined" || partnerEmail === "null") {
       console.error("❌ handleRemoveFromWatchlist called with invalid email:", partnerEmail);
-      console.log("Debug info - userData:", userData);
-      console.log("Debug info - selectedPartner:", selectedPartner);
 
-      // Try to get email from selectedPartner as fallback
       if (selectedPartner) {
         partnerEmail = selectedPartner.personalInfo?.email ||
           selectedPartner.email ||
           selectedPartner.userEmail;
-        console.log("Fallback email from selectedPartner:", partnerEmail);
       }
 
       if (!partnerEmail) {
@@ -442,13 +448,6 @@ const Watchlist = () => {
         return;
       }
 
-      console.log("✅ Removing from watchlist:", {
-        userEmail,
-        partnerEmail,
-        endpoint: `${BACKEND_URL}/api/watchlist-remove`
-      });
-
-      // Send BOTH parameters as query params
       const response = await axios.delete(
         `${BACKEND_URL}/api/watchlist-remove`,
         {
@@ -463,10 +462,7 @@ const Watchlist = () => {
         }
       );
 
-      console.log("✅ Remove response:", response.data);
-
       if (response.data.success) {
-        // Update local states
         setWatchlistEmails(prev => prev.filter(email => email !== partnerEmail));
         setPartners(prev => prev.filter(p => p.personalInfo?.email !== partnerEmail));
         setFilteredPartners(prev => prev.filter(p => p.personalInfo?.email !== partnerEmail));
@@ -481,12 +477,7 @@ const Watchlist = () => {
         toast.error(response.data.error || "Failed to remove from watchlist");
       }
     } catch (error) {
-      console.error("❌ Remove watchlist error:", {
-        error: error.message,
-        status: error.response?.status,
-        data: error.response?.data,
-        paramsSent: { user_email: userData?.userEmail, partner_email: partnerEmail }
-      });
+      console.error("❌ Remove watchlist error:", error);
 
       if (error.response?.status === 422) {
         toast.error("Validation error: Missing required parameters");
@@ -556,7 +547,7 @@ const Watchlist = () => {
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       applyFilters();
-    }, 300); // Debounce for 300ms
+    }, 300);
 
     return () => clearTimeout(timeoutId);
   }, [activeFilters, partners, applyFilters]);
@@ -671,7 +662,6 @@ const Watchlist = () => {
                           e.stopPropagation();
                           e.preventDefault();
 
-                          // Get email from multiple possible locations
                           const email = personalInfo?.email ||
                             partner?.email ||
                             partner?.userEmail ||
@@ -685,14 +675,12 @@ const Watchlist = () => {
                             return;
                           }
 
-                          // Direct removal without waiting for async
                           const userEmail = userData?.userEmail;
                           if (!userEmail) {
                             toast.error("User email not found");
                             return;
                           }
 
-                          // Optimistically update UI first
                           setPartners(prev => prev.filter(p =>
                             p.personalInfo?.email !== email &&
                             p.email !== email &&
@@ -704,9 +692,8 @@ const Watchlist = () => {
                             p.userEmail !== email
                           ));
 
-                          // Then call the API
-                          handleRemoveFromWatchlist(email);
-                          setShowPartnerModal(false);
+                          onRemove(email);
+                          onClose();
                         }}
                         className="flex-1 px-4 py-3 bg-gradient-to-r from-[#D25353] to-[#9E3B3B] text-white rounded-lg hover:opacity-90 transition font-medium flex items-center justify-center gap-2"
                       >
@@ -1051,7 +1038,7 @@ const Watchlist = () => {
     );
   };
 
-  // Enhanced Filters Modal - FIXED: Separate local state for modal
+  // Enhanced Filters Modal
   const FiltersModal = () => {
     const [localFilters, setLocalFilters] = useState(activeFilters);
 
@@ -1158,7 +1145,7 @@ const Watchlist = () => {
                       type="number"
                       value={localFilters.minAge}
                       onChange={(e) => {
-                        let val = e.target.value.replace(/\D/g, ""); // digits only
+                        let val = e.target.value.replace(/\D/g, "");
                         if (Number(val) > 100) val = "100";
                         handleLocalFilterChange("minAge", val.slice(0, 3));
                       }}
@@ -1205,8 +1192,8 @@ const Watchlist = () => {
                       type="number"
                       value={localFilters.minHeight}
                       onChange={(e) => {
-                        let val = e.target.value.replace(/\D/g, ""); // only digits
-                        if (Number(val) > 250) val = "250"; // cap
+                        let val = e.target.value.replace(/\D/g, "");
+                        if (Number(val) > 250) val = "250";
                         handleLocalFilterChange("minHeight", val.slice(0, 3));
                       }}
                       className="w-full px-3 py-2 border border-[#FFEAD3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EA7B7B] focus:border-transparent"
@@ -1252,8 +1239,8 @@ const Watchlist = () => {
                       type="number"
                       value={localFilters.minWeight}
                       onChange={(e) => {
-                        let val = e.target.value.replace(/\D/g, ""); // digits only
-                        if (Number(val) > 200) val = "200"; // cap max
+                        let val = e.target.value.replace(/\D/g, "");
+                        if (Number(val) > 200) val = "200";
                         handleLocalFilterChange("minWeight", val.slice(0, 3));
                       }}
                       className="w-full px-3 py-2 border border-[#FFEAD3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EA7B7B] focus:border-transparent"
@@ -1399,14 +1386,14 @@ const Watchlist = () => {
                       value={localFilters.homeCity}
                       onChange={(e) => {
                         let val = e.target.value;
-                        val = val.replace(/[^a-zA-Z\s]/g, ""); // letters + space
-                        val = val.replace(/\s{2,}/g, " ");     // single space only
-                        val = val.replace(/^\s/, "");          // no start space
+                        val = val.replace(/[^a-zA-Z\s]/g, "");
+                        val = val.replace(/\s{2,}/g, " ");
+                        val = val.replace(/^\s/, "");
                         handleLocalFilterChange("homeCity", val);
                       }}
                       onBlur={(e) =>
                         handleLocalFilterChange("homeCity", e.target.value.trim())
-                      } // remove end space
+                      }
                       className="w-full px-3 py-2 border border-[#FFEAD3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EA7B7B] focus:border-transparent text-sm"
                       placeholder="Enter city name..."
                     />
@@ -1682,37 +1669,69 @@ const Watchlist = () => {
               className="space-y-6 sm:space-y-8"
             >
               {/* First Section: Premium Watchlist Features */}
-              <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+              <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl border border-gray-200 overflow-hidden transition-all duration-300 hover:shadow-2xl">
                 {/* Collapsible Header */}
                 <button
                   onClick={() => setIsExpanded2(!isExpanded2)}
-                  className="w-full px-4 sm:px-6 md:px-8 py-4 sm:py-6 flex justify-between items-center transition-colors hover:bg-gray-50"
+                  className="w-full px-4 sm:px-6 md:px-8 py-4 sm:py-6 
+             flex flex-col lg:flex-row 
+             lg:justify-between lg:items-center 
+             gap-4 transition-all duration-300 
+             hover:bg-gradient-to-r from-gray-50/50 to-white/80 group"
                 >
-                  <div className="flex items-center gap-3 sm:gap-4">
-                    <div className="p-3 sm:p-4 rounded-xl" style={{ background: primaryColor }}>
-                      <FiStar className="text-white" size={20} />
+                  {/* LEFT SECTION */}
+                  <div className="flex items-center gap-3 sm:gap-4 w-full">
+                    <div
+                      className="p-3 sm:p-4 rounded-xl shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:shadow-xl"
+                      style={{ background: getPrimaryGradient("135deg") }}
+                    >
+                      <FiStar className="text-white" size={24} />
                     </div>
+
                     <div className="text-left">
-                      <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">
+                      <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
                         Premium Watchlist
                       </h1>
-                      <p className="text-gray-600 text-xs sm:text-sm mt-1">
+                      <p className="text-gray-600 text-sm sm:text-base mt-1 sm:mt-2">
                         Access exclusive features for your matrimonial journey
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3">
-                    <div className="px-3 py-1 text-white rounded-full text-xs font-bold flex items-center gap-1 sm:gap-2"
-                      style={{ background: primaryColor }}>
+                  {/* RIGHT SECTION */}
+                  <div className="flex flex-row lg:flex-row items-center justify-between w-full lg:w-auto gap-3 sm:gap-4">
+
+                    {/* PREMIUM BADGE */}
+                    <div
+                      className="w-full lg:w-auto px-4 py-2 text-white rounded-full text-sm font-bold 
+                 flex items-center justify-center gap-2 shadow-lg 
+                 transition-all duration-300 hover:shadow-xl hover:scale-105"
+                      style={{ background: getPrimaryGradient("135deg") }}
+                    >
+                      <FiCheckCircle className="text-white" size={16} />
                       <span className="hidden xs:inline">Premium Active</span>
                       <span className="xs:hidden">Active</span>
                     </div>
 
-                    {/* Arrow Icon */}
-                    <div className={`transform transition-transform duration-300 ${isExpanded2 ? 'rotate-180' : ''}`}>
-                      <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    {/* ARROW */}
+                    <div
+                      className={`transform transition-all duration-500 
+        ${isExpanded2 ? "rotate-180 scale-110" : ""} 
+        group-hover:scale-110`}
+                      style={{ color: primaryColor }}
+                    >
+                      <svg
+                        className="w-6 h-6"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        strokeWidth="3"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M19 9l-7 7-7-7"
+                        />
                       </svg>
                     </div>
                   </div>
@@ -1720,36 +1739,210 @@ const Watchlist = () => {
 
                 {/* Collapsible Content for Premium Features */}
                 {isExpanded2 && (
-                  <div className="px-4 sm:px-6 md:px-8 pb-4 sm:pb-6 md:pb-8 pt-2">
-                    {/* Premium Features Grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                      {[
-                        { icon: FiHeart, title: "View All Details", desc: "View complete profile details of interested partners" },
-                        { icon: FiCalendar, title: "Date Planning", desc: "Schedule meetings with matches" },
-                        { icon: HiOutlineSparkles, title: "Marriage Help", desc: "Expert guidance through process" },
-                        { icon: FiTag, title: "Extra Discounts", desc: "Up to 15% off on our locations" },
-                      ].map((feature, index) => (
-                        <motion.div
-                          key={index}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: index * 0.1 }}
-                          whileHover={{ y: -4 }}
-                          className="bg-white p-4 sm:p-6 rounded-lg border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-300 group"
-                        >
-                          <div className="p-3 rounded-lg w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-110 transition-transform duration-300"
-                            style={{ background: `${primaryColor}15` }}>
-                            <feature.icon style={{ color: primaryColor }} size={20} />
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    transition={{ duration: 0.5, ease: "easeOut" }}
+                    className="overflow-hidden"
+                  >
+                    <div className="px-4 sm:px-6 md:px-8 pb-6 sm:pb-8 md:pb-10 pt-4 bg-gradient-to-b from-white to-gray-50/50">
+
+                      {/* Premium Features Grid with Enhanced Design */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 md:gap-8">
+                        {[
+                          {
+                            icon: FiHeart,
+                            title: "View All Details",
+                            desc: "Unlock complete profile details of interested partners including contact information, family details, and preferences"
+                          },
+                          {
+                            icon: HiOutlineSparkles,
+                            title: "Marriage Help",
+                            desc: "AI-powered marriage planning assistance with compatibility analysis and timeline guidance",
+                            action: "marriage"
+                          },
+                          {
+                            icon: FiTag,
+                            title: "Extra Discounts",
+                            desc: "Exclusive discounts up to 25% on premium wedding services and partner vendors",
+                            action: "wedding"
+                          },
+                        ].map((feature, index) => (
+                          <motion.div
+                            key={index}
+                            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            transition={{ delay: index * 0.15, duration: 0.4 }}
+                            whileHover={{
+                              y: -8,
+                              scale: 1.02,
+                              boxShadow: `0 20px 40px -15px color-mix(in oklch, ${primaryColor} 25%, transparent)`
+                            }}
+                            className="relative bg-white p-5 sm:p-6 md:p-7 rounded-2xl border-2 border-gray-100 shadow-lg hover:shadow-2xl transition-all duration-500 group overflow-hidden"
+                            style={{
+                              background: `linear-gradient(135deg, color-mix(in oklch, ${primaryColor} 10%, white), color-mix(in oklch, ${primaryColor} 5%, white))`
+                            }}
+                          >
+                            {/* Background accent */}
+                            <div className="absolute top-0 right-0 w-20 h-20 opacity-5 group-hover:opacity-10 transition-opacity duration-500"
+                              style={{
+                                background: primaryColor,
+                                clipPath: 'circle(40px at 80px 0)'
+                              }} />
+
+                            <div className="relative z-10">
+                              <div className="flex items-start justify-between mb-4 sm:mb-5">
+                                <div
+                                  className="p-3 sm:p-4 rounded-xl shadow-lg transition-all duration-500 group-hover:scale-110 group-hover:shadow-xl group-hover:rotate-3"
+                                  style={{ background: getPrimaryGradient('135deg') }}
+                                >
+                                  <feature.icon className="text-white" size={24} />
+                                </div>
+
+                                {/* Enhanced GO Button for 2nd & 3rd features */}
+                                {feature.action && (
+                                  <button
+                                    onClick={() => {
+                                      if (feature.action === "marriage") setOpenMarriage(true);
+                                      if (feature.action === "wedding") setOpenWedding(true);
+                                    }}
+                                    className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg font-bold text-sm sm:text-base shadow-md transition-all duration-300 hover:shadow-xl hover:scale-105 active:scale-95 flex items-center gap-2 group/button"
+                                    style={{
+                                      background: getPrimaryGradient('135deg'),
+                                      color: 'white'
+                                    }}
+                                  >
+                                    <span className="transition-all duration-300 group-hover/button:tracking-wider">Go</span>
+                                    <FiArrowRight className="transition-transform duration-300 group-hover/button:translate-x-2" />
+                                  </button>
+                                )}
+                              </div>
+
+                              <h3 className="font-bold text-gray-900 text-lg sm:text-xl md:text-2xl mb-2 sm:mb-3 tracking-tight">
+                                {feature.title}
+                              </h3>
+
+                              <p className="text-gray-700 text-sm sm:text-base leading-relaxed mb-4 sm:mb-5">
+                                {feature.desc}
+                              </p>
+
+                              {/* Status Badge with theme color */}
+                              <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-2 h-2 rounded-full animate-pulse"
+                                    style={{ background: primaryColor }} />
+                                  <span className="text-sm font-semibold" style={{ color: primaryColor }}>
+                                    ✓ Active
+                                  </span>
+                                </div>
+                                <div className="p-1 rounded-full" style={{ background: `color-mix(in oklch, ${primaryColor} 15%, transparent)` }}>
+                                  <FiCheckCircle style={{ color: primaryColor }} size={18} />
+                                </div>
+                              </div>
+                            </div>
+                          </motion.div>
+                        ))}
+                      </div>
+
+                      {/* Enhanced Large Modals with Theme */}
+                      {openMarriage && (
+                        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4 md:p-6">
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            transition={{ duration: 0.3 }}
+                            className="bg-white w-full max-w-5xl rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden"
+                          >
+                            {/* Modal Header with Theme Gradient */}
+                            <div className="p-4 sm:p-6 border-b" style={{
+                              background: `linear-gradient(135deg, color-mix(in oklch, ${primaryColor} 8%, white), white)`
+                            }}>
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <div className="p-2 rounded-lg" style={{ background: primaryColor }}>
+                                    <HiOutlineSparkles className="text-white" size={20} />
+                                  </div>
+                                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Marriage Planning Assistant</h2>
+                                </div>
+                                <button
+                                  onClick={() => setOpenMarriage(false)}
+                                  className="p-2 rounded-full hover:bg-gray-200 transition-colors duration-200"
+                                  style={{ color: primaryColor }}
+                                >
+                                  <FiX size={24} />
+                                </button>
+                              </div>
+                            </div>
+                            <div className="max-h-[75vh] overflow-y-auto p-0">
+                              <Marriage />
+                            </div>
+                          </motion.div>
+                        </div>
+                      )}
+
+                      {openWedding && (
+                        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4 md:p-6">
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            transition={{ duration: 0.3 }}
+                            className="bg-white w-full max-w-5xl rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden"
+                          >
+                            {/* Modal Header with Theme Gradient */}
+                            <div className="p-4 sm:p-6 border-b" style={{
+                              background: `linear-gradient(135deg, color-mix(in oklch, ${primaryColor} 8%, white), white)`
+                            }}>
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <div className="p-2 rounded-lg" style={{ background: primaryColor }}>
+                                    <FiTag className="text-white" size={20} />
+                                  </div>
+                                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Wedding Services & Discounts</h2>
+                                </div>
+                                <button
+                                  onClick={() => setOpenWedding(false)}
+                                  className="p-2 rounded-full hover:bg-gray-200 transition-colors duration-200"
+                                  style={{ color: primaryColor }}
+                                >
+                                  <FiX size={24} />
+                                </button>
+                              </div>
+                            </div>
+                            <div className="max-h-[75vh] overflow-y-auto p-0">
+                              <WeddingServices />
+                            </div>
+                          </motion.div>
+                        </div>
+                      )}
+
+                      {/* Additional Theme Info Banner */}
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.5 }}
+                        className="mt-6 sm:mt-8 p-4 sm:p-6 rounded-xl flex items-center justify-between"
+                        style={{
+                          background: `linear-gradient(135deg, color-mix(in oklch, ${primaryColor} 5%, white), white)`,
+                          border: `2px solid color-mix(in oklch, ${primaryColor} 15%, transparent)`
+                        }}
+                      >
+                        <div className="flex items-center gap-3 sm:gap-4">
+                          <div className="p-2 sm:p-3 rounded-lg" style={{ background: `color-mix(in oklch, ${primaryColor} 15%, transparent)` }}>
+                            <FiInfo style={{ color: primaryColor }} size={20} />
                           </div>
-                          <h3 className="font-bold text-gray-800 text-base sm:text-lg mb-1 sm:mb-2">{feature.title}</h3>
-                          <p className="text-gray-600 text-xs sm:text-sm">{feature.desc}</p>
-                          <div className="mt-3 sm:mt-4 pt-3 border-t border-gray-100">
-                            <span className="text-xs font-medium" style={{ color: primaryColor }}>✓ Active</span>
+                          <div>
+                            <h4 className="font-bold text-gray-900 text-sm sm:text-base">All Premium Features Active</h4>
+                            <p className="text-gray-600 text-xs sm:text-sm">Your subscription includes full access to all premium matrimonial services</p>
                           </div>
-                        </motion.div>
-                      ))}
+                        </div>
+                        <div className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-bold text-white"
+                          style={{ background: primaryColor }}>
+                          VALID
+                        </div>
+                      </motion.div>
+
                     </div>
-                  </div>
+                  </motion.div>
                 )}
               </div>
 
@@ -1887,7 +2080,6 @@ const Watchlist = () => {
                                   e.stopPropagation();
                                   e.preventDefault();
 
-                                  // Get email from multiple possible locations
                                   const email = personalInfo?.email ||
                                     partner?.email ||
                                     partner?.userEmail ||
@@ -1901,14 +2093,12 @@ const Watchlist = () => {
                                     return;
                                   }
 
-                                  // Direct removal without waiting for async
                                   const userEmail = userData?.userEmail;
                                   if (!userEmail) {
                                     toast.error("User email not found");
                                     return;
                                   }
 
-                                  // Optimistically update UI first
                                   setPartners(prev => prev.filter(p =>
                                     p.personalInfo?.email !== email &&
                                     p.email !== email &&
@@ -1920,7 +2110,6 @@ const Watchlist = () => {
                                     p.userEmail !== email
                                   ));
 
-                                  // Then call the API
                                   handleRemoveFromWatchlist(email);
                                 }}
                                 className="absolute top-3 left-3 z-10 w-8 h-8 md:w-10 md:h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white transition-all duration-200 hover:scale-110 active:scale-95 shadow-lg group"

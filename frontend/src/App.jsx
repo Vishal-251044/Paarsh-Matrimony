@@ -27,21 +27,13 @@ const PublicRoute = ({ children }) => {
 };
 
 function App() {
-  useEffect(() => {
-    const userAgent = navigator.userAgent.toLowerCase();
-    const isChrome = userAgent.includes("chrome") && !userAgent.includes("brave");
-    const isBrave = userAgent.includes("brave");
-
-    if (isChrome) {
-      document.body.style.zoom = "100%";
-    } else if (isBrave) {
-      document.body.style.zoom = "100%";
-    }
-  }, []);
-
+  /* ---------------- ZOOM CONTROL ---------------- */
   useEffect(() => {
     const disableZoomKeys = (event) => {
-      if ((event.ctrlKey || event.metaKey) && ["+", "-", "0"].includes(event.key)) {
+      if (
+        (event.ctrlKey || event.metaKey) &&
+        ["+", "-", "0"].includes(event.key)
+      ) {
         event.preventDefault();
       }
     };
@@ -50,19 +42,82 @@ function App() {
       if (event.ctrlKey) event.preventDefault();
     };
 
-    const disableTouchZoom = (event) => {
-      if (event.touches.length > 1) event.preventDefault();
-    };
-
     document.addEventListener("keydown", disableZoomKeys);
     document.addEventListener("wheel", disableWheelZoom, { passive: false });
-    document.addEventListener("touchmove", disableTouchZoom, { passive: false });
 
     return () => {
       document.removeEventListener("keydown", disableZoomKeys);
       document.removeEventListener("wheel", disableWheelZoom);
-      document.removeEventListener("touchmove", disableTouchZoom);
     };
+  }, []);
+
+  /* ---------------- BLOCK REFRESH KEYS ---------------- */
+  useEffect(() => {
+    const blockRefresh = (e) => {
+      if (
+        e.key === "F5" ||
+        (e.ctrlKey && e.key.toLowerCase() === "r") ||
+        (e.metaKey && e.key.toLowerCase() === "r")
+      ) {
+        e.preventDefault();
+      }
+    };
+
+    window.addEventListener("keydown", blockRefresh);
+    return () => window.removeEventListener("keydown", blockRefresh);
+  }, []);
+
+  /* ---------------- MOBILE PULL REFRESH BLOCK ---------------- */
+  useEffect(() => {
+    let lastTouchY = 0;
+
+    const handleTouchStart = (e) => {
+      lastTouchY = e.touches[0].clientY;
+    };
+
+    const handleTouchMove = (e) => {
+      const touchY = e.touches[0].clientY;
+      if (touchY > lastTouchY && window.scrollY === 0) {
+        e.preventDefault();
+      }
+    };
+
+    document.addEventListener("touchstart", handleTouchStart, {
+      passive: false,
+    });
+    document.addEventListener("touchmove", handleTouchMove, {
+      passive: false,
+    });
+
+    return () => {
+      document.removeEventListener("touchstart", handleTouchStart);
+      document.removeEventListener("touchmove", handleTouchMove);
+    };
+  }, []);
+
+  /* ---------------- PREVENT BACK NAVIGATION ---------------- */
+  useEffect(() => {
+    window.history.pushState(null, "", window.location.href);
+    window.onpopstate = () => {
+      window.history.pushState(null, "", window.location.href);
+    };
+  }, []);
+
+  /* ---------------- SAVE & RESTORE ROUTE ---------------- */
+  useEffect(() => {
+    const savedRoute = sessionStorage.getItem("lastRoute");
+    if (savedRoute) {
+      window.history.replaceState(null, "", savedRoute);
+    }
+  }, []);
+
+  useEffect(() => {
+    const saveRoute = () => {
+      sessionStorage.setItem("lastRoute", window.location.pathname);
+    };
+
+    window.addEventListener("beforeunload", saveRoute);
+    return () => window.removeEventListener("beforeunload", saveRoute);
   }, []);
 
   return (

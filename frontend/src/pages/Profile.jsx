@@ -3157,10 +3157,10 @@ const Profile = () => {
                     features={[
                       "All Free Membership Features",
                       "Contact Partner Directly",
-                      "Plan Meetings and Dates",
                       "Add to Watchlist for Shortlisting",
                       "View all Partner Data",
                       "Marriage Planning Assistance",
+                      "Extra Discounts on Wedding Services",
                     ]}
                     price="1999"
                     popular={true}

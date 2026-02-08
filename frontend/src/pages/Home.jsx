@@ -74,14 +74,14 @@ const Home = () => {
       description: "Filter by age, education, profession, location, religion, and community"
     },
     {
-      icon: <Clock className="w-10 h-10" />,
-      title: "Dates or Meetings Scheduler",
-      description: "Schedule secure dates or meetings with mutual consent and convenience."
+      icon: <Calendar className="w-10 h-10" />,
+      title: "Marriage Planning Assistance",
+      description: "AI marriage finance planner, checklist generator for a stress-free wedding"
     },
     {
-      icon: <Calendar className="w-10 h-10" />,
-      title: "Marriage Planning",
-      description: "Complete wedding planning assistance with venue booking and vendor management"
+      icon: <Clock className="w-10 h-10" />,
+      title: "Extra Discounts",
+      description: "Exclusive discounts on wedding services like venues, photographers, caterers, and more"
     },
     {
       icon: <MapPin className="w-10 h-10" />,
@@ -107,10 +107,10 @@ const Home = () => {
       features: [
         "All Free Membership Features",
         "Contact Partner Directly",
-        "Plan Meetings and Dates",
         "Add to Watchlist for Shortlisting",
         "View all Partner Data",
         "Marriage Planning Assistance",
+        "Extra Discounts on Wedding Services",
       ],
       popular: true
     }
