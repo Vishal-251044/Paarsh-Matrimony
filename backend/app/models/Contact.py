@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from typing import Optional
 from datetime import datetime
 
@@ -7,4 +7,5 @@ class Contact(BaseModel):
     email: EmailStr
     phone: Optional[str] = None
     message: str
-    created_at: Optional[datetime] = None
+    status: Optional[str] = "new"   # new | read | archived
+    created_at: Optional[datetime] = Field(default_factory=datetime.utcnow)

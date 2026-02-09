@@ -16,7 +16,9 @@ from app.routes import (
     delete_route,
     marriageAssistance_route,
     services_route,
-    userServicesShow_route
+    userServicesShow_route,
+    feedback_admin_route,
+    contact_admin_route
 )
 
 load_dotenv()
@@ -47,6 +49,8 @@ app.include_router(delete_route.router, prefix="/api", tags=["Delete"])
 app.include_router(marriageAssistance_route.router, prefix="/api", tags=["Marriage Assistance"])
 app.include_router(services_route.router)
 app.include_router(userServicesShow_route.router)
+app.include_router(feedback_admin_route.router)
+app.include_router(contact_admin_route.router)
 
 @app.get("/")
 async def root():

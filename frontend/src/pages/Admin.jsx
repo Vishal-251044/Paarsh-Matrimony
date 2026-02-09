@@ -3,6 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { toast, Toaster } from 'react-hot-toast';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import AdminFeedback from '../components/AdminFeedback';
+import AdminContact from '../components/AdminContact';
+import AdminFinance from '../components/AdminFinance';
+import AdminDashboard from '../components/AdminDashboard';
+import AdminNotification from '../components/AdminNotification';
 import {
     Home as HomeIcon,
     LayoutDashboard,
@@ -43,7 +48,6 @@ const navSections = [
     { id: 'notification', name: 'Notification', icon: <Bell className="w-5 h-5" />, description: 'Manage and view all system notifications and alerts.' },
     { id: 'finance', name: 'Finance', icon: <DollarSign className="w-5 h-5" />, description: 'Track revenue, expenses, and financial reports.' },
     { id: 'services', name: 'Services', icon: <Settings className="w-5 h-5" />, description: 'Manage and configure all platform services.' },
-    { id: 'theme', name: 'Theme', icon: <Palette className="w-5 h-5" />, description: 'Customize your dashboard appearance and colors.' },
     { id: 'feedback', name: 'Feedback', icon: <MessageSquare className="w-5 h-5" />, description: 'View and respond to user feedback.' },
     { id: 'contact', name: 'Contact', icon: <Phone className="w-5 h-5" />, description: 'Access contact information and support channels.' }
 ];
@@ -783,7 +787,6 @@ const Admin = () => {
             const data = await response.json();
             setServices(data);
             setFilteredServices(data);
-            toast.success('Services loaded successfully!');
         } catch (error) {
             console.error('Error fetching services:', error);
             toast.error('Failed to load services. Please try again.');
@@ -1222,20 +1225,16 @@ const Admin = () => {
                 <main className="flex-1 p-4 md:p-6 transition-all duration-300 w-full">
                     {activeSection === 'services' ? (
                         <ServicesContent {...servicesContentProps} />
-                    ) : activeSection ? (
-                        <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow">
-                            <h2 className="text-xl font-bold text-gray-900 mb-2">
-                                {navSections.find(sec => sec.id === activeSection)?.name}
-                            </h2>
-                            <p className="text-gray-600">
-                                {navSections.find(sec => sec.id === activeSection)?.description}
-                            </p>
-                        </div>
+                    ) : activeSection === 'feedback' ? (
+                        <AdminFeedback />
+                    ) : activeSection === 'contact' ? (
+                        <AdminContact />
+                    ) : activeSection === 'finance' ? (
+                        <AdminFinance />
+                    ) : activeSection === 'notification' ? (
+                        <AdminNotification />
                     ) : (
-                        <div className="text-center py-12">
-                            <LayoutDashboard className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-                            <p className="text-gray-500 text-lg">Click a section in the sidebar to view its content.</p>
-                        </div>
+                        <AdminDashboard />
                     )}
                 </main>
             </div>
