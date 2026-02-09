@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FiTag, FiCheckCircle, FiCamera, FiHome, FiStar, FiSearch, FiMapPin, FiChevronDown } from "react-icons/fi";
+import { FiTag, FiCheckCircle, FiStar, FiSearch, FiMapPin, FiChevronDown } from "react-icons/fi";
 import { motion } from "framer-motion";
 
 const WeddingServices = () => {
@@ -31,7 +31,6 @@ const WeddingServices = () => {
 
         let safeValue = value;
 
-        // Apply only for state / city / name type fields
         if (["state", "city", "location"].includes(name)) {
             safeValue = value
                 .replace(/[^a-zA-Z\s]/g, "")
@@ -66,9 +65,7 @@ const WeddingServices = () => {
         try {
             const response = await fetch(`${BACKEND_URL}/api/vendors/search`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     state: formData.state,
                     city: formData.city,
@@ -92,14 +89,13 @@ const WeddingServices = () => {
             }
         } catch (err) {
             setError("Network error. Please try again.");
-            console.error("Search error:", err);
         } finally {
             setLoading(false);
         }
     };
 
     const formatDiscount = (token) => {
-        // Assuming discount token format: "DISCOUNT15" or "SAVE10"
+        if (!token) return "Special Offer";
         const match = token.match(/\d+/);
         return match ? `${match[0]}% OFF` : "Special Offer";
     };
@@ -111,6 +107,7 @@ const WeddingServices = () => {
             transition={{ delay: 0.2 }}
             className="bg-white/90 backdrop-blur-sm rounded-2xl p-5 sm:p-6 border border-[#FFEAD3] shadow-lg h-full"
         >
+            {/* HEADER */}
             <div className="flex items-center gap-3 mb-5">
                 <div className="p-2 bg-gradient-to-br from-[#EA7B7B] to-[#D25353] rounded-xl shadow-sm">
                     <FiTag className="text-white" size={22} />
@@ -128,7 +125,7 @@ const WeddingServices = () => {
                 Save money while getting premium quality services tailored for Indian weddings.
             </p>
 
-            {/* Search Form */}
+            {/* SEARCH FORM */}
             <div className="space-y-4 mb-6">
                 <div className="space-y-3">
                     <div className="flex items-center gap-2">
@@ -137,165 +134,126 @@ const WeddingServices = () => {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div>
-                            <input
-                                type="text"
-                                name="state"
-                                value={formData.state}
-                                onChange={handleInputChange}
-                                onBlur={(e) =>
-                                    setFormData((p) => ({ ...p, [e.target.name]: e.target.value.trim() }))
-                                }
-                                placeholder="Enter state"
-                                className="w-full px-4 py-2 border border-[#FFEAD3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EA7B7B]/30 focus:border-[#EA7B7B]"
-                            />
-                        </div>
-
-                        <div>
-                            <input
-                                type="text"
-                                name="city"
-                                value={formData.city}
-                                onChange={handleInputChange}
-                                onBlur={(e) =>
-                                    setFormData((p) => ({ ...p, [e.target.name]: e.target.value.trim() }))
-                                }
-                                placeholder="Enter city"
-                                className="w-full px-4 py-2 border border-[#FFEAD3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EA7B7B]/30 focus:border-[#EA7B7B]"
-                            />
-                        </div>
+                        <input
+                            type="text"
+                            name="state"
+                            value={formData.state}
+                            onChange={handleInputChange}
+                            placeholder="Enter state"
+                            className="w-full px-4 py-2 border border-[#FFEAD3] rounded-lg"
+                        />
+                        <input
+                            type="text"
+                            name="city"
+                            value={formData.city}
+                            onChange={handleInputChange}
+                            placeholder="Enter city"
+                            className="w-full px-4 py-2 border border-[#FFEAD3] rounded-lg"
+                        />
                     </div>
                 </div>
 
-                <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                        <FiTag className="text-[#EA7B7B]" />
-                        <label className="text-sm font-medium text-gray-700">Service Type</label>
-                    </div>
+                {/* SERVICE DROPDOWN */}
+                <div className="relative">
+                    <button
+                        type="button"
+                        onClick={() => setShowServiceDropdown(!showServiceDropdown)}
+                        className="w-full px-4 py-2 border border-[#FFEAD3] rounded-lg flex justify-between bg-white"
+                    >
+                        {formData.service}
+                        <FiChevronDown />
+                    </button>
 
-                    <div className="relative">
-                        <button
-                            type="button"
-                            onClick={() => setShowServiceDropdown(!showServiceDropdown)}
-                            className="w-full px-4 py-2 border border-[#FFEAD3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EA7B7B]/30 focus:border-[#EA7B7B] flex items-center justify-between bg-white"
-                        >
-                            <span>{formData.service}</span>
-                            <FiChevronDown className={`transition-transform ${showServiceDropdown ? 'rotate-180' : ''}`} />
-                        </button>
-
-                        {showServiceDropdown && (
-                            <div className="absolute z-10 w-full mt-1 bg-white border border-[#FFEAD3] rounded-lg shadow-lg">
-                                {serviceOptions.map((service, index) => (
-                                    <button
-                                        key={index}
-                                        type="button"
-                                        onClick={() => handleServiceSelect(service)}
-                                        className="w-full px-4 py-2 text-left hover:bg-[#FFEAD3]/20 first:rounded-t-lg last:rounded-b-lg"
-                                    >
-                                        {service}
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-                    </div>
+                    {showServiceDropdown && (
+                        <div className="absolute w-full bg-white border rounded-lg shadow-lg">
+                            {serviceOptions.map((service, i) => (
+                                <button
+                                    key={i}
+                                    onClick={() => handleServiceSelect(service)}
+                                    className="w-full px-4 py-2 text-left hover:bg-[#FFEAD3]/20"
+                                >
+                                    {service}
+                                </button>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
-                {error && (
-                    <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                        <p className="text-sm text-red-600">{error}</p>
-                    </div>
-                )}
+                {error && <p className="text-red-600 text-sm">{error}</p>}
 
                 <button
                     onClick={searchVendors}
                     disabled={loading}
-                    className="w-full py-3 bg-gradient-to-r from-[#EA7B7B] to-[#D25353] text-white font-medium rounded-lg hover:opacity-90 transition-opacity disabled:opacity-70 flex items-center justify-center gap-2"
+                    className="w-full py-3 bg-gradient-to-r from-[#EA7B7B] to-[#D25353] text-white rounded-lg"
                 >
-                    <FiSearch />
                     {loading ? "Searching..." : "Find Wedding Vendors"}
                 </button>
             </div>
 
-            {/* Search Results */}
+            {/* SEARCH RESULTS */}
             {searchResults && (
-                <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mt-6 border-t border-[#FFEAD3] pt-6"
-                >
-                    <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <motion.div className="mt-6 border-t pt-6">
+
+                    {/* USER SELECTED INFO */}
+                    <div className="mb-4 p-3 bg-[#FFEAD3]/20 border rounded-lg">
+                        <p className="text-sm">
+                            <strong>Location:</strong> {formData.city}, {formData.state}
+                        </p>
+                        <p className="text-sm">
+                            <strong>Service:</strong> {formData.service}
+                        </p>
+                    </div>
+
+                    <h3 className="text-lg font-bold mb-4 flex gap-2">
                         <FiStar className="text-[#EA7B7B]" />
-                        Available Vendors in {formData.city}, {formData.state}
+                        Available Vendors
                     </h3>
 
-                    {searchResults.vendors && searchResults.vendors.length > 0 ? (
-                        <div className="space-y-4">
-                            {searchResults.vendors.map((vendor, index) => (
-                                <motion.div
-                                    key={index}
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: index * 0.1 }}
-                                    className="p-4 bg-gradient-to-r from-[#FFEAD3]/10 to-white rounded-lg border border-[#FFEAD3]"
-                                >
-                                    <div className="flex justify-between items-start mb-2">
-                                        <h4 className="font-bold text-gray-800">{vendor.name}</h4>
-                                        <span className="px-3 py-1 bg-[#EA7B7B]/10 text-[#EA7B7B] text-sm font-medium rounded-full">
-                                            {formatDiscount(vendor.discountToken)}
-                                        </span>
-                                    </div>
+                    {searchResults.vendors?.length > 0 ? (
+                        searchResults.vendors.map((vendor, index) => (
+                            <div key={index} className="p-4 border rounded-lg mb-3">
+                                <h4 className="font-bold text-gray-800">{vendor.name}</h4>
 
-                                    <p className="text-sm text-gray-600 mb-2">
-                                        <span className="font-medium">Service:</span> {vendor.service}
+                                <p className="text-sm text-gray-600">
+                                    {vendor.service}
+                                </p>
+
+                                <p className="text-sm text-gray-600">
+                                    {vendor.city}, {vendor.state}
+                                </p>
+
+                                <p className="text-sm text-gray-600">
+                                    Contact: {vendor.phone}
+                                </p>
+
+                                {vendor.discount && (
+                                    <p className="text-[#EA7B7B] font-medium">
+                                        {vendor.discount}% OFF
                                     </p>
+                                )}
 
-                                    <p className="text-sm text-gray-600 mb-2">
-                                        <span className="font-medium">Address:</span> {vendor.address}
+                                {vendor.token && (
+                                    <p className="text-xs bg-yellow-100 border border-yellow-300 px-2 py-1 rounded inline-block mt-1">
+                                        Use Code: <span className="font-semibold">{vendor.token}</span>
                                     </p>
+                                )}
 
-                                    {vendor.phone && (
-                                        <p className="text-sm text-gray-600">
-                                            <span className="font-medium">Contact:</span> {vendor.phone}
-                                        </p>
-                                    )}
-
-                                    {vendor.specialOffer && (
-                                        <div className="mt-3 p-2 bg-yellow-50 border border-yellow-200 rounded">
-                                            <p className="text-xs text-yellow-700">
-                                                <span className="font-medium">Special Offer:</span> {vendor.specialOffer}
-                                            </p>
-                                        </div>
-                                    )}
-                                </motion.div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="text-center py-8">
-                            <div className="inline-flex items-center justify-center w-16 h-16 bg-[#FFEAD3]/30 rounded-full mb-4">
-                                <FiTag className="text-[#EA7B7B] text-2xl" />
                             </div>
-                            <h4 className="text-lg font-semibold text-gray-700 mb-2">
-                                {searchResults.message || "Sorry, our services are not available in this location yet"}
-                            </h4>
-                            <p className="text-gray-500 text-sm">
-                                We're expanding our network. Please check back soon or try a different location.
-                            </p>
-                        </div>
+                        ))
+                    ) : (
+                        <p className="text-gray-500 text-center">
+                            {searchResults.message}
+                        </p>
                     )}
                 </motion.div>
             )}
 
-            {/* Benefits Section */}
+            {/* BENEFITS */}
             {!searchResults && (
-                <div className="space-y-4 mb-6">
-                    <div className="flex items-start gap-3 p-3 bg-gradient-to-r from-[#FFEAD3]/20 to-white rounded-lg border border-[#FFEAD3]">
-                        <div className="p-2 bg-[#EA7B7B]/10 rounded-lg">
-                            <FiCheckCircle className="text-[#EA7B7B]" />
-                        </div>
-                        <div>
-                            <h4 className="font-medium text-gray-800 mb-1">Up to 15% Vendor Discounts</h4>
-                            <p className="text-xs text-gray-500">Special rates for wedding planners, caterers, and decorators</p>
-                        </div>
+                <div className="p-3 bg-[#FFEAD3]/20 rounded-lg">
+                    <div className="flex gap-3">
+                        <FiCheckCircle className="text-[#EA7B7B]" />
+                        <p className="text-sm">Up to 15% Vendor Discounts</p>
                     </div>
                 </div>
             )}

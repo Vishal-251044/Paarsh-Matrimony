@@ -14,7 +14,9 @@ from app.routes import (
     watchlist_route,
     watchlistData_route,
     delete_route,
-    marriageAssistance_route
+    marriageAssistance_route,
+    services_route,
+    userServicesShow_route
 )
 
 load_dotenv()
@@ -43,6 +45,8 @@ app.include_router(watchlist_route.router)
 app.include_router(watchlistData_route.router, prefix="/api")
 app.include_router(delete_route.router, prefix="/api", tags=["Delete"])
 app.include_router(marriageAssistance_route.router, prefix="/api", tags=["Marriage Assistance"])
+app.include_router(services_route.router)
+app.include_router(userServicesShow_route.router)
 
 @app.get("/")
 async def root():
