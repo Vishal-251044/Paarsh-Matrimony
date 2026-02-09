@@ -122,16 +122,19 @@ const AppContent = () => {
 
   /* ---------------- MOBILE PULL REFRESH BLOCK ---------------- */
   useEffect(() => {
-    let lastTouchY = 0;
+    let startY = 0;
 
     const handleTouchStart = (e) => {
-      lastTouchY = e.touches[0].clientY;
+      startY = e.touches[0].clientY;
     };
 
     const handleTouchMove = (e) => {
-      const touchY = e.touches[0].clientY;
-      if (touchY > lastTouchY && window.scrollY === 0) {
-        e.preventDefault();
+      const currentY = e.touches[0].clientY;
+      const diffY = currentY - startY;
+
+      // If user is at top and pulling down more than 10px
+      if (window.scrollY === 0 && diffY > 10) {
+        e.preventDefault(); // block refresh
       }
     };
 

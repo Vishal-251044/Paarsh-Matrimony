@@ -7,6 +7,33 @@ const Admin = () => {
         <>
             <Navbar />
             <div>Admin</div>
+            <div>Admin</div>
+            <div>Admin</div>
+            <div>Admin</div>
+            <div>Admin</div>
+            <div>Admin</div>
+            <div>Admin</div>
+            <div>Admin</div>
+            <div>Admin</div>
+            <div>Admin</div>
+            <div>Admin</div>
+            <div>Admin</div>
+            <div>Admin</div>
+            <div>Admin</div>
+            <div>Admin</div>
+            <div>Admin</div>
+            <div>Admin</div>
+            <div>Admin</div>
+            <div>Admin</div>
+            <div>Admin</div>
+            <div>Admin</div>
+            <div>Admin</div>
+            <div>Admin</div>
+            <div>Admin</div>
+            <div>Admin</div>
+            <div>Admin</div>
+            <div>Admin</div>
+            <div>Admin</div>
             <Footer />
         </>
     )

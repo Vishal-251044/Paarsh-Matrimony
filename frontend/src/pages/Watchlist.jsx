@@ -1012,19 +1012,31 @@ const Watchlist = () => {
                                   <FaWhatsapp className="text-xl md:text-2xl text-[#D25353]" />
                                 </div>
                                 <div className="min-w-0">
-                                  <div className="font-medium text-gray-800 text-sm md:text-base">WhatsApp Number</div>
-                                  <a
-                                    href={`https://wa.me/91${personalInfo.whatsappNumber}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-lg font-bold text-[#9E3B3B] mt-1 truncate hover:underline"
-                                  >
-                                    {showValue(personalInfo.whatsappNumber)}
-                                  </a>
+                                  <div className="font-medium text-gray-800 text-sm md:text-base">
+                                    WhatsApp Number
+                                  </div>
+
+                                  {(() => {
+                                    const defaultMessage =
+                                      "Hello, I saw your profile on Paarsh Matrimony and would like to connect regarding marriage.";
+                                    const encodedMessage = encodeURIComponent(defaultMessage);
+
+                                    return (
+                                      <a
+                                        href={`https://wa.me/91${personalInfo.whatsappNumber}?text=${encodedMessage}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-lg font-bold text-[#9E3B3B] mt-1 truncate hover:underline"
+                                      >
+                                        {showValue(personalInfo.whatsappNumber)}
+                                      </a>
+                                    );
+                                  })()}
                                 </div>
                               </div>
                             </div>
                           )}
+
                         </div>
                       </div>
                     )}
