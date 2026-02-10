@@ -756,6 +756,14 @@ const Profile = () => {
 
       if (response.data) {
         setMembershipPlan(response.data.membership_plan);
+
+        // Update membership dates if available
+        if (response.data.membershipStartDate || response.data.membershipExpiryDate) {
+          setMembershipDates({
+            membershipStartDate: response.data.membershipStartDate || "",
+            membershipExpiryDate: response.data.membershipExpiryDate || ""
+          });
+        }
       }
     } catch (error) {
       console.error("Error checking membership:", error);

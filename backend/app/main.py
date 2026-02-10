@@ -18,7 +18,10 @@ from app.routes import (
     services_route,
     userServicesShow_route,
     feedback_admin_route,
-    contact_admin_route
+    contact_admin_route,
+    dashboard_admin_route,
+    notification_admin_route,
+    verification_admin_route
 )
 
 load_dotenv()
@@ -51,6 +54,9 @@ app.include_router(services_route.router)
 app.include_router(userServicesShow_route.router)
 app.include_router(feedback_admin_route.router)
 app.include_router(contact_admin_route.router)
+app.include_router(dashboard_admin_route.router)
+app.include_router(notification_admin_route.router)
+app.include_router(verification_admin_route.router)
 
 @app.get("/")
 async def root():

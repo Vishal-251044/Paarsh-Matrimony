@@ -746,10 +746,6 @@ const Watchlist = () => {
                           <div className="font-bold text-[#9E3B3B]">{showValue(personalInfo.fullName)}</div>
                         </div>
                         <div className="bg-gradient-to-br from-[#FFEAD3]/20 to-white p-4 rounded-xl border border-[#FFEAD3]">
-                          <div className="font-medium text-gray-600 mb-1 text-sm">Email</div>
-                          <div className="font-bold text-[#9E3B3B] truncate">{showValue(personalInfo.email)}</div>
-                        </div>
-                        <div className="bg-gradient-to-br from-[#FFEAD3]/20 to-white p-4 rounded-xl border border-[#FFEAD3]">
                           <div className="font-medium text-gray-600 mb-1 text-sm">Date of Birth</div>
                           <div className="font-bold text-[#9E3B3B]">{showValue(personalInfo.dob)}</div>
                         </div>

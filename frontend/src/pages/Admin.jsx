@@ -36,8 +36,10 @@ import {
     Utensils,
     Brush,
     Sparkles,
-    Users
+    Users,
 } from 'lucide-react';
+import { SearchCheck } from 'lucide-react';
+import AdminVerification from '../components/AdminVerification';
 
 const themeColor = "#f87171";
 
@@ -46,6 +48,7 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 const navSections = [
     { id: 'dashboard', name: 'Dashboard', icon: <LayoutDashboard className="w-5 h-5" />, description: 'Overview of your system metrics and statistics.' },
     { id: 'notification', name: 'Notification', icon: <Bell className="w-5 h-5" />, description: 'Manage and view all system notifications and alerts.' },
+    { id: 'verification', name: 'Verification', icon: <SearchCheck className="w-5 h-5" />, description: 'Verify the profiles.' },
     { id: 'finance', name: 'Finance', icon: <DollarSign className="w-5 h-5" />, description: 'Track revenue, expenses, and financial reports.' },
     { id: 'services', name: 'Services', icon: <Settings className="w-5 h-5" />, description: 'Manage and configure all platform services.' },
     { id: 'feedback', name: 'Feedback', icon: <MessageSquare className="w-5 h-5" />, description: 'View and respond to user feedback.' },
@@ -1231,6 +1234,8 @@ const Admin = () => {
                         <AdminContact />
                     ) : activeSection === 'finance' ? (
                         <AdminFinance />
+                    ) : activeSection === 'verification' ? (
+                        <AdminVerification />
                     ) : activeSection === 'notification' ? (
                         <AdminNotification />
                     ) : (
