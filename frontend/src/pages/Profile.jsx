@@ -2370,8 +2370,10 @@ const Profile = () => {
                         label="Full Name *"
                         value={personalInfo.fullName}
                         onChange={(val) => {
-                          const safeValue = val
+                          let safeValue = val
+                            .replace(/[^a-zA-Z\s]/g, "")
                             .replace(/\s{2,}/g, " ")
+                            .trimStart()
                             .slice(0, 50);
 
                           setPersonalInfo(prev => ({ ...prev, fullName: safeValue }));
@@ -2421,7 +2423,7 @@ const Profile = () => {
                           label="Height (cm)"
                           value={personalInfo.height}
                           onChange={(val) => {
-                            const safeValue = val.replace(/\D/g, "").slice(0, 3); // only numbers, max 3 digits
+                            const safeValue = val.replace(/\D/g, "").slice(0, 3);
                             setPersonalInfo(prev => ({ ...prev, height: safeValue }));
                           }}
                           placeholder="Height in cm"

@@ -295,7 +295,9 @@ const AdminContact = () => {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
                         <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2 md:gap-3" style={{ color: gold }}>
-                            <MessageCircle className="w-6 h-6 md:w-8 md:h-8" />
+                            <div className="p-2 rounded-xl bg-gradient-to-br from-amber-50 to-amber-100 border border-amber-200">
+                                <MessageCircle className="w-6 h-6 md:w-8 md:h-8" />
+                            </div>
                             Contact Messages
                         </h1>
                         <p className="text-gray-600 text-sm md:text-base mt-1">
@@ -307,8 +309,8 @@ const AdminContact = () => {
                         <button
                             onClick={() => setBulkDeleteMode(!bulkDeleteMode)}
                             className={`px-3 md:px-4 py-2 rounded-lg border flex items-center gap-2 text-sm md:text-base transition-all flex-1 sm:flex-none ${bulkDeleteMode
-                                    ? "bg-red-50 border-red-200 text-red-700"
-                                    : "border-gray-300 hover:bg-gray-50"
+                                ? "bg-red-50 border-red-200 text-red-700"
+                                : "border-gray-300 hover:bg-gray-50"
                                 }`}
                         >
                             <Trash2 className="w-4 h-4" />

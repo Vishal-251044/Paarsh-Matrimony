@@ -60,14 +60,16 @@ const AdminNotification = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl md:text-2xl lg:text-3xl font-bold flex items-center gap-2" style={{ color: 'black' }}>
-            <Mail className="w-5 h-5 md:w-6 md:h-6 lg:w-8 lg:h-8" />
+            <div className="p-2 rounded-xl bg-gradient-to-br from-amber-50 to-amber-100 border border-amber-200">
+              <Mail className="w-6 h-6 md:w-8 md:h-8" />
+            </div>
             Send Notification
           </h1>
           <p className="text-gray-600 text-xs md:text-sm lg:text-base mt-1">
             Send combined message to users based on plans
           </p>
         </div>
-        
+
         {/* Mobile Menu Toggle */}
         <button
           className="md:hidden self-end flex items-center gap-2 px-3 py-2 bg-red-500 text-white rounded-lg"

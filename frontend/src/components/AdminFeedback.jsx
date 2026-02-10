@@ -203,7 +203,9 @@ const AdminFeedback = () => {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
                         <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2 md:gap-3" style={{ color: gold }}>
-                            <MessageSquare className="w-6 h-6 md:w-8 md:h-8" />
+                            <div className="p-2 rounded-xl bg-gradient-to-br from-amber-50 to-amber-100 border border-amber-200 flex items-center justify-center">
+                                <MessageSquare className="w-6 h-6 md:w-8 md:h-8" />
+                            </div>
                             User Feedback
                         </h1>
                         <p className="text-gray-600 text-sm md:text-base mt-1">

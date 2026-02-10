@@ -70,7 +70,7 @@ const AdminFloatingButton = () => {
   return (
     <button
       onClick={() => navigate("/admin")}
-      className="fixed bottom-6 right-6 z-50 bg-red-400 hover:bg-red-500 text-white p-4 rounded-full shadow-lg transition-all duration-300 hover:scale-110"
+      className="fixed bottom-4 right-4 z-50 bg-red-400 hover:bg-red-500 text-white p-4 rounded-full shadow-lg transition-all duration-300 hover:scale-110"
       title="Admin Panel"
     >
       <FiSettings size={22} />
