@@ -19,15 +19,15 @@ const PrivacyPolicy = () => {
 
           {/* Header */}
           <div className="text-center mb-16">
-            <h1
-              className="text-[oklch(70.4%_0.191_22.216)] text-5xl sm:text-6xl mb-6 select-none relative"
-              style={{ fontFamily: "'Great Vibes', cursive" }}
+            <h2
+              className="text-[oklch(70.4%_0.191_22.216)] text-3xl sm:text-4xl font-bold mb-6 select-none relative"
+              style={{ fontFamily: "'Poppins', sans-serif" }}
             >
               <span className="relative inline-block">
                 Privacy Policy
-                <span className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-32 h-1 bg-gradient-to-r from-transparent via-[oklch(70.4%_0.191_22.216)] to-transparent"></span>
+                <span className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-transparent via-[oklch(70.4%_0.191_22.216)] to-transparent"></span>
               </span>
-            </h1>
+            </h2>
           </div>
 
           {/* Content */}

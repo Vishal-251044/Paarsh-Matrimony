@@ -158,7 +158,7 @@ const Home = () => {
                         <Star
                           key={i}
                           className={`w-5 h-5 ${i < feedback.rating
-                            ? 'text-red-500 fill-red-500'
+                            ? 'text-red-400 fill-red-400'
                             : 'text-gray-300'
                             }`}
                         />

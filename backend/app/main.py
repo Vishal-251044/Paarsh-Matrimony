@@ -21,7 +21,7 @@ from app.routes import (
     contact_admin_route,
     dashboard_admin_route,
     notification_admin_route,
-    verification_admin_route
+    verification_admin_route,
 )
 
 load_dotenv()

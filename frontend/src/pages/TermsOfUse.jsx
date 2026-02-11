@@ -33,15 +33,15 @@ const TermsOfUse = () => {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           {/* Header */}
           <div className="text-center mb-16">
-            <h1
-              className="text-[oklch(70.4%_0.191_22.216)] text-5xl sm:text-6xl mb-6 select-none relative"
-              style={{ fontFamily: "'Great Vibes', cursive" }}
+            <h2
+              className="text-[oklch(70.4%_0.191_22.216)] text-3xl sm:text-4xl font-bold mb-6 select-none relative"
+              style={{ fontFamily: "'Poppins', sans-serif" }}
             >
               <span className="relative inline-block">
                 Terms of Use
-                <span className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-32 h-1 bg-gradient-to-r from-transparent via-[oklch(70.4%_0.191_22.216)] to-transparent"></span>
+                <span className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-transparent via-[oklch(70.4%_0.191_22.216)] to-transparent"></span>
               </span>
-            </h1>
+            </h2>
           </div>
 
           {/* Main Content Container */}
@@ -134,7 +134,7 @@ const TermsOfUse = () => {
                   color: "from-green-500/10 to-teal-500/10"
                 }
               ].map((term, index) => (
-                <div 
+                <div
                   key={index}
                   className="group bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
                 >
@@ -177,7 +177,7 @@ const TermsOfUse = () => {
                     </p>
                   </div>
                 </div>
-                
+
                 {/* Contact Info Cards */}
                 <div className="grid sm:grid-cols-2 gap-4 mt-8">
                   <div className="bg-white rounded-xl p-4 border border-gray-200">
@@ -191,7 +191,7 @@ const TermsOfUse = () => {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="bg-white rounded-xl p-4 border border-gray-200">
                     <div className="flex items-center gap-3 mb-2">
                       <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center">
@@ -220,7 +220,7 @@ const TermsOfUse = () => {
                 </p>
               </div>
               <a
-                href= '/contact'
+                href='/contact'
                 className="bg-[oklch(70.4%_0.191_22.216)] text-white px-6 py-3 rounded-xl font-medium hover:opacity-90 transition-opacity whitespace-nowrap"
               >
                 Contact Legal Support

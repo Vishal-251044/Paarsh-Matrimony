@@ -1,12 +1,11 @@
 import { useState } from "react";
-import { Mail, Lock, Eye, EyeOff, User } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, User, Home } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Footer from "../components/Footer";
-import { GoogleLogin } from "@react-oauth/google";
-import { GoogleOAuthProvider } from "@react-oauth/google";
+import { GoogleLogin, GoogleOAuthProvider } from "@react-oauth/google";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -15,13 +14,17 @@ export default function LoginPage() {
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [loading, setLoading] = useState(false);
 
-  const gold = "oklch(70.4%_0.191_22.216)";
+  // Matrimony theme: elegant rose gold / blush
+  const primaryColor = "oklch(70.4% 0.191 22.216)"; // warm peach/pink
+  const primaryLight = "oklch(80% 0.12 22.216)";
+  const softBg = "#fff9f7"; // off-white with warmth
+
   const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
-  // Email / Password Login & Signup
+  // EMAIL LOGIN / SIGNUP
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -54,13 +57,10 @@ export default function LoginPage() {
     }
   };
 
+  // GOOGLE LOGIN
   const handleGoogleSuccess = async (credentialResponse) => {
     setLoading(true);
     try {
-      if (!credentialResponse?.credential) {
-        throw new Error("No Google credential received");
-      }
-
       const response = await axios.post(`${BACKEND_URL}/auth/google`, {
         credential: credentialResponse.credential,
       });
@@ -71,218 +71,243 @@ export default function LoginPage() {
       toast.success("Google login successful!");
       navigate("/profile");
     } catch (err) {
-      console.error("Full Google login error:", err);
-
-      if (err.response?.status === 401) {
-        toast.error("Google authentication failed. Please try again.");
-      } else if (err.response?.data?.detail) {
-        toast.error(err.response.data.detail);
-      } else {
-        toast.error("Google login failed. Please check your credentials.");
-      }
+      toast.error("Google login failed");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleGoogleError = () => {
-    console.error("Google button error");
-    toast.error("Failed to initialize Google login. Check your console.");
-  };
-
   return (
     <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
-
       <ToastContainer position="top-right" />
 
+      {/* CLEAN MATRIMONY BACKGROUND */}
       <div
-        className="
-    min-h-screen flex justify-center items-center px-2 py-16 sm:py-5
-    bg-cover bg-center bg-no-repeat
-    bg-[url('/3.0.jpg')] 
-    sm:bg-[url('/3.jpg')]
-  "
+        className="min-h-screen flex items-center justify-center px-3 py-10 relative"
+        style={{ background: softBg }}
       >
-        <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-6 sm:p-8">
-          <h1
-            className="text-2xl sm:text-3xl font-semibold text-center"
-            style={{ color: gold }}
-          >
-            {isSignup ? "Create Account" : "Welcome Back"}
-          </h1>
+        {/* subtle pattern overlay */}
+        <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
+          style={{ backgroundImage: `radial-gradient(${primaryColor} 1px, transparent 1px)`, backgroundSize: '24px 24px' }}
+        />
 
-          <p className="text-gray-500 text-sm text-center mt-1">
-            {isSignup
-              ? "Begin your journey with Paarsh Matrimony"
-              : "Login to continue your journey"}
-          </p>
+        {/* BACK TO HOME BUTTON - floating at top left */}
+        <button
+          onClick={() => navigate('/')}
+          className="absolute top-6 left-6 z-20 flex items-center gap-2 px-5 py-2.5 bg-white border shadow-sm rounded-full text-gray-700 hover:text-gray-900 transition-all hover:shadow-md"
+          style={{ borderColor: '#f0e2e0' }}
+        >
+          <Home size={18} style={{ color: primaryColor }} />
+        </button>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-            {isSignup && (
-              <div>
-                <label className="text-sm text-gray-600">Name</label>
-                <div className="mt-1 flex items-center gap-2 border rounded-lg px-3 py-2">
-                  <User size={18} className="text-gray-400" />
-                  <input
-                    name="name"
-                    value={form.name}
-                    onChange={handleChange}
-                    type="text"
-                    placeholder="Your full name"
-                    className="w-full outline-none text-gray-800 placeholder-gray-400 text-sm"
-                    required
-                  />
-                </div>
-              </div>
-            )}
+        {/* CARD - CLEAN, WHITE, ELEGANT */}
+        <div
+          className="
+            relative z-10
+            w-full max-w-5xl
+            bg-white
+            rounded-2xl
+            shadow-xl
+            overflow-hidden
+            grid grid-cols-1 md:grid-cols-2
+            border border-white/20
+          "
+        >
+          {/* LEFT FORM */}
+          <div className="p-8 sm:p-12" style={{ background: 'white' }}>
 
-            <div>
-              <label className="text-sm text-gray-600">Email</label>
-              <div className="mt-1 flex items-center gap-2 border rounded-lg px-3 py-2">
-                <Mail size={18} className="text-gray-400" />
-                <input
-                  name="email"
-                  value={form.email}
-                  onChange={handleChange}
-                  type="email"
-                  placeholder="you@example.com"
-                  className="w-full outline-none text-gray-800 placeholder-gray-400 text-sm"
-                  required
-                />
-              </div>
+            {/* subtle matrimony emblem */}
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-8 h-0.5 rounded-full" style={{ background: primaryColor }}></div>
+              <span className="text-xs uppercase tracking-[0.3em] font-light text-gray-400">Paarsh Matrimony</span>
             </div>
 
-            <div>
-              <label className="text-sm text-gray-600">Password</label>
-              <div className="mt-1 flex items-center gap-2 border rounded-lg px-3 py-2">
-                <Lock size={18} className="text-gray-400" />
-                <input
+            <h1 className="text-3xl sm:text-4xl font-bold text-gray-800">
+              {isSignup ? "Begin your journey" : "Welcome back"}
+            </h1>
+
+            <p className="text-gray-500 mt-2 text-sm font-light">
+              {isSignup
+                ? "Find your perfect companion"
+                : "Sign in to continue your search"}
+            </p>
+
+            {/* FORM */}
+            <form onSubmit={handleSubmit} className="mt-10 space-y-5">
+
+              {isSignup && (
+                <InputField
+                  icon={<User size={18} style={{ color: primaryColor }} />}
+                  placeholder="Full Name"
+                  name="name"
+                  value={form.name}
+                  onChange={handleChange}
+                  primaryColor={primaryColor}
+                />
+              )}
+
+              <InputField
+                icon={<Mail size={18} style={{ color: primaryColor }} />}
+                placeholder="Email Address"
+                name="email"
+                value={form.email}
+                onChange={handleChange}
+                type="email"
+                primaryColor={primaryColor}
+              />
+
+              <div className="relative">
+                <InputField
+                  icon={<Lock size={18} style={{ color: primaryColor }} />}
+                  placeholder="Password"
                   name="password"
                   value={form.password}
                   onChange={handleChange}
                   type={showPassword ? "text" : "password"}
-                  placeholder="Enter password"
-                  className="w-full outline-none text-gray-800 placeholder-gray-400 text-sm"
-                  required
+                  primaryColor={primaryColor}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="text-gray-400"
+                  className="absolute right-4 top-3.5 text-gray-400 hover:text-gray-600 transition"
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
+
+              {/* FORGOT PASSWORD - only for login */}
+              {!isSignup && (
+                <div className="text-right">
+                  <button
+                    type="button"
+                    className="text-xs hover:underline"
+                    style={{ color: primaryColor }}
+                    onClick={() => toast.info("Please use Google login")}
+                  >
+                    Forgot password?
+                  </button>
+                </div>
+              )}
+
+              {/* BUTTON - elegant matrimony rose */}
+              <button
+                disabled={loading}
+                className="
+                  w-full py-2.5 rounded-xl font-medium text-white
+                  transition duration-200 ease-in-out
+                  hover:shadow-lg hover:shadow-rose-200/50
+                  disabled:opacity-60 disabled:cursor-not-allowed
+                "
+                style={{
+                  background: primaryColor,
+                  boxShadow: '0 8px 20px -8px oklch(70.4% 0.191 22.216 / 0.4)'
+                }}
+              >
+                {loading
+                  ? "Please wait..."
+                  : isSignup
+                    ? "Create Account"
+                    : "Sign In"}
+              </button>
+            </form>
+
+            {/* DIVIDER */}
+            <div className="my-8 flex items-center gap-3 text-gray-400 text-xs">
+              <div className="flex-1 h-px bg-gray-200"></div>
+              <span className="font-light">or continue with</span>
+              <div className="flex-1 h-px bg-gray-200"></div>
             </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className={`w-full mt-3 py-2.5 rounded-lg text-white font-medium bg-[oklch(70.4%_0.191_22.216)] hover:opacity-90 transition ${loading ? "opacity-70 cursor-not-allowed" : ""
-                }`}
-            >
-              {loading
-                ? isSignup
-                  ? "Signing Up..."
-                  : "Signing In..."
-                : isSignup
-                  ? "Sign Up"
-                  : "Sign In"}
-            </button>
-          </form>
+            {/* GOOGLE BUTTON CUSTOM WRAPPER */}
+            <div className="flex justify-center">
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                width="300"
+                locale="en"
+                shape="circle"
+                theme="outline"
+                size="large"
+                text="continue_with"
+              />
+            </div>
 
-          {/* Divider */}
-          <div className="flex items-center gap-3 my-4">
-            <div className="flex-1 h-px bg-gray-200"></div>
-            <span className="text-xs text-gray-400">or continue with</span>
-            <div className="flex-1 h-px bg-gray-200"></div>
+            {/* TOGGLE SIGNUP/LOGIN */}
+            <p className="mt-8 text-sm text-gray-600 text-center">
+              {isSignup ? "Already have an account?" : "New to Paarsh?"}
+              <button
+                onClick={() => setIsSignup(!isSignup)}
+                className="ml-2 font-medium hover:underline transition"
+                style={{ color: primaryColor }}
+              >
+                {isSignup ? "Sign in" : "Create account"}
+              </button>
+            </p>
+
+            {/* TERMS NOTE */}
+            <p className="mt-6 text-xs text-gray-400 text-center leading-relaxed">
+              By continuing, you agree to Paarsh's{' '}
+              <a href="/terms" className="hover:underline" style={{ color: primaryColor }}>Terms</a>
+              {' '}and{' '}
+              <a href="/privacy" className="hover:underline" style={{ color: primaryColor }}>Privacy Policy</a>
+            </p>
+
           </div>
 
-          {/* Google Login */}
-          <div className="w-full">
-            <div className="flex justify-center px-4 sm:px-0">
-              <div className="w-full max-w-[280px]">
-                <GoogleLogin
-                  onSuccess={handleGoogleSuccess}
-                  onError={handleGoogleError}
-                  useOneTap={false}
-                  shape="circle"
-                  size="large"
-                  width="280"
-                  logo_alignment="left"
-                  text="signin_with"
-                  render={(renderProps) => (
-                    <button
-                      onClick={renderProps.onClick}
-                      disabled={loading || renderProps.disabled}
-                      className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-red border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-md transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
-                    >
-                      <svg className="w-5 h-5" viewBox="0 0 24 24">
-                        <path
-                          fill="#4285F4"
-                          d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                        />
-                        <path
-                          fill="#34A853"
-                          d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                        />
-                        <path
-                          fill="#FBBC05"
-                          d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                        />
-                        <path
-                          fill="#EA4335"
-                          d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                        />
-                      </svg>
-                      <span className="text-gray-700 font-medium text-sm">
-                        Continue with Google
-                      </span>
-                    </button>
-                  )}
-                />
-              </div>
+          {/* RIGHT SIDE - MATRIMONY STYLE IMAGE */}
+          <div className="hidden md:block relative bg-gradient-to-br from-rose-50 to-orange-50">
+            <div className="absolute inset-0 bg-gradient-to-t from-white/20 via-transparent to-white/10"></div>
+            <img
+              src="/3.jpg"
+              alt="Happy couple"
+              className="w-full h-full object-cover mix-blend-multiply"
+            />
+            <div className="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-white/90 via-white/40 to-transparent">
+              <p className="text-gray-800 font-serif text-xl italic">
+                “Two souls, one journey”
+              </p>
             </div>
           </div>
-
-          {/* Toggle */}
-          <p className="text-center text-sm text-gray-500 mt-5">
-            {isSignup ? (
-              <>
-                Already have an account?{" "}
-                <span
-                  onClick={() => setIsSignup(false)}
-                  className="cursor-pointer text-red-400 relative after:content-[''] after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[1.5px] after:bg-red-400 after:transition-all after:duration-300 hover:after:w-full"
-                  style={{ color: gold }}
-                >
-                  Sign in
-                </span>
-              </>
-            ) : (
-              <>
-                Don&apos;t have an account?{" "}
-                <span
-                  onClick={() => setIsSignup(true)}
-                  className="cursor-pointer text-red-400 relative after:content-[''] after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[1.5px] after:bg-red-400 after:transition-all after:duration-300 hover:after:w-full"
-                  style={{ color: gold }}
-                >
-                  Sign up
-                </span>
-              </>
-            )}
-          </p>
-
-          <p
-            onClick={() => navigate("/")}
-            className="text-center text-xs text-gray-400 mt-6 cursor-pointer"
-          >
-            Back to home
-          </p>
         </div>
       </div>
 
       <Footer />
     </GoogleOAuthProvider>
+  );
+}
+
+/* INPUT COMPONENT - matrimony clean style */
+function InputField({ icon, primaryColor, ...props }) {
+  return (
+    <div
+      className="
+        flex items-center gap-3
+        bg-gray-50
+        border border-gray-200
+        rounded-xl px-4 py-3
+        focus-within:border-opacity-100 focus-within:border-2
+        transition-all
+      "
+      style={{
+        focusWithin: { borderColor: primaryColor },
+      }}
+      onFocusCapture={(e) => {
+        e.currentTarget.style.borderColor = primaryColor;
+        e.currentTarget.style.borderWidth = '2px';
+      }}
+      onBlurCapture={(e) => {
+        e.currentTarget.style.borderColor = '#e5e7eb';
+        e.currentTarget.style.borderWidth = '1px';
+      }}
+    >
+      <span className="text-gray-400">{icon}</span>
+      <input
+        {...props}
+        required
+        className="
+          w-full bg-transparent outline-none
+          text-sm text-gray-800 placeholder-gray-400
+        "
+      />
+    </div>
   );
 }

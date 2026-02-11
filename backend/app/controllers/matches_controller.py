@@ -8,6 +8,7 @@ from app.database import db
 class MatchesController:
     def __init__(self):
         self.profiles_collection = db.profiles
+        self.users_collection = db.users
     
     async def get_profile_by_email(self, email: str) -> Optional[Dict]:
         """Get profile by email"""
@@ -20,6 +21,19 @@ class MatchesController:
             print(f"Error getting profile: {str(e)}")
             return None
     
+    async def get_user_status(self, email: str) -> Dict:
+        try:
+            user = await self.users_collection.find_one({"email": email})
+            if not user:
+                return {"isOnline": False, "lastSeen": None}
+    
+            return {
+                "isOnline": user.get("is_online", False),
+                "lastSeen": user.get("last_seen")
+            }
+        except:
+            return {"isOnline": False, "lastSeen": None}
+
     async def get_all_published_profiles(self) -> List[Dict]:
         """Get all published profiles"""
         try:
@@ -1194,6 +1208,7 @@ class MatchesController:
                 
                 # Calculate match score
                 score = self.calculate_match_score(user_profile, profile)
+                status = await self.get_user_status(profile.get("email"))
                 
                 # Only include matches with decent score
                 if score >= 50:
@@ -1221,7 +1236,9 @@ class MatchesController:
                         'contactNumber': profile.get('personalInfo', {}).get('contactNumber', ''),
                         'whatsappNumber': profile.get('personalInfo', {}).get('whatsappNumber', ''),
                         'nativePlace': profile.get('familyInfo', {}).get('nativePlace', ''),
-                        'motherTongue': profile.get('religionInfo', {}).get('motherTongue', '')
+                        'motherTongue': profile.get('religionInfo', {}).get('motherTongue', ''),
+                        'isOnline': status.get("isOnline", False),
+                        'lastSeen': status.get("lastSeen")
                     }
                     
                     matches.append(match_data)

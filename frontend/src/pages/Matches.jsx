@@ -31,6 +31,7 @@ import {
   FiTarget,
   FiBarChart2
 } from "react-icons/fi";
+import { FaCircle, FaClock } from "react-icons/fa";
 import {
   FaVenusMars,
   FaBirthdayCake,
@@ -615,6 +616,24 @@ const Matches = () => {
     return count;
   };
 
+  const formatLastSeen = (dateString) => {
+    if (!dateString) return "";
+
+    const date = new Date(dateString);
+
+    const istOffset = 5.5 * 60 * 60 * 1000;
+    const istDate = new Date(date.getTime() + istOffset);
+
+    return istDate.toLocaleString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true
+    });
+  };
+
   const MatchDetailModal = ({ match, onClose, onAddToWatchlist, isPremiumUser }) => {
     if (!match) return null;
 
@@ -642,8 +661,20 @@ const Matches = () => {
                   <span className="inline-flex items-center gap-1 bg-[#EA7B7B]/10 text-[#9E3B3B] px-2 py-0.5 md:px-3 md:py-1 rounded-full text-xs md:text-sm">
                     <FaBirthdayCake className="text-[#EA7B7B] text-xs md:text-sm" /> {match.age}
                   </span>
-                  <span className="inline-flex items-center gap-1 bg-[#D25353]/10 text-[#9E3B3B] px-2 py-0.5 md:px-3 md:py-1 rounded-full text-xs md:text-sm">
-                    <FaVenusMars className="text-[#D25353] text-xs md:text-sm" /> {match.gender}
+                  <span
+                    className={
+                      match.isOnline
+                        ? "text-xs md:text-sm font-medium flex items-center gap-1 px-3 py-1.5 rounded-full shadow-sm transition-all duration-300 !bg-green-100 !text-green-800 border border-green-200"
+                        : "text-xs md:text-sm font-medium flex items-center gap-1 px-3 py-1.5 rounded-full shadow-sm transition-all duration-300 !bg-gray-100 !text-gray-700 border border-gray-200"
+                    }
+                  >
+                    {match.isOnline ? (
+                      <FaCircle className="text-green-500 text-[8px] animate-pulse" />
+                    ) : (
+                      <FaClock className="text-gray-500 text-xs" />
+                    )}
+
+                    {match.isOnline ? "Online" : formatLastSeen(match.lastSeen)}
                   </span>
                   <span className="inline-flex items-center gap-1 bg-[#9E3B3B]/10 text-[#9E3B3B] px-2 py-0.5 md:px-3 md:py-1 rounded-full text-xs md:text-sm truncate max-w-[120px] md:max-w-none">
                     <FiMapPin className="text-[#9E3B3B] text-xs md:text-sm" /> {match.state}
@@ -1652,9 +1683,23 @@ const Matches = () => {
                                     <span className="text-xs md:text-sm text-[#9E3B3B] font-medium flex items-center gap-1 bg-[#FFEAD3] px-2 py-1 rounded">
                                       <FaBirthdayCake className="text-[#EA7B7B] text-xs" /> {match.age} years
                                     </span>
-                                    <span className="text-xs md:text-sm text-[#9E3B3B] font-medium flex items-center gap-1 bg-[#FFEAD3] px-2 py-1 rounded">
-                                      <FaVenusMars className="text-[#EA7B7B] text-xs" /> {match.gender}
+                                    <span
+                                      className={
+                                        match.isOnline
+                                          ? "text-xs md:text-sm font-medium flex items-center gap-1 px-3 py-1.5 rounded-full shadow-sm transition-all duration-300 !bg-green-100 !text-green-800 border border-green-200"
+                                          : "text-xs md:text-sm font-medium flex items-center gap-1 px-3 py-1.5 rounded-full shadow-sm transition-all duration-300 !bg-gray-100 !text-gray-700 border border-gray-200"
+                                      }
+                                    >
+                                      {match.isOnline ? (
+                                        <FaCircle className="text-green-500 text-[8px] animate-pulse" />
+                                      ) : (
+                                        <FaClock className="text-gray-500 text-xs" />
+                                      )}
+
+                                      {match.isOnline ? "Online" : formatLastSeen(match.lastSeen)}
                                     </span>
+
+
                                   </div>
                                 </div>
 

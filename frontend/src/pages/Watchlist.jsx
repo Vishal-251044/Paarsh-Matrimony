@@ -42,6 +42,7 @@ import {
   FiCheckCircle,
   FiArrowRight
 } from "react-icons/fi";
+import { FaCircle, FaClock } from "react-icons/fa";
 import {
   FaVenusMars,
   FaBirthdayCake,
@@ -353,6 +354,25 @@ const Watchlist = () => {
     return count;
   };
 
+  const formatLastSeen = (dateString) => {
+    if (!dateString) return "";
+
+    const date = new Date(dateString);
+
+    // Add IST offset manually (5 hours 30 minutes)
+    const istOffset = 5.5 * 60 * 60 * 1000;
+    const istDate = new Date(date.getTime() + istOffset);
+
+    return istDate.toLocaleString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true
+    });
+  };
+
   // Fetch watchlist data
   const fetchWatchlist = async () => {
     if (!isPremium || !userData?.userEmail) {
@@ -574,6 +594,25 @@ const Watchlist = () => {
     const matchScore = formatMatchScore(partner.match_score);
     const matchPercentage = calculateMatchPercentage(matchScore);
 
+    const formatLastSeen = (dateString) => {
+      if (!dateString) return "";
+
+      const date = new Date(dateString);
+
+      // Add IST offset manually (5 hours 30 minutes)
+      const istOffset = 5.5 * 60 * 60 * 1000;
+      const istDate = new Date(date.getTime() + istOffset);
+
+      return istDate.toLocaleString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true
+      });
+    };
+
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center p-0 md:p-4 z-50 overflow-y-auto">
         <div className="bg-white rounded-none md:rounded-2xl w-full md:max-w-6xl md:w-full max-h-screen md:max-h-[90vh] overflow-hidden shadow-2xl md:my-8">
@@ -597,9 +636,26 @@ const Watchlist = () => {
                   <span className="inline-flex items-center gap-1 bg-[#EA7B7B]/10 text-[#9E3B3B] px-2 py-0.5 md:px-3 md:py-1 rounded-full text-xs md:text-sm">
                     <FaBirthdayCake className="text-[#EA7B7B] text-xs md:text-sm" /> {showValue(personalInfo.age)}
                   </span>
-                  <span className="inline-flex items-center gap-1 bg-[#D25353]/10 text-[#9E3B3B] px-2 py-0.5 md:px-3 md:py-1 rounded-full text-xs md:text-sm">
-                    <FaVenusMars className="text-[#D25353] text-xs md:text-sm" /> {showValue(personalInfo.gender)}
+                  <span
+                    className={
+                      partner.isOnline
+                        ? "text-xs md:text-sm font-medium flex items-center gap-1 px-3 py-1.5 rounded-full !bg-green-100 !text-green-800 border border-green-200"
+                        : "text-xs md:text-sm font-medium flex items-center gap-1 px-3 py-1.5 rounded-full !bg-gray-100 !text-gray-700 border border-gray-200"
+                    }
+                  >
+                    {partner.isOnline ? (
+                      <FaCircle className="text-green-500 text-[8px] animate-pulse" />
+                    ) : (
+                      <FaClock className="text-gray-500 text-xs" />
+                    )}
+
+                    {partner.isOnline
+                      ? "Online"
+                      : partner.lastSeen
+                        ? formatLastSeen(partner.lastSeen)
+                        : "Offline"}
                   </span>
+
                   <span className="inline-flex items-center gap-1 bg-[#9E3B3B]/10 text-[#9E3B3B] px-2 py-0.5 md:px-3 md:py-1 rounded-full text-xs md:text-sm truncate max-w-[120px] md:max-w-none">
                     <FiMapPin className="text-[#9E3B3B] text-xs md:text-sm" /> {showValue(locationInfo.state)}
                   </span>
@@ -1113,6 +1169,7 @@ const Watchlist = () => {
       });
       return count;
     };
+
 
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -2123,9 +2180,22 @@ const Watchlist = () => {
                                     <span className="text-xs md:text-sm text-[#9E3B3B] font-medium flex items-center gap-1 bg-[#FFEAD3] px-2 py-1 rounded">
                                       <FaBirthdayCake className="text-[#EA7B7B] text-xs" /> {showValue(personalInfo.age)} years
                                     </span>
-                                    <span className="text-xs md:text-sm text-[#9E3B3B] font-medium flex items-center gap-1 bg-[#FFEAD3] px-2 py-1 rounded">
-                                      <FaVenusMars className="text-[#EA7B7B] text-xs" /> {showValue(personalInfo.gender)}
+                                    <span
+                                      className={
+                                        partner.isOnline
+                                          ? "text-xs md:text-sm font-medium flex items-center gap-1 px-3 py-1.5 rounded-full shadow-sm !bg-green-100 !text-green-800 border border-green-200"
+                                          : "text-xs md:text-sm font-medium flex items-center gap-1 px-3 py-1.5 rounded-full shadow-sm !bg-gray-100 !text-gray-700 border border-gray-200"
+                                      }
+                                    >
+                                      {partner.isOnline ? (
+                                        <FaCircle className="text-green-500 text-[8px] animate-pulse" />
+                                      ) : (
+                                        <FaClock className="text-gray-500 text-xs" />
+                                      )}
+
+                                      {partner.isOnline ? "Online" : formatLastSeen(partner.lastSeen)}
                                     </span>
+
                                   </div>
                                 </div>
 

@@ -11,20 +11,6 @@ const AboutUs = () => {
             <div className="min-h-screen bg-gradient-to-br from-gray-50 to-pink-50 pt-24 pb-10 relative">
                 {/* Background Image in Top Left Corner */}
                 <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
-                    {/* Background Image Container */}
-                    <div className="absolute top-0 left-0 w-96 h-96 opacity-20">
-                        <div
-                            className="w-full h-full"
-                            style={{
-                                backgroundImage: 'url("/about.jpg")',
-                                backgroundSize: 'cover',
-                                backgroundPosition: 'center',
-                                backgroundRepeat: 'no-repeat',
-                                maskImage: 'radial-gradient(circle at center, black 30%, transparent 70%)',
-                                WebkitMaskImage: 'radial-gradient(circle at center, black 30%, transparent 70%)',
-                            }}
-                        ></div>
-                    </div>
 
                     {/* Decorative Background Elements */}
                     <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-[oklch(70.4%_0.191_22.216)]/5 rounded-full blur-3xl"></div>
@@ -38,15 +24,15 @@ const AboutUs = () => {
                         <div className="absolute -top-10 -left-10 w-40 h-40 opacity-10 pointer-events-none">
                             <div className="w-full h-full rounded-full border-4 border-[oklch(70.4%_0.191_22.216)]"></div>
                         </div>
-                        <h1
-                            className="text-[oklch(70.4%_0.191_22.216)] text-5xl sm:text-6xl mb-6 select-none relative"
-                            style={{ fontFamily: "'Great Vibes', cursive" }}
+                        <h2
+                            className="text-[oklch(70.4%_0.191_22.216)] text-3xl sm:text-4xl font-bold mb-6 select-none relative"
+                            style={{ fontFamily: "'Poppins', sans-serif" }}
                         >
                             <span className="relative inline-block">
                                 About Paarsh Matrimony
                                 <span className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-transparent via-[oklch(70.4%_0.191_22.216)] to-transparent"></span>
                             </span>
-                        </h1>
+                        </h2>
                         <p className="text-gray-700 text-xl max-w-3xl mx-auto leading-relaxed relative">
                             Connecting Hearts, Building Futures with Trust and Technology
                         </p>

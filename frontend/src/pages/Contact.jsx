@@ -97,9 +97,15 @@ const Contact = () => {
             <div className="bg-gray-50 min-h-screen pt-10">
                 {/* HERO */}
                 <section className="max-w-7xl mx-auto px-4 py-12 text-center">
-                    <h1 className={`text-3xl md:text-4xl font-bold ${theme}`}>
-                        Let's Connect – We're Here to Help
-                    </h1>
+                    <h2
+                        className="text-[oklch(70.4%_0.191_22.216)] text-3xl sm:text-4xl font-bold mb-6 select-none relative"
+                        style={{ fontFamily: "'Poppins', sans-serif" }}
+                    >
+                        <span className="relative inline-block">
+                            Let's Connect – We're Here to Help
+                            <span className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-transparent via-[oklch(70.4%_0.191_22.216)] to-transparent"></span>
+                        </span>
+                    </h2>
                     <p className="mt-4 text-gray-600 max-w-2xl mx-auto text-sm md:text-base">
                         We'd love to hear from you. Our team is ready to answer all your
                         questions.
