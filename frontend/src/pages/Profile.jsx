@@ -367,27 +367,39 @@ const Section = ({ title, children, icon: Icon }) => (
 
 // FormBox component
 const FormBox = ({ title, children, isEditing, setIsEditing, loadingSaveProfile, sectionProgress, icon: Icon }) => (
-  <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-5 md:p-6 mb-6">
-    <div className="flex justify-between items-start mb-6">
-      <div className="flex items-center gap-3">
-        {Icon && <Icon className="text-red-400 text-xl" />}
-        <div>
-          <h2 className="text-xl font-bold text-gray-800">{title}</h2>
+  <div className="bg-white rounded-2xl shadow-lg border border-gray-200/50 p-6 md:p-8 mb-8 relative overflow-hidden group profile-card">
+    {/* Premium gradient background on hover */}
+    <div className="absolute inset-0 bg-gradient-to-br from-red-50/0 to-red-50/0 group-hover:from-red-50/30 group-hover:to-red-50/20 transition-all duration-300 pointer-events-none"></div>
+    
+    {/* Top accent bar */}
+    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-red-400 via-red-500 to-transparent"></div>
+    
+    <div className="flex flex-col md:flex-row justify-between md:items-start gap-4 mb-6 relative z-10">
+      <div className="flex items-start gap-4 flex-1">
+        {Icon && (
+          <div className="p-3 bg-gradient-to-br from-red-100 to-red-50 rounded-xl flex-shrink-0">
+            <Icon className="text-red-500 text-2xl" />
+          </div>
+        )}
+        <div className="flex-1">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">{title}</h2>
           {sectionProgress !== undefined && (
-            <div className="mt-2">
-              <div className="flex items-center gap-2 mb-1">
-                <div className="w-32 bg-gray-200 rounded-full h-2.5">
+            <div className="mt-3">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="flex-1 max-w-xs bg-gray-200 rounded-full h-3 overflow-hidden shadow-inner">
                   <div
-                    className={`h-2.5 rounded-full transition-all duration-300 ${sectionProgress >= 80 ? 'bg-green-500' : sectionProgress >= 50 ? 'bg-yellow-500' : 'bg-red-400'}`}
+                    className={`h-3 rounded-full transition-all duration-500 relative ${sectionProgress >= 80 ? 'bg-gradient-to-r from-green-500 to-green-400' : sectionProgress >= 50 ? 'bg-gradient-to-r from-yellow-500 to-yellow-400' : 'bg-gradient-to-r from-red-500 to-red-400'}`}
                     style={{ width: `${Math.min(sectionProgress, 100)}%` }}
-                  ></div>
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"></div>
+                  </div>
                 </div>
-                <span className={`text-xs font-semibold ${sectionProgress >= 80 ? 'text-green-600' : sectionProgress >= 50 ? 'text-yellow-600' : 'text-red-400'}`}>
+                <span className={`text-sm font-bold min-w-fit ${sectionProgress >= 80 ? 'text-green-600' : sectionProgress >= 50 ? 'text-yellow-600' : 'text-red-500'}`}>
                   {sectionProgress}%
                 </span>
               </div>
-              <p className="text-xs text-gray-500">
-                {sectionProgress >= 80 ? '✓ Ready to save' : `⚠ Need ${80 - sectionProgress}% more`}
+              <p className={`text-xs font-medium ${sectionProgress >= 80 ? 'text-green-600' : sectionProgress >= 50 ? 'text-yellow-600' : 'text-red-500'}`}>
+                {sectionProgress >= 80 ? '✓ Ready to publish' : `⚠ Complete ${80 - sectionProgress}% more`}
               </p>
             </div>
           )}
@@ -395,60 +407,82 @@ const FormBox = ({ title, children, isEditing, setIsEditing, loadingSaveProfile,
       </div>
       <button
         onClick={() => setIsEditing(!isEditing)}
-        className="flex items-center gap-2 px-4 py-2 text-red-400 hover:bg-red-50 rounded-lg transition disabled:opacity-50 border border-red-200"
+        className="flex items-center gap-2 px-5 py-2.5 text-red-600 hover:bg-red-50/80 rounded-lg transition-all duration-300 disabled:opacity-50 border border-red-200/50 hover:border-red-300 font-semibold shadow-sm hover:shadow-md flex-shrink-0"
         disabled={loadingSaveProfile}
       >
         {loadingSaveProfile ? (
-          <FiLoader className="animate-spin" />
+          <>
+            <FiLoader className="animate-spin w-5 h-5" />
+            <span className="hidden sm:inline">Saving...</span>
+          </>
         ) : (
-          <FiEdit2 />
+          <>
+            <FiEdit2 className="w-5 h-5" />
+            <span className="hidden sm:inline">{isEditing ? "Cancel" : "Edit"}</span>
+          </>
         )}
-        {isEditing ? "Cancel" : "Edit"}
       </button>
     </div>
-    {children}
+    <div className="relative z-10">
+      {children}
+    </div>
   </div>
 );
 
 // SubmitButton component
 const SubmitButton = ({ text, onClick, loading = false, disabled = false }) => (
-  <div className="mt-6 flex justify-center">
+  <div className="mt-8 flex justify-center">
     <button
       onClick={onClick}
-      className="px-6 py-3 bg-red-400 text-white rounded-lg font-medium hover:bg-red-400 transition disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 min-w-[180px] shadow-md"
+      className="group relative px-8 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 min-w-[200px] overflow-hidden"
       disabled={loading || disabled}
     >
-      {loading ? (
-        <>
-          <FiLoader className="animate-spin" />
-          Saving...
-        </>
-      ) : (
-        <>
-          <FiSave />
-          {text}
-        </>
-      )}
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+      <div className="relative flex items-center gap-2">
+        {loading ? (
+          <>
+            <FiLoader className="animate-spin w-5 h-5" />
+            <span>Saving...</span>
+          </>
+        ) : (
+          <>
+            <FiSave className="w-5 h-5" />
+            <span>{text}</span>
+          </>
+        )}
+      </div>
     </button>
   </div>
 );
 
 // LoadingButton component
 const LoadingButton = ({ children, onClick, loading = false, disabled = false, className = "", variant = "primary" }) => {
-  const baseClasses = "px-4 py-2 rounded-lg font-medium transition flex items-center justify-center gap-2";
+  const baseClasses = "px-6 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center gap-2 overflow-hidden group relative";
   const variantClasses = variant === "primary"
-    ? "bg-red-400 text-white hover:bg-red-400"
+    ? "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-lg hover:shadow-xl"
     : variant === "secondary"
-      ? "bg-gray-100 text-gray-800 hover:bg-gray-200 border border-gray-300"
-      : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300";
+      ? "bg-gray-100 text-gray-800 hover:bg-gray-200 border border-gray-300 shadow-md"
+      : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 shadow-md";
 
   return (
     <button
       onClick={onClick}
-      className={`${baseClasses} ${variantClasses} ${className} ${disabled || loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+      className={`${baseClasses} ${variantClasses} ${className} ${disabled || loading ? 'opacity-50 cursor-not-allowed' : ''}`}
       disabled={disabled || loading}
     >
-      {loading ? <FiLoader className="animate-spin" /> : children}
+      {variant === "primary" && (
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+      )}
+      <div className="relative flex items-center gap-2">
+        {loading ? (
+          <>
+            <FiLoader className="animate-spin w-5 h-5" />
+            <span>Loading...</span>
+          </>
+        ) : (
+          children
+        )}
+      </div>
     </button>
   );
 };
@@ -479,33 +513,49 @@ const MembershipCard = ({
   };
 
   return (
-    <div className={`relative border rounded-xl p-5 transition-all duration-300 ${popular ? 'border-red-400 shadow-lg' : 'border-gray-200'} ${isCurrentPlan ? 'ring-2 ring-red-400 ring-opacity-50' : ''}`}>
+    <div className={`relative rounded-2xl overflow-hidden transition-all duration-300 group profile-card
+      ${popular 
+        ? 'border-2 border-red-400 bg-gradient-to-br from-white via-white to-red-50/30 shadow-2xl scale-105 md:scale-100' 
+        : 'border border-gray-200/60 bg-white shadow-lg hover:shadow-xl'
+      } 
+      ${isCurrentPlan ? 'ring-2 ring-red-400/50 ring-offset-2' : 'hover:border-red-300/50'}`}>
+      
+      {/* Premium gradient overlay on hover */}
+      <div className="absolute inset-0 bg-gradient-to-br from-red-50 to-transparent opacity-0 group-hover:opacity-50 transition-opacity duration-300 pointer-events-none"></div>
+
       {popular && (
-        <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-          <span className="bg-red-400 text-white px-4 py-1 rounded-full text-sm font-semibold shadow">
-            MOST POPULAR
-          </span>
+        <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-20">
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-red-400 to-red-500 rounded-full blur-md opacity-50"></div>
+            <span className="relative block bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-1.5 rounded-full text-xs font-bold shadow-lg">
+              ⭐ MOST POPULAR
+            </span>
+          </div>
         </div>
       )}
 
-      <div className="text-center mb-6 pt-4">
-        <h3 className="text-xl font-bold text-gray-900 mb-2">{type}</h3>
-        <div className="flex items-center justify-center gap-1">
-          <span className="text-3xl font-bold text-gray-900">
-            {type === "Free Membership" ? "₹0" : `₹${price}`}
-          </span>
-          <span className="text-gray-500 text-sm">/year</span>
+      <div className="relative z-10 p-7 md:p-8">
+        <div className="text-center mb-7 pt-2">
+          <h3 className={`font-bold mb-3 ${popular ? 'text-2xl text-gray-900' : 'text-xl text-gray-900'}`}>{type}</h3>
+          <div className="flex items-baseline justify-center gap-2">
+            <span className={`font-bold text-gray-900 ${popular ? 'text-4xl' : 'text-3xl'}`}>
+              {type === "Free Membership" ? "₹0" : `₹${price}`}
+            </span>
+            {type !== "Free Membership" && <span className="text-gray-500 text-base">/year</span>}
+          </div>
+          {type === "Free Membership" && <p className="text-gray-500 text-sm mt-2">Forever free</p>}
         </div>
-      </div>
 
-      <ul className="space-y-3 mb-6">
-        {features.map((feature, index) => (
-          <li key={index} className="flex items-start gap-2">
-            <FiCheckCircle className="text-green-500 mt-0.5 flex-shrink-0" size={16} />
-            <span className="text-sm text-gray-700">{feature}</span>
-          </li>
-        ))}
-      </ul>
+        <ul className="space-y-3 mb-8">
+          {features.map((feature, index) => (
+            <li key={index} className="flex items-start gap-3">
+              <div className="p-1 bg-green-100 rounded-full flex-shrink-0 mt-0.5">
+                <FiCheckCircle className="text-green-600 flex-shrink-0" size={14} />
+              </div>
+              <span className="text-sm text-gray-700 leading-relaxed">{feature}</span>
+            </li>
+          ))}
+        </ul>
 
       {/* Button Logic */}
       {type === "Free Membership" ? (
@@ -1913,17 +1963,20 @@ const Profile = () => {
 
       <div className="min-h-screen bg-gray-50 pt-20 md:pt-24 pb-12">
         <div className="container mx-auto px-3 md:px-4">
-          {/* User Profile Header - Jeewansathi Premium Style */}
-          <div className="bg-gradient-to-br from-white via-white to-red-50/30 rounded-xl shadow-md p-3 md:p-4 mb-4 md:mb-5 relative border border-red-100/80 backdrop-blur-sm max-w-4xl mx-auto"> {/* Changed max-w-2xl to max-w-4xl */}
+          {/* User Profile Header - Jeevansathi Premium Style */}
+          <div className="bg-gradient-to-br from-white via-white to-red-50/40 rounded-2xl shadow-lg p-4 md:p-6 mb-6 md:mb-8 relative border border-red-100/60 backdrop-blur-md max-w-4xl mx-auto">
+            {/* Premium Background Accent */}
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-red-400 via-red-500 to-red-400 rounded-t-2xl"></div>
+
             {/* Settings Icon with Premium Style */}
-            <div className="absolute top-3 right-3 z-20">
+            <div className="absolute top-4 right-4 z-20">
               <div className="relative">
                 <button
                   onClick={() => setShowSettings(!showSettings)}
-                  className="p-2 rounded-full bg-gray-50 hover:bg-red-50 transition-all duration-300 group"
+                  className="p-2 rounded-full bg-gradient-to-br from-white to-gray-50 hover:from-red-50 hover:to-white shadow-md hover:shadow-lg transition-all duration-300 group border border-gray-200/50"
                 >
                   <FiSettings
-                    className="w-5 h-5 text-gray-600 group-hover:text-red-400 transition-transform duration-300 group-hover:rotate-90"
+                    className="w-5 h-5 text-gray-700 group-hover:text-red-500 transition-transform duration-300 group-hover:rotate-90"
                   />
                 </button>
                 {showSettings && (
@@ -2012,73 +2065,89 @@ const Profile = () => {
             </div>
 
             {/* Main Profile Content */}
-            <div className="flex flex-col items-center gap-6 md:flex-row md:items-start md:gap-8"> {/* Increased gap */}
-              {/* Avatar - Full Height Desktop / Square Mobile */}
-              <div className="relative flex-shrink-0 w-36 h-36 md:w-44 md:h-auto md:self-stretch">
-                <div
-                  className="w-full h-full aspect-square overflow-hidden rounded-lg border"
-                  style={{ borderColor: "#d7d4d1", borderWidth: "2px" }}
-                >
-                  <img
-                    src={personalInfo.profileImg ? personalInfo.profileImg : "/5.png"}
-                    alt="Profile"
-                    className="w-full h-full object-cover"
-                  />
+            <div className="flex flex-col items-center gap-6 md:flex-row md:items-start md:gap-10 pt-2">
+              {/* Avatar - Premium Ring Effect */}
+              <div className="relative flex-shrink-0">
+                {/* Outer Ring */}
+                <div className="absolute inset-0 -m-2 bg-gradient-to-br from-red-400/20 to-red-500/20 rounded-full blur-lg"></div>
+                
+                <div className="relative w-40 h-40 md:w-48 md:h-48">
+                  {/* Border Ring */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-red-400 to-red-500 rounded-full p-1">
+                    <div className="w-full h-full rounded-full overflow-hidden border-4 border-white shadow-lg">
+                      <img
+                        src={personalInfo.profileImg ? personalInfo.profileImg : "/5.png"}
+                        alt="Profile"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  </div>
                 </div>
 
+                {/* Verification Badge */}
                 {isProfilePublished && (
-                  <div className="absolute -bottom-1 -right-1 bg-green-500 border-2 border-white rounded-full p-1">
-                    <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
+                  <div className="absolute -bottom-2 -right-2 bg-gradient-to-br from-green-400 to-green-500 border-3 border-white rounded-full p-2 shadow-lg">
+                    <FiCheckCircle className="w-5 h-5 text-white" />
+                  </div>
+                )}
+                
+                {/* Premium Star Badge */}
+                {membershipPlan === "premium" && (
+                  <div className="absolute -top-2 -right-2 bg-gradient-to-br from-amber-400 to-amber-500 border-3 border-white rounded-full p-1.5 shadow-lg">
+                    <FiStar className="w-4 h-4 text-white fill-white" />
                   </div>
                 )}
               </div>
 
               {/* User Info */}
               <div className="flex-1 w-full text-center md:text-left">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-1 mb-2">
-                  <div>
-                    <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                      {user.name}
-                    </h1>
-                    <p className="text-base text-gray-500 flex items-center gap-1.5 justify-center md:justify-start">
-                      <span className="w-1 h-1 bg-red-400 rounded-full"></span>
-                      {user.email}
-                    </p>
-                  </div>
+                <div className="mb-3">
+                  <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+                    {user.name}
+                  </h1>
+                  <p className="text-base text-gray-600 flex items-center gap-2 justify-center md:justify-start">
+                    <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+                    <span>{user.email}</span>
+                  </p>
                 </div>
 
-                {/* Premium Progress Bar - Compact */}
-                <div className="mb-3 bg-white/50 backdrop-blur-sm rounded-lg p-3 border border-red-100/50">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 bg-red-400 rounded-full animate-pulse"></span>
+                {/* Trust Indicators - Premium Layout */}
+                <div className="flex flex-col md:flex-row gap-3 mb-4">
+                  {user.google_id && (
+                    <span className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-50 to-emerald-50 text-green-700 rounded-full text-sm font-semibold border border-green-200 shadow-sm">
+                      <FiCheckCircle className="w-4 h-4" />
+                      Verified
+                    </span>
+                  )}
+                  <span className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-50 to-cyan-50 text-blue-700 rounded-full text-sm font-semibold border border-blue-200 shadow-sm">
+                    <FiUser className="w-4 h-4" />
+                    Member since {new Date(user.createdAt || new Date()).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}
+                  </span>
+                </div>
+
+                {/* Profile Completion - Enhanced */}
+                <div className="mb-4 bg-gradient-to-br from-white/80 to-red-50/40 backdrop-blur-sm rounded-2xl p-4 border border-red-100/60 shadow-md">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-semibold text-gray-800 flex items-center gap-2">
+                      <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
                       Profile Strength
                     </span>
-                    <span className="text-sm font-bold text-red-400">
+                    <span className="text-base font-bold text-transparent bg-gradient-to-r from-red-500 to-red-400 bg-clip-text">
                       {Math.round((Object.values(profileProgress).reduce((a, b) => a + b, 0) / 3))}%
                     </span>
                   </div>
-                  <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+                  <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden shadow-inner">
                     <div
-                      className="bg-gradient-to-r from-red-400 to-red-300 h-2 rounded-full transition-all duration-700 ease-out relative"
+                      className="h-3 rounded-full transition-all duration-700 ease-out relative bg-gradient-to-r from-red-500 via-red-400 to-red-300"
                       style={{ width: `${Math.round((Object.values(profileProgress).reduce((a, b) => a + b, 0) / 3))}%` }}
                     >
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"></div>
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer"></div>
                     </div>
                   </div>
                 </div>
 
-                {user.google_id && (
-                  <div className="flex justify-center md:justify-start mb-3 animate-fadeIn">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-green-50 to-emerald-50 text-green-700 rounded-lg text-sm font-medium border border-green-200/50 shadow-sm">
-                      <FiCheckCircle className="w-4 h-4" />
-                      Google Account
-                    </span>
-                  </div>
-                )}
-
-                {/* Action Buttons - Smaller */}
-                <div className="flex flex-wrap gap-3 justify-center md:justify-start">
+                {/* Action Buttons - Premium */}
+                <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
                   <button
                     onClick={() => {
                       setLoadingState('viewMatches', true);
@@ -2091,16 +2160,21 @@ const Profile = () => {
                       navigate("/matches", { state: userData });
                     }}
                     disabled={loadingStates.viewMatches}
-                    className="group relative px-4 py-2 bg-gradient-to-r from-red-400 to-red-500 text-white rounded-lg text-base font-semibold shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-50 overflow-hidden"
+                    className="group relative px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 overflow-hidden flex items-center justify-center gap-2"
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-                    <div className="relative flex items-center gap-1.5">
+                    <div className="relative flex items-center gap-2">
                       {loadingStates.viewMatches ? (
-                        <FiLoader className="animate-spin w-4 h-4" />
+                        <>
+                          <FiLoader className="animate-spin w-5 h-5" />
+                          <span>Loading...</span>
+                        </>
                       ) : (
-                        <FiEye className="w-4 h-4" />
+                        <>
+                          <FiHeart className="w-5 h-5" />
+                          <span>View Matches</span>
+                        </>
                       )}
-                      <span>View Matches</span>
                     </div>
                   </button>
                   <button
@@ -2115,42 +2189,47 @@ const Profile = () => {
                       navigate("/watchlist", { state: userData });
                     }}
                     disabled={loadingStates.watchlist}
-                    className="group relative px-4 py-2 bg-white text-gray-700 rounded-lg text-base font-semibold border border-red-100 hover:border-red-400 shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-50"
+                    className="group relative px-6 py-3 bg-white text-red-600 rounded-lg font-semibold border-2 border-red-400 hover:bg-red-50 shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-2"
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-red-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg"></div>
-                    <div className="relative flex items-center gap-1.5">
+                    <div className="relative flex items-center gap-2">
                       {loadingStates.watchlist ? (
-                        <FiLoader className="animate-spin w-4 h-4" />
+                        <>
+                          <FiLoader className="animate-spin w-5 h-5" />
+                          <span>Loading...</span>
+                        </>
                       ) : (
-                        <FiHeart className="w-4 h-4 text-red-400" />
+                        <>
+                          <FiHeart className="w-5 h-5" />
+                          <span>Watchlist</span>
+                        </>
                       )}
-                      <span>Watchlist</span>
                     </div>
                   </button>
                 </div>
               </div>
             </div>
 
-            {/* Profile Status Badge - Compact */}
-            <div className="mt-4 flex items-center justify-center">
+            {/* Profile Status Badge - Premium */}
+            <div className="mt-5 flex items-center justify-center">
               <div
-                className={`px-4 py-1.5 rounded-lg text-base font-medium shadow-md backdrop-blur-sm flex items-center gap-1.5
+                className={`px-5 py-2.5 rounded-full text-sm font-semibold shadow-lg backdrop-blur-sm flex items-center gap-2 border
 ${isProfilePublished
-                    ? "bg-gradient-to-r from-green-50 to-emerald-50 text-green-700 border border-green-200/50"
-                    : "bg-gradient-to-r from-amber-50 to-orange-50 text-amber-700 border border-amber-200/50"
+                    ? "bg-gradient-to-r from-green-400/10 to-emerald-400/10 text-green-700 border-green-300/50"
+                    : "bg-gradient-to-r from-amber-400/10 to-orange-400/10 text-amber-700 border-amber-300/50"
                   }`}
               >
                 {isProfilePublished ? (
                   <>
-                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                     <MdPublishedWithChanges className="w-5 h-5" />
-                    <span className="font-medium">Profile Published</span>
+                    <span className="font-semibold">Profile Published & Visible</span>
                   </>
                 ) : (
                   <>
-                    <div className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse"></div>
+                    <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
                     <MdWarning className="w-5 h-5" />
-                    <span className="font-medium">Profile Not Published</span>
+                    <span className="font-semibold">Complete & Publish Profile</span>
                   </>
                 )}
               </div>
@@ -2428,9 +2507,9 @@ ${isProfilePublished
             )}
           </div>
 
-          {/* Navigation Tabs - Jeewansathi Style */}
-          <div className="w-full flex justify-center mb-6 md:mb-8">
-            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 px-1 max-w-full">
+          {/* Navigation Tabs - Premium Jeevansaathi Style */}
+          <div className="w-full flex justify-center mb-8 md:mb-10">
+            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-3 px-2 max-w-full bg-white/60 backdrop-blur-md rounded-2xl border border-gray-200/50 shadow-lg p-1">
               {[
                 { id: "self", label: "Self", icon: FiUser },
                 { id: "family", label: "Family", icon: MdFamilyRestroom },
@@ -2444,15 +2523,18 @@ ${isProfilePublished
                     setActiveSection(tab.id);
                     window.location.hash = tab.id;
                   }}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium transition whitespace-nowrap text-sm
+                  className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold transition whitespace-nowrap text-sm relative
           ${activeSection === tab.id
-                      ? "bg-red-500 text-white shadow-lg scale-105"
-                      : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-100"
+                      ? "bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg hover:shadow-xl"
+                      : "bg-white text-gray-700 border border-gray-200/50 hover:bg-gray-50/80 hover:border-red-300/50"
                     }`}
                   disabled={loadingStates.saveProfile}
                 >
-                  <tab.icon size={16} />
+                  <tab.icon size={18} />
                   <span className="hidden sm:inline">{tab.label}</span>
+                  {activeSection === tab.id && (
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-white to-transparent"></div>
+                  )}
                 </button>
               ))}
             </div>
@@ -3294,13 +3376,13 @@ ${isProfilePublished
 
             {activeSection === "plan" && (
               <div className="bg-white rounded-xl shadow-lg p-4 md:p-6 mb-6 border border-gray-200">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="p-2 bg-red-100 rounded-lg">
-                    <MdOutlineWorkspacePremium className="text-2xl text-red-400" />
+                <div className="flex items-center gap-4 mb-8">
+                  <div className="p-3 bg-gradient-to-br from-red-400/20 to-red-500/20 rounded-xl">
+                    <MdOutlineWorkspacePremium className="text-3xl text-red-500" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold text-gray-800">Choose Your Plan</h2>
-                    <p className="text-sm text-gray-600">Select the plan that best suits your needs</p>
+                    <h2 className="text-2xl md:text-3xl font-bold text-gray-900">Membership Plans</h2>
+                    <p className="text-base text-gray-600 mt-1">Choose the perfect plan to unlock all features</p>
                   </div>
                 </div>
 
