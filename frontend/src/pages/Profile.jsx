@@ -186,7 +186,8 @@ const Input = ({ label, type = "text", value, onChange, options = [], placeholde
             onChange={(date) => onChange(date ? date.toISOString().split('T')[0] : "")}
             dateFormat="dd/MM/yyyy"
             placeholderText="DD/MM/YYYY"
-            className={`w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[${PRIMARY_COLOR}] focus:border-transparent transition text-gray-700 ${Icon ? 'pl-10' : ''}`}
+            className={`w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition text-gray-700 ${Icon ? 'pl-10' : ''}`}
+            style={{ borderColor: !isEditing || isProtected ? '#e5e7eb' : '#d1d5db' }}
             disabled={!isEditing || isProtected}
             maxDate={new Date()}
             showYearDropdown
@@ -245,7 +246,7 @@ const Input = ({ label, type = "text", value, onChange, options = [], placeholde
         <div className="relative">
           <input
             type="tel"
-            className={`w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[${PRIMARY_COLOR}] focus:border-transparent transition text-gray-700 ${Icon ? 'pl-10' : ''}`}
+            className={`w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition text-gray-700 ${Icon ? 'pl-10' : ''}`}
             value={formatPhoneNumber(value)}
             onChange={handlePhoneChange}
             placeholder="987-654-3210"
@@ -269,7 +270,7 @@ const Input = ({ label, type = "text", value, onChange, options = [], placeholde
       <div className="relative">
         <input
           type={type}
-          className={`w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[${PRIMARY_COLOR}] focus:border-transparent transition text-gray-700 placeholder-gray-400 ${Icon ? 'pl-10' : ''}`}
+            className={`w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition text-gray-700 placeholder-gray-400 ${Icon ? 'pl-10' : ''}`}
           value={value || ""}
           onChange={(e) => onChange(e.target.value)}
           onBlur={(e) => {
@@ -307,7 +308,7 @@ const PasswordInput = ({ label, value, onChange, placeholder = "", isEditing = t
       <div className="relative">
         <input
           type={showPassword ? "text" : "password"}
-          className="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[${PRIMARY_COLOR}] focus:border-transparent transition text-gray-700 placeholder-gray-400"
+            className="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition text-gray-700 placeholder-gray-400"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           disabled={!isEditing}
@@ -334,7 +335,7 @@ const Textarea = ({ label, value, onChange, rows = 4, placeholder = "", isEditin
     </label>
     <div className="relative">
       <textarea
-        className={`w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[${PRIMARY_COLOR}] focus:border-transparent transition text-gray-700 placeholder-gray-400 resize-y ${Icon ? 'pl-10' : ''}`}
+            className={`w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition text-gray-700 placeholder-gray-400 resize-y ${Icon ? 'pl-10' : ''}`}
         rows={rows}
         value={value || ""}
         onChange={(e) => onChange(e.target.value)}
