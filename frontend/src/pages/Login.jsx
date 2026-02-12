@@ -5,6 +5,7 @@ import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Footer from "../components/Footer";
+import Chatbot from '../components/Chatbot';
 import { GoogleLogin, GoogleOAuthProvider } from "@react-oauth/google";
 
 export default function LoginPage() {
@@ -84,7 +85,7 @@ export default function LoginPage() {
       {/* CLEAN MATRIMONY BACKGROUND */}
       <div
         className="min-h-screen flex items-center justify-center px-3 py-10 relative"
-        style={{ background: softBg }}
+        style={{ background: "oklch(75% 0.14 22.216)" }}
       >
         {/* subtle pattern overlay */}
         <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
@@ -100,11 +101,11 @@ export default function LoginPage() {
           <Home size={18} style={{ color: primaryColor }} />
         </button>
 
-        {/* CARD - CLEAN, WHITE, ELEGANT */}
+        {/* CARD - SMALLER, CLEAN, WHITE, ELEGANT */}
         <div
           className="
             relative z-10
-            w-full max-w-5xl
+            w-full max-w-4xl
             bg-white
             rounded-2xl
             shadow-xl
@@ -113,31 +114,31 @@ export default function LoginPage() {
             border border-white/20
           "
         >
-          {/* LEFT FORM */}
-          <div className="p-8 sm:p-12" style={{ background: 'white' }}>
+          {/* LEFT FORM - COMPACT */}
+          <div className="p-6 sm:p-8" style={{ background: 'white' }}>
 
             {/* subtle matrimony emblem */}
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-0.5 rounded-full" style={{ background: primaryColor }}></div>
-              <span className="text-xs uppercase tracking-[0.3em] font-light text-gray-400">Paarsh Matrimony</span>
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-6 h-0.5 rounded-full" style={{ background: primaryColor }}></div>
+              <span className="text-[0.6rem] uppercase tracking-[0.2em] font-light text-gray-400">Paarsh Matrimony</span>
             </div>
 
-            <h1 className="text-3xl sm:text-4xl font-bold text-gray-800">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">
               {isSignup ? "Begin your journey" : "Welcome back"}
             </h1>
 
-            <p className="text-gray-500 mt-2 text-sm font-light">
+            <p className="text-gray-500 mt-1 text-xs font-light">
               {isSignup
                 ? "Find your perfect companion"
                 : "Sign in to continue your search"}
             </p>
 
-            {/* FORM */}
-            <form onSubmit={handleSubmit} className="mt-10 space-y-5">
+            {/* FORM - COMPACT */}
+            <form onSubmit={handleSubmit} className="mt-6 space-y-4">
 
               {isSignup && (
                 <InputField
-                  icon={<User size={18} style={{ color: primaryColor }} />}
+                  icon={<User size={16} style={{ color: primaryColor }} />}
                   placeholder="Full Name"
                   name="name"
                   value={form.name}
@@ -147,7 +148,7 @@ export default function LoginPage() {
               )}
 
               <InputField
-                icon={<Mail size={18} style={{ color: primaryColor }} />}
+                icon={<Mail size={16} style={{ color: primaryColor }} />}
                 placeholder="Email Address"
                 name="email"
                 value={form.email}
@@ -158,7 +159,7 @@ export default function LoginPage() {
 
               <div className="relative">
                 <InputField
-                  icon={<Lock size={18} style={{ color: primaryColor }} />}
+                  icon={<Lock size={16} style={{ color: primaryColor }} />}
                   placeholder="Password"
                   name="password"
                   value={form.password}
@@ -169,9 +170,9 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-3.5 text-gray-400 hover:text-gray-600 transition"
+                  className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 transition"
                 >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
 
@@ -180,7 +181,7 @@ export default function LoginPage() {
                 <div className="text-right">
                   <button
                     type="button"
-                    className="text-xs hover:underline"
+                    className="text-[0.7rem] hover:underline"
                     style={{ color: primaryColor }}
                     onClick={() => toast.info("Please use Google login")}
                   >
@@ -193,7 +194,7 @@ export default function LoginPage() {
               <button
                 disabled={loading}
                 className="
-                  w-full py-2.5 rounded-xl font-medium text-white
+                  w-full py-2 rounded-lg font-medium text-white text-sm
                   transition duration-200 ease-in-out
                   hover:shadow-lg hover:shadow-rose-200/50
                   disabled:opacity-60 disabled:cursor-not-allowed
@@ -211,18 +212,18 @@ export default function LoginPage() {
               </button>
             </form>
 
-            {/* DIVIDER */}
-            <div className="my-8 flex items-center gap-3 text-gray-400 text-xs">
+            {/* DIVIDER - COMPACT */}
+            <div className="my-5 flex items-center gap-2 text-gray-400 text-[0.65rem]">
               <div className="flex-1 h-px bg-gray-200"></div>
               <span className="font-light">or continue with</span>
               <div className="flex-1 h-px bg-gray-200"></div>
             </div>
 
-            {/* GOOGLE BUTTON CUSTOM WRAPPER */}
-            <div className="flex justify-center">
+            {/* GOOGLE BUTTON CUSTOM WRAPPER - SCALED DOWN */}
+            <div className="flex justify-center scale-90">
               <GoogleLogin
                 onSuccess={handleGoogleSuccess}
-                width="300"
+                width="280"
                 locale="en"
                 shape="circle"
                 theme="outline"
@@ -231,20 +232,20 @@ export default function LoginPage() {
               />
             </div>
 
-            {/* TOGGLE SIGNUP/LOGIN */}
-            <p className="mt-8 text-sm text-gray-600 text-center">
+            {/* TOGGLE SIGNUP/LOGIN - COMPACT */}
+            <p className="mt-5 text-xs text-gray-600 text-center">
               {isSignup ? "Already have an account?" : "New to Paarsh?"}
               <button
                 onClick={() => setIsSignup(!isSignup)}
-                className="ml-2 font-medium hover:underline transition"
+                className="ml-1.5 font-medium hover:underline transition text-xs"
                 style={{ color: primaryColor }}
               >
                 {isSignup ? "Sign in" : "Create account"}
               </button>
             </p>
 
-            {/* TERMS NOTE */}
-            <p className="mt-6 text-xs text-gray-400 text-center leading-relaxed">
+            {/* TERMS NOTE - COMPACT */}
+            <p className="mt-4 text-[0.6rem] text-gray-400 text-center leading-relaxed">
               By continuing, you agree to Paarsh's{' '}
               <a href="/terms" className="hover:underline" style={{ color: primaryColor }}>Terms</a>
               {' '}and{' '}
@@ -253,16 +254,16 @@ export default function LoginPage() {
 
           </div>
 
-          {/* RIGHT SIDE - MATRIMONY STYLE IMAGE */}
+          {/* RIGHT SIDE - MATRIMONY STYLE IMAGE (FULL HEIGHT, MAINTAINED) */}
           <div className="hidden md:block relative bg-gradient-to-br from-rose-50 to-orange-50">
             <div className="absolute inset-0 bg-gradient-to-t from-white/20 via-transparent to-white/10"></div>
             <img
-              src="/3.jpg"
+              src="/3.5.jpg"
               alt="Happy couple"
               className="w-full h-full object-cover mix-blend-multiply"
             />
-            <div className="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-white/90 via-white/40 to-transparent">
-              <p className="text-gray-800 font-serif text-xl italic">
+            <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-white/90 via-white/40 to-transparent">
+              <p className="text-gray-800 font-serif text-lg italic">
                 “Two souls, one journey”
               </p>
             </div>
@@ -271,19 +272,20 @@ export default function LoginPage() {
       </div>
 
       <Footer />
+      <Chatbot />
     </GoogleOAuthProvider>
   );
 }
 
-/* INPUT COMPONENT - matrimony clean style */
+/* INPUT COMPONENT - matrimony clean style, smaller */
 function InputField({ icon, primaryColor, ...props }) {
   return (
     <div
       className="
-        flex items-center gap-3
+        flex items-center gap-2
         bg-gray-50
         border border-gray-200
-        rounded-xl px-4 py-3
+        rounded-lg px-3 py-2
         focus-within:border-opacity-100 focus-within:border-2
         transition-all
       "
@@ -305,7 +307,7 @@ function InputField({ icon, primaryColor, ...props }) {
         required
         className="
           w-full bg-transparent outline-none
-          text-sm text-gray-800 placeholder-gray-400
+          text-xs text-gray-800 placeholder-gray-400
         "
       />
     </div>

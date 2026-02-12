@@ -117,8 +117,7 @@ async def verify_payment(data: dict):
 @router.get("/check-membership/{email}")
 async def check_membership(email: str):
     """
-    Check user's membership status. 
-    Expired memberships are flagged as inactive but dates are preserved.
+    Check user's membership status and UPDATE DATABASE if expired.
     """
     try:
         profile = await profile_collection.find_one({"email": email})
@@ -132,6 +131,7 @@ async def check_membership(email: str):
 
         is_premium = plan != "free"
         is_active = False
+        current_plan = plan
 
         if is_premium and expiry_str:
             expiry_date = datetime.fromisoformat(expiry_str)
@@ -139,12 +139,23 @@ async def check_membership(email: str):
             if now <= expiry_date:
                 is_active = True
             else:
-                # Membership expired, but keep dates for history
+                # 🔴 THIS IS THE KEY FIX - UPDATE DATABASE TO FREE
+                await profile_collection.update_one(
+                    {"email": email},
+                    {
+                        "$set": {
+                            "membershipPlan": "free",  # Actually change the plan
+                            "lastUpdated": datetime.now().isoformat()
+                        }
+                    }
+                )
+                # Update response values
+                current_plan = "free"
+                is_premium = False
                 is_active = False
-                plan = "free"  # Frontend sees user as free, but start/expiry dates remain
 
         return {
-            "membership_plan": plan,
+            "membership_plan": current_plan,  # Will be "free" if expired
             "is_premium": is_premium,
             "is_active": is_active,
             "membershipStartDate": start_str,

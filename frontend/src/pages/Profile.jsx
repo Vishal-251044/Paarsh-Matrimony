@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import Chatbot from '../components/Chatbot';
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import DatePicker from "react-datepicker";
@@ -490,7 +491,6 @@ const MembershipCard = ({
       <div className="text-center mb-6 pt-4">
         <h3 className="text-xl font-bold text-gray-900 mb-2">{type}</h3>
         <div className="flex items-center justify-center gap-1">
-          <FiDollarSign className="text-red-400" />
           <span className="text-3xl font-bold text-gray-900">
             {type === "Free Membership" ? "₹0" : `₹${price}`}
           </span>
@@ -506,32 +506,6 @@ const MembershipCard = ({
           </li>
         ))}
       </ul>
-
-      {/* Membership Dates Display */}
-      {/* {isCurrentPlan && membershipDates?.membershipStartDate && (
-        <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
-          <div className="flex items-center gap-2 mb-2">
-            <FiCalendar className="text-gray-500" size={14} />
-            <span className="text-xs font-medium text-gray-700">Membership Period:</span>
-          </div>
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            <div className="flex items-center gap-1">
-              <span className="text-gray-600">Started:</span>
-              <span className="font-medium text-green-600">
-                {formatDate(membershipDates.membershipStartDate)}
-              </span>
-            </div>
-            {membershipDates.membershipExpiryDate && (
-              <div className="flex items-center gap-1">
-                <span className="text-gray-600">Expires:</span>
-                <span className="font-medium text-amber-600">
-                  {formatDate(membershipDates.membershipExpiryDate)}
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
-      )} */}
 
       {/* Button Logic */}
       {type === "Free Membership" ? (
@@ -864,52 +838,33 @@ const Profile = () => {
   // Check membership status and dates
   const checkMembershipStatus = async () => {
     try {
-      console.log("Checking membership status for:", user.email);
 
-      // First try the membership dates endpoint
-      try {
-        const datesResponse = await axios.get(
-          `${BACKEND_URL}/profile/membership-dates/${user.email}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+      // Use ONLY the payment endpoint which now updates the database
+      const paymentResponse = await axios.get(
+        `${BACKEND_URL}/payment/check-membership/${user.email}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
-        console.log("Membership dates response:", datesResponse.data);
+      if (paymentResponse.data) {
+        // Update state with the CORRECT plan (will be "free" if expired)
+        setMembershipPlan(paymentResponse.data.membership_plan);
 
-        if (datesResponse.data) {
-          setMembershipPlan(datesResponse.data.membershipPlan || "free");
+        setMembershipDates({
+          membershipStartDate: paymentResponse.data.membershipStartDate || "",
+          membershipExpiryDate: paymentResponse.data.membershipExpiryDate || ""
+        });
 
-          if (datesResponse.data.membershipStartDate || datesResponse.data.membershipExpiryDate) {
-            setMembershipDates({
-              membershipStartDate: datesResponse.data.membershipStartDate || "",
-              membershipExpiryDate: datesResponse.data.membershipExpiryDate || ""
-            });
+        // Show notification if membership just expired
+        if (paymentResponse.data.membership_plan === "free" &&
+          paymentResponse.data.membershipExpiryDate) {
+          const expiryDate = new Date(paymentResponse.data.membershipExpiryDate);
+          const today = new Date();
+
+          if (expiryDate < today) {
+            toast.info("Your Premium membership has expired. You are now on Free plan.");
           }
         }
-      } catch (datesError) {
-        console.log("Could not fetch membership dates:", datesError.message);
       }
-
-      // Also try the payment endpoint
-      try {
-        const paymentResponse = await axios.get(
-          `${BACKEND_URL}/payment/check-membership/${user.email}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-
-        if (paymentResponse.data) {
-          setMembershipPlan(paymentResponse.data.membership_plan || membershipPlan);
-
-          if (paymentResponse.data.membershipStartDate || paymentResponse.data.membershipExpiryDate) {
-            setMembershipDates({
-              membershipStartDate: paymentResponse.data.membershipStartDate || membershipDates.membershipStartDate,
-              membershipExpiryDate: paymentResponse.data.membershipExpiryDate || membershipDates.membershipExpiryDate
-            });
-          }
-        }
-      } catch (paymentError) {
-        console.log("Could not fetch payment membership:", paymentError.message);
-      }
-
     } catch (error) {
       console.error("Error checking membership:", error);
     }
@@ -1959,7 +1914,7 @@ const Profile = () => {
       <div className="min-h-screen bg-gray-50 pt-20 md:pt-24 pb-12">
         <div className="container mx-auto px-3 md:px-4">
           {/* User Profile Header - Jeewansathi Premium Style */}
-          <div className="bg-gradient-to-br from-white via-white to-red-50/30 rounded-2xl shadow-lg p-4 md:p-5 mb-5 md:mb-6 relative border border-red-100/80 backdrop-blur-sm">
+          <div className="bg-gradient-to-br from-white via-white to-red-50/30 rounded-xl shadow-md p-3 md:p-4 mb-4 md:mb-5 relative border border-red-100/80 backdrop-blur-sm max-w-4xl mx-auto"> {/* Changed max-w-2xl to max-w-4xl */}
             {/* Settings Icon with Premium Style */}
             <div className="absolute top-3 right-3 z-20">
               <div className="relative">
@@ -1972,10 +1927,10 @@ const Profile = () => {
                   />
                 </button>
                 {showSettings && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white/95 backdrop-blur-sm border border-red-100 shadow-xl rounded-xl text-left z-50 overflow-hidden animate-fadeIn">
+                  <div className="absolute right-0 mt-2 w-64 bg-white/95 backdrop-blur-sm border border-red-100 shadow-xl rounded-xl text-left z-50 overflow-hidden animate-fadeIn">
                     <div className="py-1">
                       <button
-                        className="flex items-center gap-2 w-full text-left px-4 py-2.5 hover:bg-gradient-to-r hover:from-red-50/50 hover:to-transparent transition-all duration-200 disabled:opacity-50 group text-sm"
+                        className="flex items-center gap-2 w-full text-left px-3 py-2.5 hover:bg-gradient-to-r hover:from-red-50/50 hover:to-transparent transition-all duration-200 disabled:opacity-50 group text-base"
                         onClick={() => {
                           setShowPasswordBox(true);
                           setShowFeedbackBox(false);
@@ -1985,12 +1940,12 @@ const Profile = () => {
                         disabled={loadingStates.passwordUpdate}
                       >
                         <div className="p-1.5 rounded-lg bg-red-50 group-hover:bg-red-100 transition-colors">
-                          <FiEdit2 className="w-3.5 h-3.5 text-red-400" />
+                          <FiEdit2 className="w-4 h-4 text-red-400" />
                         </div>
                         <span className="font-medium text-gray-700">Change Password</span>
                       </button>
                       <button
-                        className="flex items-center gap-2 w-full text-left px-4 py-2.5 hover:bg-gradient-to-r hover:from-red-50/50 hover:to-transparent transition-all duration-200 disabled:opacity-50 group text-sm"
+                        className="flex items-center gap-2 w-full text-left px-3 py-2.5 hover:bg-gradient-to-r hover:from-red-50/50 hover:to-transparent transition-all duration-200 disabled:opacity-50 group text-base"
                         onClick={() => {
                           setShowFeedbackBox(true);
                           setShowPasswordBox(false);
@@ -2000,13 +1955,13 @@ const Profile = () => {
                         disabled={loadingStates.feedbackSubmit}
                       >
                         <div className="p-1.5 rounded-lg bg-red-50 group-hover:bg-red-100 transition-colors">
-                          <FiMessageSquare className="w-3.5 h-3.5 text-red-400" />
+                          <FiMessageSquare className="w-4 h-4 text-red-400" />
                         </div>
                         <span className="font-medium text-gray-700">Give Feedback</span>
                       </button>
                       {isProfilePublished && (
                         <button
-                          className="flex items-center gap-2 w-full text-left px-4 py-2.5 hover:bg-gradient-to-r hover:from-red-50/50 hover:to-transparent transition-all duration-200 disabled:opacity-50 group text-sm"
+                          className="flex items-center gap-2 w-full text-left px-3 py-2.5 hover:bg-gradient-to-r hover:from-red-50/50 hover:to-transparent transition-all duration-200 disabled:opacity-50 group text-base"
                           onClick={() => {
                             handleRemoveProfile();
                             setShowSettings(false);
@@ -2014,13 +1969,13 @@ const Profile = () => {
                           disabled={loadingStates.removeProfile}
                         >
                           <div className="p-1.5 rounded-lg bg-red-50 group-hover:bg-red-100 transition-colors">
-                            <MdOutlineRemoveCircle className="w-3.5 h-3.5 text-red-400" />
+                            <MdOutlineRemoveCircle className="w-4 h-4 text-red-400" />
                           </div>
                           <span className="font-medium text-gray-700">Hide Profile</span>
                         </button>
                       )}
                       <button
-                        className="flex items-center gap-2 w-full text-left px-4 py-2.5 hover:bg-gradient-to-r hover:from-red-50/50 hover:to-transparent transition-all duration-200 disabled:opacity-50 group text-sm"
+                        className="flex items-center gap-2 w-full text-left px-3 py-2.5 hover:bg-gradient-to-r hover:from-red-50/50 hover:to-transparent transition-all duration-200 disabled:opacity-50 group text-base"
                         onClick={() => {
                           setShowDeleteConfirm(true);
                           setShowPasswordBox(false);
@@ -2030,22 +1985,22 @@ const Profile = () => {
                         disabled={loadingStates.deleteProfile}
                       >
                         <div className="p-1.5 rounded-lg bg-red-50 group-hover:bg-red-100 transition-colors">
-                          <FiTrash2 className="w-3.5 h-3.5 text-red-400" />
+                          <FiTrash2 className="w-4 h-4 text-red-400" />
                         </div>
                         <span className="font-medium text-red-400">Delete Profile</span>
                       </button>
                     </div>
                     <div className="border-t border-gray-100 bg-gradient-to-r from-gray-50/50 to-transparent">
                       <button
-                        className="flex items-center gap-2 w-full text-left px-4 py-2.5 hover:bg-gradient-to-r hover:from-red-50/50 hover:to-transparent transition-all duration-200 disabled:opacity-50 group text-sm"
+                        className="flex items-center gap-2 w-full text-left px-3 py-2.5 hover:bg-gradient-to-r hover:from-red-50/50 hover:to-transparent transition-all duration-200 disabled:opacity-50 group text-base"
                         onClick={handleLogout}
                         disabled={loadingStates.logout}
                       >
                         <div className="p-1.5 rounded-lg bg-gray-100 group-hover:bg-red-100 transition-colors">
                           {loadingStates.logout ? (
-                            <FiLoader className="animate-spin w-3.5 h-3.5 text-gray-600" />
+                            <FiLoader className="animate-spin w-4 h-4 text-gray-600" />
                           ) : (
-                            <FiLogOut className="w-3.5 h-3.5 text-gray-600 group-hover:text-red-400" />
+                            <FiLogOut className="w-4 h-4 text-gray-600 group-hover:text-red-400" />
                           )}
                         </div>
                         <span className="font-medium text-gray-700">Logout</span>
@@ -2057,29 +2012,20 @@ const Profile = () => {
             </div>
 
             {/* Main Profile Content */}
-            <div className="flex flex-col items-center gap-4 md:flex-row md:items-start md:gap-5">
-              {/* Avatar with Premium Ring */}
-              <div className="relative flex-shrink-0">
-                <div className="absolute inset-0 bg-gradient-to-r from-red-400 to-red-300 rounded-full blur-sm opacity-60 animate-pulse"></div>
-                <div className="relative w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden border-3 border-white shadow-lg">
-                  {personalInfo.profileImg ? (
-                    <img
-                      src={personalInfo.profileImg}
-                      alt="Profile"
-                      className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
-                    />
-                  ) : (
-                    <div
-                      className="w-full h-full flex items-center justify-center
-              text-3xl md:text-4xl font-bold tracking-wide
-              text-white
-              bg-gradient-to-br from-red-400 to-red-500
-              rounded-full"
-                    >
-                      {user.name[0].toUpperCase()}
-                    </div>
-                  )}
+            <div className="flex flex-col items-center gap-6 md:flex-row md:items-start md:gap-8"> {/* Increased gap */}
+              {/* Avatar - Full Height Desktop / Square Mobile */}
+              <div className="relative flex-shrink-0 w-36 h-36 md:w-44 md:h-auto md:self-stretch">
+                <div
+                  className="w-full h-full aspect-square overflow-hidden rounded-lg border"
+                  style={{ borderColor: "#d7d4d1", borderWidth: "2px" }}
+                >
+                  <img
+                    src={personalInfo.profileImg ? personalInfo.profileImg : "/5.png"}
+                    alt="Profile"
+                    className="w-full h-full object-cover"
+                  />
                 </div>
+
                 {isProfilePublished && (
                   <div className="absolute -bottom-1 -right-1 bg-green-500 border-2 border-white rounded-full p-1">
                     <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
@@ -2089,12 +2035,12 @@ const Profile = () => {
 
               {/* User Info */}
               <div className="flex-1 w-full text-center md:text-left">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-1">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-1 mb-2">
                   <div>
-                    <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                    <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
                       {user.name}
                     </h1>
-                    <p className="text-xs md:text-sm text-gray-500 flex items-center gap-1.5 justify-center md:justify-start">
+                    <p className="text-base text-gray-500 flex items-center gap-1.5 justify-center md:justify-start">
                       <span className="w-1 h-1 bg-red-400 rounded-full"></span>
                       {user.email}
                     </p>
@@ -2102,9 +2048,9 @@ const Profile = () => {
                 </div>
 
                 {/* Premium Progress Bar - Compact */}
-                <div className="mb-3 bg-white/50 backdrop-blur-sm rounded-xl p-3 border border-red-100/50">
+                <div className="mb-3 bg-white/50 backdrop-blur-sm rounded-lg p-3 border border-red-100/50">
                   <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-xs font-semibold text-gray-700 flex items-center gap-1.5">
+                    <span className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
                       <span className="w-1.5 h-1.5 bg-red-400 rounded-full animate-pulse"></span>
                       Profile Strength
                     </span>
@@ -2124,15 +2070,15 @@ const Profile = () => {
 
                 {user.google_id && (
                   <div className="flex justify-center md:justify-start mb-3 animate-fadeIn">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-green-50 to-emerald-50 text-green-700 rounded-xl text-xs font-medium border border-green-200/50 shadow-sm">
-                      <FiCheckCircle className="w-3.5 h-3.5" />
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-green-50 to-emerald-50 text-green-700 rounded-lg text-sm font-medium border border-green-200/50 shadow-sm">
+                      <FiCheckCircle className="w-4 h-4" />
                       Google Account
                     </span>
                   </div>
                 )}
 
                 {/* Action Buttons - Smaller */}
-                <div className="flex flex-wrap gap-2.5 justify-center md:justify-start">
+                <div className="flex flex-wrap gap-3 justify-center md:justify-start">
                   <button
                     onClick={() => {
                       setLoadingState('viewMatches', true);
@@ -2145,14 +2091,14 @@ const Profile = () => {
                       navigate("/matches", { state: userData });
                     }}
                     disabled={loadingStates.viewMatches}
-                    className="group relative px-4 py-2 bg-gradient-to-r from-red-400 to-red-500 text-white rounded-xl text-sm font-semibold shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-50 overflow-hidden"
+                    className="group relative px-4 py-2 bg-gradient-to-r from-red-400 to-red-500 text-white rounded-lg text-base font-semibold shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-50 overflow-hidden"
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
                     <div className="relative flex items-center gap-1.5">
                       {loadingStates.viewMatches ? (
-                        <FiLoader className="animate-spin w-3.5 h-3.5" />
+                        <FiLoader className="animate-spin w-4 h-4" />
                       ) : (
-                        <FiEye className="w-3.5 h-3.5" />
+                        <FiEye className="w-4 h-4" />
                       )}
                       <span>View Matches</span>
                     </div>
@@ -2169,14 +2115,14 @@ const Profile = () => {
                       navigate("/watchlist", { state: userData });
                     }}
                     disabled={loadingStates.watchlist}
-                    className="group relative px-4 py-2 bg-white text-gray-700 rounded-xl text-sm font-semibold border border-red-100 hover:border-red-400 shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-50"
+                    className="group relative px-4 py-2 bg-white text-gray-700 rounded-lg text-base font-semibold border border-red-100 hover:border-red-400 shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-50"
                   >
-                    <div className="absolute inset-0 bg-gradient-to-r from-red-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"></div>
+                    <div className="absolute inset-0 bg-gradient-to-r from-red-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg"></div>
                     <div className="relative flex items-center gap-1.5">
                       {loadingStates.watchlist ? (
-                        <FiLoader className="animate-spin w-3.5 h-3.5" />
+                        <FiLoader className="animate-spin w-4 h-4" />
                       ) : (
-                        <FiHeart className="w-3.5 h-3.5 text-red-400" />
+                        <FiHeart className="w-4 h-4 text-red-400" />
                       )}
                       <span>Watchlist</span>
                     </div>
@@ -2188,8 +2134,8 @@ const Profile = () => {
             {/* Profile Status Badge - Compact */}
             <div className="mt-4 flex items-center justify-center">
               <div
-                className={`px-4 py-1.5 rounded-xl text-xs font-medium shadow-md backdrop-blur-sm flex items-center gap-1.5
-        ${isProfilePublished
+                className={`px-4 py-1.5 rounded-lg text-base font-medium shadow-md backdrop-blur-sm flex items-center gap-1.5
+${isProfilePublished
                     ? "bg-gradient-to-r from-green-50 to-emerald-50 text-green-700 border border-green-200/50"
                     : "bg-gradient-to-r from-amber-50 to-orange-50 text-amber-700 border border-amber-200/50"
                   }`}
@@ -2197,13 +2143,13 @@ const Profile = () => {
                 {isProfilePublished ? (
                   <>
                     <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
-                    <MdPublishedWithChanges className="w-4 h-4" />
+                    <MdPublishedWithChanges className="w-5 h-5" />
                     <span className="font-medium">Profile Published</span>
                   </>
                 ) : (
                   <>
                     <div className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse"></div>
-                    <MdWarning className="w-4 h-4" />
+                    <MdWarning className="w-5 h-5" />
                     <span className="font-medium">Profile Not Published</span>
                   </>
                 )}
@@ -2212,9 +2158,9 @@ const Profile = () => {
 
             {/* Change Password Box - Compact */}
             {showPasswordBox && (
-              <div className="mt-4 p-4 md:p-5 bg-gradient-to-br from-white to-gray-50/80 backdrop-blur-sm rounded-xl border border-red-100 shadow-lg animate-slideDown">
+              <div className="mt-4 p-4 md:p-5 bg-gradient-to-br from-white to-gray-50/80 backdrop-blur-sm rounded-lg border border-red-100 shadow-lg animate-slideDown">
                 <div className="flex justify-between items-center mb-3">
-                  <h3 className="text-base font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                  <h3 className="text-lg font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
                     Change Password
                   </h3>
                   <button
@@ -2222,7 +2168,7 @@ const Profile = () => {
                     className="p-1.5 hover:bg-red-50 rounded-full transition-all duration-300 group"
                     disabled={loadingStates.passwordUpdate}
                   >
-                    <FiX size={18} className="text-gray-500 group-hover:text-red-400 group-hover:rotate-90 transition-all duration-300" />
+                    <FiX size={20} className="text-gray-500 group-hover:text-red-400 group-hover:rotate-90 transition-all duration-300" />
                   </button>
                 </div>
                 <div className="space-y-3">
@@ -2233,18 +2179,18 @@ const Profile = () => {
                       onChange={setNewPassword}
                       placeholder="Enter new password (min 8 characters)"
                       isEditing={true}
-                      className="!bg-white/50 backdrop-blur-sm text-sm"
+                      className="!bg-white/50 backdrop-blur-sm text-base"
                     />
-                    <p className="mt-1.5 text-xs text-gray-500 flex items-center gap-1">
+                    <p className="mt-1.5 text-sm text-gray-500 flex items-center gap-1">
                       <span className="w-1 h-1 bg-red-400 rounded-full"></span>
                       Minimum 8 characters
                     </p>
                   </div>
-                  <div className="flex flex-col sm:flex-row gap-2 pt-1">
+                  <div className="flex flex-col sm:flex-row gap-3 pt-2">
                     <button
                       onClick={handlePasswordUpdate}
                       disabled={loadingStates.passwordUpdate}
-                      className="group relative flex-1 py-2 bg-gradient-to-r from-red-400 to-red-500 text-white rounded-lg text-sm font-semibold shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-50 overflow-hidden"
+                      className="group relative flex-1 py-2 bg-gradient-to-r from-red-400 to-red-500 text-white rounded-lg text-base font-semibold shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-50 overflow-hidden"
                     >
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
                       <span className="relative">
@@ -2253,7 +2199,7 @@ const Profile = () => {
                     </button>
                     <button
                       onClick={() => { setShowPasswordBox(false); setNewPassword(""); }}
-                      className="flex-1 py-2 bg-white text-gray-700 rounded-lg text-sm font-semibold border border-gray-200 hover:border-red-400 hover:bg-red-50/30 transition-all duration-300 disabled:opacity-50"
+                      className="flex-1 py-2 bg-white text-gray-700 rounded-lg text-base font-semibold border border-gray-200 hover:border-red-400 hover:bg-red-50/30 transition-all duration-300 disabled:opacity-50"
                       disabled={loadingStates.passwordUpdate}
                     >
                       Cancel
@@ -2265,10 +2211,10 @@ const Profile = () => {
 
             {/* Delete Profile Confirmation - Compact */}
             {showDeleteConfirm && (
-              <div className="mt-4 p-4 md:p-5 bg-gradient-to-br from-red-50/90 to-red-50/70 backdrop-blur-sm rounded-xl border border-red-200 shadow-lg animate-slideDown">
+              <div className="mt-4 p-4 md:p-5 bg-gradient-to-br from-red-50/90 to-red-50/70 backdrop-blur-sm rounded-lg border border-red-200 shadow-lg animate-slideDown">
                 <div className="flex justify-between items-center mb-3">
-                  <h3 className="text-base font-bold text-red-500 flex items-center gap-1.5">
-                    <FiTrash2 className="w-4 h-4" />
+                  <h3 className="text-lg font-bold text-red-500 flex items-center gap-1.5">
+                    <FiTrash2 className="w-5 h-5" />
                     Delete Profile
                   </h3>
                   <button
@@ -2276,7 +2222,7 @@ const Profile = () => {
                     className="p-1.5 hover:bg-red-100 rounded-full transition-all duration-300 group"
                     disabled={loadingStates.deleteProfile}
                   >
-                    <FiX size={18} className="text-red-400 group-hover:text-red-500 group-hover:rotate-90 transition-all duration-300" />
+                    <FiX size={20} className="text-red-400 group-hover:text-red-500 group-hover:rotate-90 transition-all duration-300" />
                   </button>
                 </div>
 
@@ -2286,16 +2232,16 @@ const Profile = () => {
                       <MdWarning className="text-red-500 text-lg" />
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-bold text-red-600 text-xs mb-1">Warning: Permanent Action!</h4>
-                      <p className="text-gray-600 text-xs leading-relaxed">
+                      <h4 className="font-bold text-red-600 text-base mb-0.5">Warning: Permanent Action!</h4>
+                      <p className="text-gray-600 text-sm leading-relaxed">
                         All your data will be permanently deleted.
                       </p>
                     </div>
                   </div>
 
                   <div className="p-3 bg-white/50 backdrop-blur-sm rounded-lg border border-amber-200">
-                    <p className="text-gray-700 text-xs flex items-start gap-1.5">
-                      <FiInfo className="text-amber-500 w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                    <p className="text-gray-700 text-sm flex items-start gap-1.5">
+                      <FiInfo className="text-amber-500 w-4 h-4 flex-shrink-0 mt-0.5" />
                       <span>
                         {isProfilePublished ?
                           "Use 'Hide Profile' to temporarily hide instead." :
@@ -2304,22 +2250,22 @@ const Profile = () => {
                     </p>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row gap-2 pt-1">
+                  <div className="flex flex-col sm:flex-row gap-3 pt-2">
                     <button
                       onClick={handleDeleteProfile}
                       disabled={loadingStates.deleteProfile}
-                      className="group relative flex-1 py-2.5 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg text-sm font-bold shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-50 overflow-hidden"
+                      className="group relative flex-1 py-2.5 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg text-base font-bold shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-50 overflow-hidden"
                     >
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
                       <div className="relative flex items-center justify-center gap-1.5">
                         {loadingStates.deleteProfile ? (
                           <>
-                            <FiLoader className="animate-spin w-3.5 h-3.5" />
+                            <FiLoader className="animate-spin w-4 h-4" />
                             <span>Deleting...</span>
                           </>
                         ) : (
                           <>
-                            <FiTrash2 className="w-3.5 h-3.5" />
+                            <FiTrash2 className="w-4 h-4" />
                             <span>Delete</span>
                           </>
                         )}
@@ -2327,7 +2273,7 @@ const Profile = () => {
                     </button>
                     <button
                       onClick={() => setShowDeleteConfirm(false)}
-                      className="flex-1 py-2.5 bg-white text-gray-700 rounded-lg text-sm font-semibold border border-gray-200 hover:border-red-400 hover:bg-red-50/30 transition-all duration-300 disabled:opacity-50"
+                      className="flex-1 py-2.5 bg-white text-gray-700 rounded-lg text-base font-semibold border border-gray-200 hover:border-red-400 hover:bg-red-50/30 transition-all duration-300 disabled:opacity-50"
                       disabled={loadingStates.deleteProfile}
                     >
                       Cancel
@@ -2339,10 +2285,10 @@ const Profile = () => {
 
             {/* Feedback Form Box - Compact */}
             {showFeedbackBox && (
-              <div className="mt-4 p-4 md:p-5 bg-gradient-to-br from-purple-50/90 via-white to-red-50/30 backdrop-blur-sm rounded-xl border border-purple-100 shadow-lg animate-slideDown">
+              <div className="mt-4 p-4 md:p-5 bg-gradient-to-br from-purple-50/90 via-white to-red-50/30 backdrop-blur-sm rounded-lg border border-purple-100 shadow-lg animate-slideDown">
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-base font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent flex items-center gap-1.5">
-                    <FiMessageSquare className="w-4 h-4 text-red-400" />
+                  <h3 className="text-lg font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent flex items-center gap-1.5">
+                    <FiMessageSquare className="w-5 h-5 text-red-400" />
                     Share Feedback
                   </h3>
                   <button
@@ -2357,18 +2303,18 @@ const Profile = () => {
                     className="p-1.5 hover:bg-purple-100 rounded-full transition-all duration-300 group"
                     disabled={loadingStates.feedbackSubmit}
                   >
-                    <FiX size={18} className="text-gray-500 group-hover:text-red-400 group-hover:rotate-90 transition-all duration-300" />
+                    <FiX size={20} className="text-gray-500 group-hover:text-red-400 group-hover:rotate-90 transition-all duration-300" />
                   </button>
                 </div>
 
                 <div className="space-y-4">
                   <div className="group">
-                    <label className="block text-xs font-semibold text-gray-700 mb-1.5 flex items-center gap-1.5">
+                    <label className="block text-base font-semibold text-gray-700 mb-1.5 flex items-center gap-1.5">
                       <span className="w-1 h-1 bg-red-400 rounded-full group-hover:animate-pulse"></span>
                       Your Experience <span className="text-red-400">*</span>
                     </label>
                     <textarea
-                      className="w-full px-4 py-2.5 bg-white/70 backdrop-blur-sm border border-gray-200 focus:border-red-400 rounded-lg focus:ring-2 focus:ring-red-100 transition-all duration-300 resize-none text-sm"
+                      className="w-full px-4 py-2.5 bg-white/70 backdrop-blur-sm border border-gray-200 focus:border-red-400 rounded-lg focus:ring-2 focus:ring-red-100 transition-all duration-300 resize-none text-base"
                       rows={2}
                       value={feedback.experience}
                       onChange={(e) => {
@@ -2389,39 +2335,39 @@ const Profile = () => {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-2 flex items-center gap-1.5">
+                    <label className="block text-base font-semibold text-gray-700 mb-2 flex items-center gap-1.5">
                       <span className="w-1 h-1 bg-red-400 rounded-full"></span>
                       Rating <span className="text-red-400">*</span>
                     </label>
-                    <div className="flex items-center gap-1 p-1.5 bg-white/50 backdrop-blur-sm rounded-xl inline-flex">
+                    <div className="flex items-center gap-1.5 p-1.5 bg-white/50 backdrop-blur-sm rounded-lg inline-flex">
                       {[1, 2, 3, 4, 5].map((star) => (
                         <button
                           key={star}
                           type="button"
-                          className="p-1 hover:scale-110 transition-all duration-200 focus:outline-none group"
+                          className="p-1.5 hover:scale-110 transition-all duration-200 focus:outline-none group"
                           onClick={() => setFeedback({ ...feedback, rating: star })}
                           disabled={loadingStates.feedbackSubmit}
                         >
                           {star <= feedback.rating ? (
-                            <FiStar className="w-5 h-5 fill-red-400 text-red-400 filter drop-shadow" />
+                            <FiStar className="w-6 h-6 fill-red-400 text-red-400 filter drop-shadow" />
                           ) : (
-                            <FiStar className="w-5 h-5 text-gray-300 group-hover:text-red-200 transition-colors" />
+                            <FiStar className="w-6 h-6 text-gray-300 group-hover:text-red-200 transition-colors" />
                           )}
                         </button>
                       ))}
-                      <span className="ml-2 text-xs font-medium text-gray-600 bg-white px-3 py-1.5 rounded-lg shadow-sm">
+                      <span className="ml-2 text-base font-medium text-gray-600 bg-white px-3 py-1.5 rounded-lg shadow-sm">
                         {feedback.rating > 0 ? `${feedback.rating}/5` : 'Select'}
                       </span>
                     </div>
                   </div>
 
                   <div className="group">
-                    <label className="block text-xs font-semibold text-gray-700 mb-1.5 flex items-center gap-1.5">
+                    <label className="block text-base font-semibold text-gray-700 mb-1.5 flex items-center gap-1.5">
                       <span className="w-1 h-1 bg-red-400 rounded-full"></span>
                       Suggestions
                     </label>
                     <textarea
-                      className="w-full px-4 py-2.5 bg-white/70 backdrop-blur-sm border border-gray-200 focus:border-red-400 rounded-lg focus:ring-2 focus:ring-red-100 transition-all duration-300 resize-none text-sm"
+                      className="w-full px-4 py-2.5 bg-white/70 backdrop-blur-sm border border-gray-200 focus:border-red-400 rounded-lg focus:ring-2 focus:ring-red-100 transition-all duration-300 resize-none text-base"
                       rows={1}
                       value={feedback.suggestions}
                       onChange={(e) => {
@@ -2441,22 +2387,22 @@ const Profile = () => {
                     />
                   </div>
 
-                  <div className="flex flex-col sm:flex-row gap-2 pt-2">
+                  <div className="flex flex-col sm:flex-row gap-3 pt-2">
                     <button
                       onClick={handleFeedbackSubmit}
                       disabled={loadingStates.feedbackSubmit}
-                      className="group relative flex-1 py-2.5 bg-gradient-to-r from-red-400 to-red-500 text-white rounded-lg text-sm font-semibold shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-50 overflow-hidden"
+                      className="group relative flex-1 py-2.5 bg-gradient-to-r from-red-400 to-red-500 text-white rounded-lg text-base font-semibold shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-50 overflow-hidden"
                     >
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
                       <div className="relative flex items-center justify-center gap-1.5">
                         {loadingStates.feedbackSubmit ? (
                           <>
-                            <FiLoader className="animate-spin w-3.5 h-3.5" />
+                            <FiLoader className="animate-spin w-4 h-4" />
                             <span>Submitting...</span>
                           </>
                         ) : (
                           <>
-                            <FiSend className="w-3.5 h-3.5" />
+                            <FiSend className="w-4 h-4" />
                             <span>Submit</span>
                           </>
                         )}
@@ -2471,7 +2417,7 @@ const Profile = () => {
                           suggestions: ""
                         });
                       }}
-                      className="flex-1 py-2.5 bg-white text-gray-700 rounded-lg text-sm font-semibold border border-gray-200 hover:border-red-400 hover:bg-red-50/30 transition-all duration-300 disabled:opacity-50"
+                      className="flex-1 py-2.5 bg-white text-gray-700 rounded-lg text-base font-semibold border border-gray-200 hover:border-red-400 hover:bg-red-50/30 transition-all duration-300 disabled:opacity-50"
                       disabled={loadingStates.feedbackSubmit}
                     >
                       Cancel
@@ -2516,7 +2462,7 @@ const Profile = () => {
           <div className="max-w-6xl mx-auto">
             {activeSection === "self" && (
               <FormBox
-                title="Self Information"
+                title="Self Data"
                 isEditing={isEditing}
                 setIsEditing={setIsEditing}
                 loadingSaveProfile={loadingStates.saveProfile}
@@ -2963,7 +2909,7 @@ const Profile = () => {
                   </div>
                 </div>
                 <SubmitButton
-                  text="Save Self Information"
+                  text="Save Self Data"
                   onClick={() => handleSubmit("Self")}
                   loading={loadingStates.saveProfile}
                   disabled={profileProgress.self < 80}
@@ -2978,7 +2924,7 @@ const Profile = () => {
 
             {activeSection === "family" && (
               <FormBox
-                title="Family Information"
+                title="Family Data"
                 isEditing={isEditing}
                 setIsEditing={setIsEditing}
                 loadingSaveProfile={loadingStates.saveProfile}
@@ -3145,7 +3091,7 @@ const Profile = () => {
                   </div>
                 </div>
                 <SubmitButton
-                  text="Save Family Information"
+                  text="Save Family Data"
                   onClick={() => handleSubmit("Family")}
                   loading={loadingStates.saveProfile}
                   disabled={profileProgress.family < 80}
@@ -3436,7 +3382,7 @@ const Profile = () => {
                       "View Limited Partner Details",
                       "Apply Filters",
                       "Give feedbacks",
-                      "Limited Features Access",
+                      "Chatbot Support and Chatting with Matches",
                     ]}
                     price="0"
                     currentPlan={membershipPlan === "free" ? "Free Membership" :
@@ -3497,7 +3443,7 @@ const Profile = () => {
                         <div>
                           <div className="flex justify-between mb-1">
                             <span className="text-sm font-medium text-gray-700 flex items-center gap-1">
-                              <FiUser className="text-gray-500" /> Self Information
+                              <FiUser className="text-gray-500" /> Self Data
                             </span>
                             <span className={`text-sm font-semibold ${profileProgress.self >= 80 ? 'text-green-600' : 'text-amber-600'}`}>
                               {profileProgress.self}%
@@ -3514,7 +3460,7 @@ const Profile = () => {
                         <div>
                           <div className="flex justify-between mb-1">
                             <span className="text-sm font-medium text-gray-700 flex items-center gap-1">
-                              <MdFamilyRestroom className="text-gray-500" /> Family Information
+                              <MdFamilyRestroom className="text-gray-500" /> Family Data
                             </span>
                             <span className={`text-sm font-semibold ${profileProgress.family >= 80 ? 'text-green-600' : 'text-amber-600'}`}>
                               {profileProgress.family}%
@@ -3668,7 +3614,7 @@ const Profile = () => {
           </div>
         </div>
       </div>
-
+      <Chatbot />
       <Footer />
     </>
   );

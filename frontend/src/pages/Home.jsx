@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import axios from 'axios'; 
+import Chatbot from '../components/Chatbot';
+import axios from 'axios';
 import {
   Heart,
   Search,
@@ -99,7 +100,7 @@ const Home = () => {
         "View Limited Partner Details",
         "Apply Filters",
         "Give feedbacks",
-        "Limited Features Access",
+        "Chatbot Support and Chatting with Matches",
       ]
     },
     {
@@ -247,10 +248,11 @@ const Home = () => {
           <div className="container mx-auto px-4">
             <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
               <div>
-                <div className="text-left mb-8">
+                <div className="text-center md:text-left mb-8">
                   <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
                     About <span className="text-[oklch(70.4%_0.191_22.216)]">Paarsh Matrimony</span>
                   </h2>
+
                   <p className="text-gray-600 text-lg mb-6">
                     Modern matrimonial platform designed for secure, efficient partner discovery
                   </p>
@@ -629,6 +631,7 @@ const Home = () => {
           </div>
         </section>
       </div>
+      <Chatbot />
       <Footer />
     </>
   );

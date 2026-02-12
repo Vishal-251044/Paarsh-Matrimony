@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import Chatbot from '../components/Chatbot';
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -244,7 +245,7 @@ const Contact = () => {
                     </div>
                 </section>
             </div>
-
+            <Chatbot />
             <Footer />
         </>
     );

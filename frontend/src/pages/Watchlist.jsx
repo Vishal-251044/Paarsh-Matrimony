@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useUserContext } from '../context/UserContext';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import Chatbot from '../components/Chatbot';
 import Marriage from "../components/MarriageAssistance";
 import WeddingServices from "../components/WeddingServices";
 import { motion, AnimatePresence } from "framer-motion";
@@ -2449,7 +2450,7 @@ const Watchlist = () => {
           )}
         </div>
       </div>
-
+      <Chatbot />
       <Footer />
 
       {/* Filters Modal */}

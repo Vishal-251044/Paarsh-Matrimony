@@ -1124,7 +1124,7 @@ const Admin = () => {
             <Navbar />
 
             {/* Mobile Hamburger */}
-            <div className="fixed bottom-4 right-4 z-40 lg:hidden">
+            <div className="fixed bottom-4 left-4 z-40 lg:hidden">
                 <button
                     onClick={() => setMobileSidebarOpen(true)}
                     className="p-4 rounded-full bg-red-400 shadow-lg flex items-center justify-center hover:bg-red-500 transition-colors shadow-lg"
@@ -1145,7 +1145,7 @@ const Admin = () => {
                             title="Home"
                         >
                             <HomeIcon className="w-5 h-5" />
-                            <span className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                            <span className="absolute right-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
                                 Home
                             </span>
                         </button>
@@ -1172,7 +1172,7 @@ const Admin = () => {
 
                 {/* Mobile Sidebar (right) */}
                 {mobileSidebarOpen && (
-                    <aside className="fixed inset-0 z-50 flex lg:hidden justify-end">
+                    <aside className="fixed inset-0 z-50 flex lg:hidden justify-start">
                         {/* Background overlay */}
                         <div
                             className="fixed inset-0 bg-black bg-opacity-30"

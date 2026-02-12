@@ -1,6 +1,7 @@
 import React from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import Chatbot from '../components/Chatbot';
 import { FiShield, FiUsers, FiSmartphone, FiHeart, FiTarget, FiStar, FiUserCheck, FiMessageCircle } from "react-icons/fi";
 
 const AboutUs = () => {
@@ -235,7 +236,7 @@ const AboutUs = () => {
                     </div>
                 </div>
             </div >
-
+            <Chatbot />
             <Footer />
         </>
     );
