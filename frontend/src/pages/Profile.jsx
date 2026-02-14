@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -34,7 +34,10 @@ import {
   FiBriefcase,
   FiUsers,
   FiLogOut,
-  FiSend
+  FiSend,
+  FiChevronDown,
+  FiChevronUp,
+  FiPlusCircle
 } from "react-icons/fi";
 import {
   MdOutlineWorkspacePremium,
@@ -51,13 +54,12 @@ import {
 import axios from "axios";
 
 // Jeewansathi inspired color theme
-const PRIMARY_COLOR = "#dc2626"; // red-400
-const SECONDARY_COLOR = "#fecaca"; // red-200
-const BG_COLOR = "#fef2f2"; // red-50
+const PRIMARY_COLOR = "#dc2626";
+const SECONDARY_COLOR = "#fecaca";
+const BG_COLOR = "#fef2f2";
 const TEXT_COLOR = "#374151";
 const LIGHT_TEXT = "#6b7280";
 
-// Custom styles for react-select
 // OKLCH Theme Color
 const THEME = "oklch(70.4% 0.191 22.216)";
 const THEME_LIGHT = "oklch(85% 0.12 22.216)";
@@ -80,7 +82,6 @@ const customSelectStyles = {
     fontSize: "0.875rem",
     fontFamily: "'Inter', 'Segoe UI', system-ui, sans-serif"
   }),
-
   option: (base, state) => ({
     ...base,
     backgroundColor: state.isSelected
@@ -97,7 +98,6 @@ const customSelectStyles = {
       backgroundColor: THEME_LIGHT
     }
   }),
-
   menu: (base) => ({
     ...base,
     borderRadius: "0.375rem",
@@ -105,24 +105,20 @@ const customSelectStyles = {
       "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
     zIndex: 9999
   }),
-
   menuList: (base) => ({
     ...base,
     padding: "0.5rem"
   }),
-
   placeholder: (base) => ({
     ...base,
     color: "#6b7280",
     fontSize: "0.875rem"
   }),
-
   singleValue: (base) => ({
     ...base,
     color: "#111827",
     fontSize: "0.875rem"
   }),
-
   dropdownIndicator: (base) => ({
     ...base,
     color: "#6b7280",
@@ -130,7 +126,6 @@ const customSelectStyles = {
       color: THEME
     }
   }),
-
   menuPortal: (base) => ({
     ...base,
     zIndex: 9999
@@ -222,11 +217,8 @@ const Input = ({ label, type = "text", value, onChange, options = [], placeholde
     const handlePhoneChange = (e) => {
       const input = e.target.value;
       const digitsOnly = input.replace(/\D/g, '');
-
-      // Limit to 10 digits
       const limitedDigits = digitsOnly.slice(0, 10);
 
-      // Validate if complete number is entered
       if (limitedDigits.length === 10) {
         const firstDigit = limitedDigits[0];
         if (!['6', '7', '8', '9'].includes(firstDigit)) {
@@ -250,7 +242,7 @@ const Input = ({ label, type = "text", value, onChange, options = [], placeholde
             onChange={handlePhoneChange}
             placeholder="987-654-3210"
             disabled={!isEditing}
-            maxLength={12} // Account for dashes
+            maxLength={12}
             onBlur={() => onBlur && onBlur(value)}
           />
           {Icon && <Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />}
@@ -260,7 +252,6 @@ const Input = ({ label, type = "text", value, onChange, options = [], placeholde
     );
   }
 
-  // Regular text/number input with trim functionality
   return (
     <div>
       <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -356,7 +347,7 @@ const Textarea = ({ label, value, onChange, rows = 4, placeholder = "", isEditin
 const Section = ({ title, children, icon: Icon }) => (
   <div className="mb-6 bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
     <div className="flex items-center gap-2 mb-4">
-      {Icon && <Icon className="text-red-400" size={20} />}
+      {Icon && <Icon className="text-red-500" size={20} />}
       <h3 className="text-lg font-semibold text-gray-800">
         {title}
       </h3>
@@ -365,91 +356,755 @@ const Section = ({ title, children, icon: Icon }) => (
   </div>
 );
 
-// FormBox component
-const FormBox = ({ title, children, isEditing, setIsEditing, loadingSaveProfile, sectionProgress, icon: Icon }) => (
-  <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-5 md:p-6 mb-6">
-    <div className="flex justify-between items-start mb-6">
-      <div className="flex items-center gap-3">
-        {Icon && <Icon className="text-red-400 text-xl" />}
-        <div>
-          <h2 className="text-xl font-bold text-gray-800">{title}</h2>
-          {sectionProgress !== undefined && (
-            <div className="mt-2">
-              <div className="flex items-center gap-2 mb-1">
-                <div className="w-32 bg-gray-200 rounded-full h-2.5">
+// ========== NEW ACCORDION FORM BOX ==========
+const AccordionFormBox = ({ title, children, isOpen, onToggle, icon: Icon, sectionProgress }) => {
+  return (
+    <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-5 md:p-6 mb-4 transition-all duration-200">
+      <div
+        className="flex justify-between items-center cursor-pointer group"
+        onClick={onToggle}
+      >
+        <div className="flex items-center gap-3 flex-1">
+          {Icon && <Icon className="text-red-500 text-xl" />}
+          <div className="flex-1">
+            <h2 className="text-xl font-bold text-gray-800 group-hover:text-red-600 transition-colors">
+              {title}
+            </h2>
+            {sectionProgress !== undefined && (
+              <div className="mt-1 flex items-center gap-2">
+                <div className="w-24 bg-gray-200 rounded-full h-2">
                   <div
-                    className={`h-2.5 rounded-full transition-all duration-300 ${sectionProgress >= 80 ? 'bg-green-500' : sectionProgress >= 50 ? 'bg-yellow-500' : 'bg-red-400'}`}
+                    className={`h-2 rounded-full transition-all duration-300 ${sectionProgress >= 80 ? 'bg-green-500' : sectionProgress >= 50 ? 'bg-yellow-500' : 'bg-red-500'}`}
                     style={{ width: `${Math.min(sectionProgress, 100)}%` }}
                   ></div>
                 </div>
-                <span className={`text-xs font-semibold ${sectionProgress >= 80 ? 'text-green-600' : sectionProgress >= 50 ? 'text-yellow-600' : 'text-red-400'}`}>
+                <span className={`text-xs font-semibold ${sectionProgress >= 80 ? 'text-green-600' : sectionProgress >= 50 ? 'text-yellow-600' : 'text-red-500'}`}>
                   {sectionProgress}%
                 </span>
               </div>
-              <p className="text-xs text-gray-500">
-                {sectionProgress >= 80 ? '✓ Ready to save' : `⚠ Need ${80 - sectionProgress}% more`}
-              </p>
-            </div>
+            )}
+          </div>
+        </div>
+        <div className="p-2 rounded-full bg-gray-100 group-hover:bg-red-100 transition-colors">
+          {isOpen ? (
+            <FiChevronUp className="text-gray-600 group-hover:text-red-600" size={20} />
+          ) : (
+            <FiChevronDown className="text-gray-600 group-hover:text-red-600" size={20} />
           )}
         </div>
       </div>
-      <button
-        onClick={() => setIsEditing(!isEditing)}
-        className="flex items-center gap-2 px-4 py-2 text-red-400 hover:bg-red-50 rounded-lg transition disabled:opacity-50 border border-red-200"
-        disabled={loadingSaveProfile}
-      >
-        {loadingSaveProfile ? (
-          <FiLoader className="animate-spin" />
-        ) : (
-          <FiEdit2 />
-        )}
-        {isEditing ? "Cancel" : "Edit"}
-      </button>
+
+      {isOpen && (
+        <div className="mt-6 border-t border-gray-100 pt-6">
+          {children}
+        </div>
+      )}
     </div>
-    {children}
+  );
+};
+
+// ========== ENHANCED PREVIEW COMPONENTS ==========
+
+// Helper function to check if value exists and is meaningful
+const hasValue = (value) => {
+  if (value === null || value === undefined) return false;
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    return trimmed !== '' && trimmed !== '0' && trimmed !== 'Select' && trimmed !== 'No Preference' && trimmed !== 'Any' && trimmed !== 'No' && trimmed !== 'Yes';
+  }
+  if (typeof value === 'number') return value > 0;
+  return false;
+};
+
+// Helper function to format display value
+const formatDisplayValue = (value) => {
+  if (!hasValue(value)) return null;
+  return value.toString().trim();
+};
+
+// Empty State Component
+const EmptyStatePreview = ({ onEdit, title, icon: Icon }) => (
+  <div className="flex flex-col items-center justify-center py-10 px-4 bg-gradient-to-br from-gray-50 to-white rounded-2xl border-2 border-dashed border-red-200">
+    <div className="w-20 h-20 bg-gradient-to-br from-red-50 to-red-100 rounded-full flex items-center justify-center mb-4">
+      {Icon && <Icon className="text-red-500 text-4xl" />}
+    </div>
+    <h3 className="text-xl font-bold text-gray-800 mb-2">No {title} Added Yet</h3>
+    <p className="text-gray-500 text-center mb-6 max-w-md">
+      Add your {title.toLowerCase()} to help other members know you better and find the perfect match.
+    </p>
+    <button
+      onClick={onEdit}
+      className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+    >
+      <FiPlusCircle className="text-lg" />
+      Add {title}
+    </button>
   </div>
 );
 
-// SubmitButton component
-const SubmitButton = ({ text, onClick, loading = false, disabled = false }) => (
-  <div className="mt-6 flex justify-center">
-    <button
-      onClick={onClick}
-      className="px-6 py-3 bg-red-400 text-white rounded-lg font-medium hover:bg-red-400 transition disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 min-w-[180px] shadow-md"
-      disabled={loading || disabled}
-    >
+// Info Card Component for consistent styling
+const InfoCard = ({ children, className = "" }) => (
+  <div className={`bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden ${className}`}>
+    <div className="px-2 sm:px-4 py-2 sm:py-3">
+      {children}
+    </div>
+  </div>
+);
+
+// Info Row Component for consistent field display
+const InfoRow = ({ label, value, icon: Icon }) => {
+  const displayValue = formatDisplayValue(value);
+  if (!displayValue) return null;
+
+  return (
+    <div className="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-3 py-2 px-2 sm:px-3 border-b border-gray-50 last:border-0">
+      <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
+        <div className="flex-shrink-0 w-5 h-5">
+          {Icon ? (
+            <Icon className="text-red-500 text-sm sm:text-base" />
+          ) : (
+            <div className="w-1.5 h-1.5 mt-1.5 bg-red-500 rounded-full"></div>
+          )}
+        </div>
+        <span className="text-xs sm:text-sm font-semibold text-gray-900 min-w-[100px] sm:min-w-[120px]">
+          {label}:
+        </span>
+      </div>
+      <span className="text-xs sm:text-sm text-gray-600 break-words pl-7 sm:pl-0 flex-1">
+        {displayValue}
+        {label.includes('Height') && value && ' cm'}
+        {label.includes('Weight') && value && ' kg'}
+      </span>
+    </div>
+  );
+};
+
+// Section Header Component
+const SectionHeader = ({ title, icon: Icon, count }) => {
+  if (!count) return null;
+  return (
+    <div className="flex items-center gap-1 sm:gap-2 mb-2 sm:mb-3 pb-1 sm:pb-2 border-b border-gray-100">
+      <div className="p-1 sm:p-1.5 bg-red-50 rounded-lg">
+        {Icon && <Icon className="text-red-600 text-sm sm:text-lg" />}
+      </div>
+      <h4 className="text-sm sm:text-base font-semibold text-gray-800">
+        {title}
+      </h4>
+    </div>
+  );
+};
+
+// ========== SELF PREVIEW ==========
+const SelfPreview = ({ personalInfo, locationInfo, religionInfo, educationInfo, careerInfo, aboutYourself, onEdit }) => {
+  // Check if any data exists
+  const hasAnyData = () => {
+    const allFields = [
+      personalInfo.profileImg,
+      personalInfo.fullName,
+      personalInfo.gender,
+      personalInfo.dob,
+      personalInfo.age,
+      personalInfo.maritalStatus,
+      personalInfo.height,
+      personalInfo.weight,
+      personalInfo.bloodGroup,
+      personalInfo.disability,
+      personalInfo.contactNumber,
+      personalInfo.whatsappNumber,
+      locationInfo.country,
+      locationInfo.state,
+      locationInfo.city,
+      locationInfo.pinCode,
+      locationInfo.currentLocation,
+      locationInfo.permanentAddress,
+      religionInfo.religion,
+      religionInfo.caste,
+      religionInfo.motherTongue,
+      educationInfo.highestEducation,
+      educationInfo.yearOfPassing,
+      educationInfo.university,
+      careerInfo.profession,
+      careerInfo.jobTitle,
+      careerInfo.companyName,
+      careerInfo.employmentType,
+      careerInfo.annualIncome,
+      careerInfo.workLocation,
+      aboutYourself
+    ];
+    return allFields.some(field => hasValue(field));
+  };
+
+  if (!hasAnyData()) {
+    return <EmptyStatePreview onEdit={onEdit} title="Self Information" icon={FiUser} />;
+  }
+
+  // Collect all non-empty sections with their fields count
+  const sections = [];
+
+  // Personal Details Section
+  const personalFields = [
+    { label: "Full Name", value: personalInfo.fullName, icon: FiUser },
+    { label: "Gender", value: personalInfo.gender, icon: FiUser },
+    { label: "Date of Birth", value: personalInfo.dob ? new Date(personalInfo.dob).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : null, icon: MdDateRange },
+    { label: "Age", value: personalInfo.age, icon: FiUser },
+    { label: "Marital Status", value: personalInfo.maritalStatus, icon: FiHeart },
+    { label: "Height", value: personalInfo.height, icon: FiUser },
+    { label: "Weight", value: personalInfo.weight, icon: FiUser },
+    { label: "Blood Group", value: personalInfo.bloodGroup, icon: FiInfo },
+    { label: "Disability", value: personalInfo.disability === "Yes" ? "Yes" : null, icon: MdWarning },
+    { label: "Contact Number", value: personalInfo.contactNumber, icon: FiMessageSquare },
+    { label: "WhatsApp Number", value: personalInfo.whatsappNumber, icon: FiMessageSquare }
+  ].filter(field => hasValue(field.value));
+
+  if (personalFields.length > 0) {
+    sections.push({
+      title: "Personal Details",
+      icon: FiUser,
+      fields: personalFields,
+      count: personalFields.length
+    });
+  }
+
+  // Location Section
+  const locationFields = [
+    { label: "Country", value: locationInfo.country, icon: MdLocationOn },
+    { label: "State", value: locationInfo.state, icon: MdLocationOn },
+    { label: "City", value: locationInfo.city, icon: MdLocationOn },
+    { label: "Pin Code", value: locationInfo.pinCode, icon: MdLocationOn },
+    { label: "Current Town", value: locationInfo.currentLocation, icon: FiHome },
+    { label: "Permanent Address", value: locationInfo.permanentAddress, icon: FiHome }
+  ].filter(field => hasValue(field.value));
+
+  if (locationFields.length > 0) {
+    sections.push({
+      title: "Location",
+      icon: MdLocationOn,
+      fields: locationFields,
+      count: locationFields.length
+    });
+  }
+
+  // Religion Section
+  const religionFields = [
+    { label: "Religion", value: religionInfo.religion, icon: MdFamilyRestroom },
+    { label: "Caste", value: religionInfo.caste, icon: MdFamilyRestroom },
+    { label: "Mother Tongue", value: religionInfo.motherTongue, icon: MdFamilyRestroom }
+  ].filter(field => hasValue(field.value));
+
+  if (religionFields.length > 0) {
+    sections.push({
+      title: "Religion & Caste",
+      icon: MdFamilyRestroom,
+      fields: religionFields,
+      count: religionFields.length
+    });
+  }
+
+  // Education Section
+  const educationFields = [
+    { label: "Highest Education", value: educationInfo.highestEducation, icon: MdSchool },
+    { label: "Year of Passing", value: educationInfo.yearOfPassing ? new Date(educationInfo.yearOfPassing).getFullYear() : null, icon: MdDateRange },
+    { label: "University/College", value: educationInfo.university, icon: MdSchool }
+  ].filter(field => hasValue(field.value));
+
+  if (educationFields.length > 0) {
+    sections.push({
+      title: "Education",
+      icon: MdSchool,
+      fields: educationFields,
+      count: educationFields.length
+    });
+  }
+
+  // Career Section
+  const careerFields = [
+    { label: "Profession", value: careerInfo.profession, icon: MdWork },
+    { label: "Job Title", value: careerInfo.jobTitle, icon: MdWork },
+    { label: "Company Name", value: careerInfo.companyName, icon: FiBriefcase },
+    { label: "Employment Type", value: careerInfo.employmentType, icon: MdWork },
+    { label: "Annual Income", value: careerInfo.annualIncome, icon: FiDollarSign },
+    { label: "Work Location", value: careerInfo.workLocation, icon: MdLocationOn }
+  ].filter(field => hasValue(field.value));
+
+  if (careerFields.length > 0) {
+    sections.push({
+      title: "Career",
+      icon: MdWork,
+      fields: careerFields,
+      count: careerFields.length
+    });
+  }
+
+  // About Yourself Section
+  const hasAbout = hasValue(aboutYourself);
+
+  return (
+    <div className="space-y-3 sm:space-y-5">
+      {/* Profile Image Header - Only show if image exists */}
+      {hasValue(personalInfo.profileImg) && (
+        <InfoCard>
+          <div className="flex items-center gap-4 p-4">
+            <div className="relative">
+              <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-white shadow">
+                <img
+                  src={personalInfo.profileImg}
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                  onError={(e) => { e.target.src = "/5.png"; }}
+                />
+              </div>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-800">
+                {formatDisplayValue(personalInfo.fullName) || 'Your Name'}
+              </h3>
+              <div className="flex flex-wrap gap-2 mt-1">
+                {hasValue(personalInfo.age) && (
+                  <span className="text-xs text-gray-600">
+                    Age: {personalInfo.age} yrs
+                  </span>
+                )}
+                {hasValue(personalInfo.gender) && (
+                  <span className="text-xs text-gray-600">
+                    • {personalInfo.gender}
+                  </span>
+                )}
+                {hasValue(personalInfo.maritalStatus) && (
+                  <span className="text-xs text-gray-600">
+                    • {personalInfo.maritalStatus}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </InfoCard>
+      )}
+
+      {/* Dynamic Sections - Only render if they have fields */}
+      {sections.map((section, idx) => (
+        <InfoCard key={idx}>
+          <div className="p-4">
+            <SectionHeader title={section.title} icon={section.icon} count={section.count} />
+            <div className="space-y-0.5">
+              {section.fields.map((field, fieldIdx) => (
+                <InfoRow key={fieldIdx} label={field.label} value={field.value} icon={field.icon} />
+              ))}
+            </div>
+          </div>
+        </InfoCard>
+      ))}
+
+      {/* About Yourself - Only if has content */}
+      {hasAbout && (
+        <InfoCard>
+          <div className="p-4">
+            <SectionHeader title="About Yourself" icon={FiUser} count={1} />
+            <div className="mt-2">
+              <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+                {aboutYourself.trim()}
+              </p>
+            </div>
+          </div>
+        </InfoCard>
+      )}
+
+      {/* Profile Image Missing Warning */}
+      {!hasValue(personalInfo.profileImg) && hasAnyData() && (
+        <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-2">
+          <MdWarning className="text-amber-500 text-lg flex-shrink-0" />
+          <p className="text-xs text-amber-700">
+            Profile image missing
+          </p>
+          <button
+            onClick={onEdit}
+            className="ml-auto text-xs bg-amber-500 text-white px-3 py-1 rounded-md"
+          >
+            Upload
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ========== FAMILY PREVIEW ==========
+const FamilyPreview = ({ familyInfo, aboutFamily, onEdit }) => {
+  // Check if any data exists
+  const hasAnyData = () => {
+    const allFields = [
+      familyInfo.fatherName,
+      familyInfo.fatherOccupation,
+      familyInfo.motherName,
+      familyInfo.motherOccupation,
+      familyInfo.brothers,
+      familyInfo.sisters,
+      familyInfo.familyType,
+      familyInfo.familyStatus,
+      familyInfo.familyLocation,
+      familyInfo.nativePlace,
+      aboutFamily
+    ];
+    return allFields.some(field => hasValue(field));
+  };
+
+  if (!hasAnyData()) {
+    return <EmptyStatePreview onEdit={onEdit} title="Family Information" icon={MdFamilyRestroom} />;
+  }
+
+  // Collect all non-empty sections
+  const sections = [];
+
+  // Parents Information
+  const parentsFields = [
+    { label: "Father's Name", value: familyInfo.fatherName, icon: FiUser },
+    { label: "Father's Occupation", value: familyInfo.fatherOccupation, icon: MdWork },
+    { label: "Mother's Name", value: familyInfo.motherName, icon: FiUser },
+    { label: "Mother's Occupation", value: familyInfo.motherOccupation, icon: MdWork }
+  ].filter(field => hasValue(field.value));
+
+  if (parentsFields.length > 0) {
+    sections.push({
+      title: "Parents",
+      icon: MdFamilyRestroom,
+      fields: parentsFields,
+      count: parentsFields.length
+    });
+  }
+
+  // Siblings Information
+  const siblingsFields = [];
+  if (hasValue(familyInfo.brothers) && familyInfo.brothers > 0) {
+    siblingsFields.push({ label: "Brothers", value: familyInfo.brothers, icon: FiUsers });
+  }
+  if (hasValue(familyInfo.sisters) && familyInfo.sisters > 0) {
+    siblingsFields.push({ label: "Sisters", value: familyInfo.sisters, icon: FiUsers });
+  }
+
+  if (siblingsFields.length > 0) {
+    sections.push({
+      title: "Siblings",
+      icon: FiUsers,
+      fields: siblingsFields,
+      count: siblingsFields.length
+    });
+  }
+
+  // Family Background
+  const backgroundFields = [
+    { label: "Family Type", value: familyInfo.familyType, icon: FiHome },
+    { label: "Family Status", value: familyInfo.familyStatus, icon: FiHome },
+    { label: "Family Location", value: familyInfo.familyLocation, icon: MdLocationOn },
+    { label: "Native Place", value: familyInfo.nativePlace, icon: MdLocationOn }
+  ].filter(field => hasValue(field.value));
+
+  if (backgroundFields.length > 0) {
+    sections.push({
+      title: "Background",
+      icon: FiHome,
+      fields: backgroundFields,
+      count: backgroundFields.length
+    });
+  }
+
+  const hasAbout = hasValue(aboutFamily);
+
+  return (
+    <div className="space-y-5">
+      {/* Dynamic Sections */}
+      {sections.map((section, idx) => (
+        <InfoCard key={idx}>
+          <div className="p-4">
+            <SectionHeader title={section.title} icon={section.icon} count={section.count} />
+            <div className="space-y-0.5">
+              {section.fields.map((field, fieldIdx) => (
+                <InfoRow key={fieldIdx} label={field.label} value={field.value} icon={field.icon} />
+              ))}
+            </div>
+          </div>
+        </InfoCard>
+      ))}
+
+      {/* About Family */}
+      {hasAbout && (
+        <InfoCard>
+          <div className="p-4">
+            <SectionHeader title="About Family" icon={MdFamilyRestroom} count={1} />
+            <div className="mt-2">
+              <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+                {aboutFamily.trim()}
+              </p>
+            </div>
+          </div>
+        </InfoCard>
+      )}
+    </div>
+  );
+};
+
+// ========== PARTNER PREVIEW ==========
+const PartnerPreview = ({ partnerInfo, onEdit }) => {
+  // Check if any data exists
+  const hasAnyData = () => {
+    const allFields = [
+      partnerInfo.preferredAgeRange,
+      partnerInfo.preferredHeight,
+      partnerInfo.preferredMaritalStatus,
+      partnerInfo.preferredReligion,
+      partnerInfo.preferredCaste,
+      partnerInfo.preferredMotherTongue,
+      partnerInfo.preferredEducation,
+      partnerInfo.preferredProfession,
+      partnerInfo.preferredIncome,
+      partnerInfo.preferredLocation,
+      partnerInfo.settledIn,
+      partnerInfo.lookingFor
+    ];
+    return allFields.some(field => hasValue(field));
+  };
+
+  if (!hasAnyData()) {
+    return <EmptyStatePreview onEdit={onEdit} title="Partner Preferences" icon={FiUsers} />;
+  }
+
+  // Collect all non-empty sections
+  const sections = [];
+
+  // Basic Preferences
+  const basicFields = [
+    { label: "Age Range", value: partnerInfo.preferredAgeRange, icon: FiUsers },
+    { label: "Height", value: partnerInfo.preferredHeight, icon: FiUser },
+    { label: "Marital Status", value: partnerInfo.preferredMaritalStatus, icon: FiHeart }
+  ].filter(field => hasValue(field.value));
+
+  if (basicFields.length > 0) {
+    sections.push({
+      title: "Basic",
+      icon: FiUsers,
+      fields: basicFields,
+      count: basicFields.length
+    });
+  }
+
+  // Background Preferences
+  const backgroundFields = [
+    { label: "Religion", value: partnerInfo.preferredReligion, icon: MdFamilyRestroom },
+    { label: "Caste", value: partnerInfo.preferredCaste, icon: MdFamilyRestroom },
+    { label: "Mother Tongue", value: partnerInfo.preferredMotherTongue, icon: MdFamilyRestroom }
+  ].filter(field => hasValue(field.value));
+
+  if (backgroundFields.length > 0) {
+    sections.push({
+      title: "Background",
+      icon: MdFamilyRestroom,
+      fields: backgroundFields,
+      count: backgroundFields.length
+    });
+  }
+
+  // Career & Education Preferences
+  const careerFields = [
+    { label: "Education", value: partnerInfo.preferredEducation, icon: MdSchool },
+    { label: "Profession", value: partnerInfo.preferredProfession, icon: MdWork },
+    { label: "Income", value: partnerInfo.preferredIncome, icon: FiDollarSign }
+  ].filter(field => hasValue(field.value));
+
+  if (careerFields.length > 0) {
+    sections.push({
+      title: "Career & Education",
+      icon: MdSchool,
+      fields: careerFields,
+      count: careerFields.length
+    });
+  }
+
+  // Location Preferences
+  const locationFields = [
+    { label: "Location", value: partnerInfo.preferredLocation, icon: MdLocationOn },
+    { label: "Settled In", value: partnerInfo.settledIn, icon: MdLocationOn }
+  ].filter(field => hasValue(field.value));
+
+  if (locationFields.length > 0) {
+    sections.push({
+      title: "Location",
+      icon: MdLocationOn,
+      fields: locationFields,
+      count: locationFields.length
+    });
+  }
+
+  // Looking For
+  const hasLookingFor = hasValue(partnerInfo.lookingFor);
+
+  return (
+    <div className="space-y-5">
+      {/* Dynamic Sections */}
+      {sections.map((section, idx) => (
+        <InfoCard key={idx}>
+          <div className="p-4">
+            <SectionHeader title={section.title} icon={section.icon} count={section.count} />
+            <div className="space-y-0.5">
+              {section.fields.map((field, fieldIdx) => (
+                <InfoRow key={fieldIdx} label={field.label} value={field.value} icon={field.icon} />
+              ))}
+            </div>
+          </div>
+        </InfoCard>
+      ))}
+
+      {/* Looking For */}
+      {hasLookingFor && (
+        <InfoCard>
+          <div className="p-4">
+            <SectionHeader title="Looking For" icon={FiUsers} count={1} />
+            <div className="mt-2">
+              <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+                {partnerInfo.lookingFor.trim()}
+              </p>
+            </div>
+          </div>
+        </InfoCard>
+      )}
+    </div>
+  );
+};
+
+// Custom Button Components with consistent styles
+const PrimaryButton = ({ children, onClick, loading = false, disabled = false, className = "", icon: Icon }) => (
+  <button
+    onClick={onClick}
+    disabled={disabled || loading}
+    className={`
+      relative overflow-hidden group
+      px-6 py-2.5 bg-gradient-to-r from-red-500 to-red-600 
+      text-white font-semibold rounded-lg
+      shadow-md hover:shadow-lg 
+      transform transition-all duration-200
+      hover:scale-[1.02] active:scale-[0.98]
+      disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100
+      focus:outline-none
+      ${className}
+    `}
+  >
+    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+    <div className="relative flex items-center justify-center gap-2">
       {loading ? (
         <>
-          <FiLoader className="animate-spin" />
-          Saving...
+          <FiLoader className="animate-spin" size={18} />
+          <span>Loading...</span>
         </>
       ) : (
         <>
-          <FiSave />
-          {text}
+          {Icon && <Icon size={18} />}
+          {children}
         </>
       )}
-    </button>
-  </div>
+    </div>
+  </button>
 );
 
-// LoadingButton component
-const LoadingButton = ({ children, onClick, loading = false, disabled = false, className = "", variant = "primary" }) => {
-  const baseClasses = "px-4 py-2 rounded-lg font-medium transition flex items-center justify-center gap-2";
-  const variantClasses = variant === "primary"
-    ? "bg-red-400 text-white hover:bg-red-400"
-    : variant === "secondary"
-      ? "bg-gray-100 text-gray-800 hover:bg-gray-200 border border-gray-300"
-      : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300";
+const SecondaryButton = ({ children, onClick, loading = false, disabled = false, className = "", icon: Icon }) => (
+  <button
+    onClick={onClick}
+    disabled={disabled || loading}
+    className={`
+      relative overflow-hidden group
+      px-6 py-2.5 bg-white text-gray-700 font-semibold rounded-lg
+      border-2 border-red-200 hover:border-red-500
+      shadow-sm hover:shadow-md
+      transform transition-all duration-200
+      hover:scale-[1.02] active:scale-[0.98]
+      disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100
+      focus:outline-none
+      ${className}
+    `}
+  >
+    <div className="absolute inset-0 bg-gradient-to-r from-red-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+    <div className="relative flex items-center justify-center gap-2">
+      {loading ? (
+        <>
+          <FiLoader className="animate-spin" size={18} />
+          <span>Loading...</span>
+        </>
+      ) : (
+        <>
+          {Icon && <Icon size={18} className="text-red-500" />}
+          {children}
+        </>
+      )}
+    </div>
+  </button>
+);
 
+const OutlineButton = ({ children, onClick, loading = false, disabled = false, className = "", icon: Icon }) => (
+  <button
+    onClick={onClick}
+    disabled={disabled || loading}
+    className={`
+      px-4 py-2 bg-transparent text-gray-600 font-medium rounded-lg
+      border border-gray-300 hover:border-red-500 hover:text-red-600
+      transform transition-all duration-200
+      hover:scale-[1.02] active:scale-[0.98]
+      disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100
+      focus:outline-none
+      ${className}
+    `}
+  >
+    <div className="flex items-center justify-center gap-2">
+      {loading ? (
+        <FiLoader className="animate-spin" size={18} />
+      ) : (
+        <>
+          {Icon && <Icon size={18} />}
+          {children}
+        </>
+      )}
+    </div>
+  </button>
+);
+
+const IconButton = ({ children, onClick, loading = false, disabled = false, className = "" }) => (
+  <button
+    onClick={onClick}
+    disabled={disabled || loading}
+    className={`
+      p-2 rounded-lg bg-gray-100 hover:bg-red-100 
+      text-gray-600 hover:text-red-600
+      transform transition-all duration-200
+      hover:scale-110 active:scale-95
+      disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100
+      focus:outline-none
+      ${className}
+    `}
+  >
+    {loading ? <FiLoader className="animate-spin" size={18} /> : children}
+  </button>
+);
+
+const SubmitButton = ({ text, onClick, loading = false, disabled = false, icon: Icon = FiSave }) => (
+  <PrimaryButton onClick={onClick} loading={loading} disabled={disabled} icon={Icon}>
+    {text}
+  </PrimaryButton>
+);
+
+const LoadingButton = ({ children, onClick, loading = false, disabled = false, className = "", variant = "primary" }) => {
+  if (variant === "primary") {
+    return (
+      <PrimaryButton onClick={onClick} loading={loading} disabled={disabled} className={className}>
+        {children}
+      </PrimaryButton>
+    );
+  }
+  if (variant === "secondary") {
+    return (
+      <SecondaryButton onClick={onClick} loading={loading} disabled={disabled} className={className}>
+        {children}
+      </SecondaryButton>
+    );
+  }
   return (
-    <button
-      onClick={onClick}
-      className={`${baseClasses} ${variantClasses} ${className} ${disabled || loading ? 'opacity-70 cursor-not-allowed' : ''}`}
-      disabled={disabled || loading}
-    >
-      {loading ? <FiLoader className="animate-spin" /> : children}
-    </button>
+    <OutlineButton onClick={onClick} loading={loading} disabled={disabled} className={className}>
+      {children}
+    </OutlineButton>
   );
 };
 
@@ -479,10 +1134,19 @@ const MembershipCard = ({
   };
 
   return (
-    <div className={`relative border rounded-xl p-5 transition-all duration-300 ${popular ? 'border-red-400 shadow-lg' : 'border-gray-200'} ${isCurrentPlan ? 'ring-2 ring-red-400 ring-opacity-50' : ''}`}>
+    <div className={`relative border rounded-xl p-6 transition-all duration-300 ${popular ? 'border-red-500 shadow-lg ring-2 ring-red-500 ring-opacity-20' : 'border-gray-200 hover:border-red-300'}`}>
       {popular && (
-        <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-          <span className="bg-red-400 text-white px-4 py-1 rounded-full text-sm font-semibold shadow">
+        <div className="absolute -top-2 sm:-top-3 left-1/2 -translate-x-1/2">
+          <span className="
+      bg-gradient-to-r from-red-500 to-red-600 text-white
+      px-2 sm:px-3 md:px-4
+      py-0.5 sm:py-1
+      rounded-full
+      text-[10px] sm:text-xs md:text-sm
+      font-semibold
+      shadow-md sm:shadow-lg
+      whitespace-nowrap
+    ">
             MOST POPULAR
           </span>
         </div>
@@ -507,20 +1171,17 @@ const MembershipCard = ({
         ))}
       </ul>
 
-      {/* Button Logic */}
       {type === "Free Membership" ? (
         <LoadingButton
           onClick={() => handleSubmit("Membership Plan")}
           loading={false}
           disabled={isCurrentPlan || isPremiumUser}
-          className="w-full py-2.5"
+          className="w-full py-3"
           variant={isCurrentPlan ? "secondary" : "primary"}
+          icon={isCurrentPlan ? FiCheckCircle : null}
         >
           {isCurrentPlan ? (
-            <>
-              <FiCheckCircle />
-              Current Plan
-            </>
+            "Current Plan"
           ) : isPremiumUser ? (
             "Premium User"
           ) : (
@@ -532,19 +1193,14 @@ const MembershipCard = ({
           onClick={() => handlePayment("premium", price)}
           loading={loadingPayment}
           disabled={isCurrentPlan}
-          className="w-full py-2.5"
-          variant={isCurrentPlan ? "secondary" : popular ? "primary" : "secondary"}
+          className="w-full py-3"
+          variant={isCurrentPlan ? "secondary" : "primary"}
+          icon={isCurrentPlan ? FiCheckCircle : MdOutlineWorkspacePremium}
         >
           {isCurrentPlan ? (
-            <>
-              <FiCheckCircle />
-              Current Plan
-            </>
+            "Current Plan"
           ) : (
-            <>
-              <MdOutlineWorkspacePremium />
-              Upgrade Now
-            </>
+            "Upgrade Now"
           )}
         </LoadingButton>
       )}
@@ -559,11 +1215,17 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   const [showPasswordBox, setShowPasswordBox] = useState(false);
+  const sidebarRef = useRef(null);
   const [showFeedbackBox, setShowFeedbackBox] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [activeSection, setActiveSection] = useState("self");
-  const [isEditing, setIsEditing] = useState(false);
+
+  // ========== NEW EDIT STATES ==========
+  const [isEditingSelf, setIsEditingSelf] = useState(false);
+  const [isEditingFamily, setIsEditingFamily] = useState(false);
+  const [isEditingPartner, setIsEditingPartner] = useState(false);
+
   const [isProfilePublished, setIsProfilePublished] = useState(false);
   const [profileCompleted, setProfileCompleted] = useState(false);
   const [profileProgress, setProfileProgress] = useState({
@@ -577,10 +1239,24 @@ const Profile = () => {
     suggestions: ""
   });
 
-  // Track if core fields are already set
+  // ========== ACCORDION STATE ==========
+  const [openSections, setOpenSections] = useState({
+    self: true,
+    family: false,
+    partner: false,
+    plan: false,
+    post: false
+  });
+
+  const toggleSection = (section) => {
+    setOpenSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
   const [coreFieldsSet, setCoreFieldsSet] = useState(false);
 
-  // Loading states for all buttons
   const [loadingStates, setLoadingStates] = useState({
     saveProfile: false,
     imageUpload: false,
@@ -598,7 +1274,6 @@ const Profile = () => {
   const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
   const token = localStorage.getItem("token");
 
-  // Form states
   const [personalInfo, setPersonalInfo] = useState({
     profileImg: "",
     fullName: "",
@@ -609,13 +1284,13 @@ const Profile = () => {
     height: "",
     weight: "",
     bloodGroup: "",
-    disability: "No",
+    disability: "",
     contactNumber: "",
     whatsappNumber: "",
   });
 
   const [locationInfo, setLocationInfo] = useState({
-    country: "India",
+    country: "",
     state: "",
     city: "",
     pinCode: "",
@@ -639,7 +1314,7 @@ const Profile = () => {
     profession: "",
     jobTitle: "",
     companyName: "",
-    employmentType: "Private",
+    employmentType: "",
     annualIncome: "",
     workLocation: "",
   });
@@ -651,8 +1326,8 @@ const Profile = () => {
     motherOccupation: "",
     brothers: 0,
     sisters: 0,
-    familyType: "Nuclear",
-    familyStatus: "Middle",
+    familyType: "",
+    familyStatus: "",
     familyLocation: "",
     nativePlace: "",
   });
@@ -660,7 +1335,7 @@ const Profile = () => {
   const [partnerInfo, setPartnerInfo] = useState({
     preferredAgeRange: "",
     preferredHeight: "",
-    preferredMaritalStatus: "Never Married",
+    preferredMaritalStatus: "",
     preferredReligion: "",
     preferredCaste: "",
     preferredMotherTongue: "",
@@ -691,8 +1366,16 @@ const Profile = () => {
       case 'self':
         const selfFields = [
           {
-            value: personalInfo.profileImg?.trim(), required: true, weight: REQUIRED_WEIGHT,
-            validation: (val) => val && val.length > 10 && !val.startsWith('data:,')
+            value: personalInfo.profileImg?.trim(),
+            required: true,
+            weight: REQUIRED_WEIGHT,
+            validation: (val) => {
+              if (!val || val.trim() === "") return false;
+              if (val === "data:,") return false;
+              if (val.includes("placeholder")) return false;
+              if (val.includes("data:image/") && val.length < 100) return false;
+              return true;
+            }
           },
           { value: personalInfo.fullName?.trim(), required: true, weight: REQUIRED_WEIGHT },
           { value: personalInfo.gender, required: true, weight: REQUIRED_WEIGHT },
@@ -712,8 +1395,6 @@ const Profile = () => {
           { value: careerInfo.profession, required: true, weight: REQUIRED_WEIGHT },
           { value: careerInfo.employmentType, required: true, weight: REQUIRED_WEIGHT },
           { value: careerInfo.annualIncome, required: true, weight: REQUIRED_WEIGHT },
-
-          // Optional fields
           { value: personalInfo.height?.toString()?.trim(), required: false, weight: OPTIONAL_WEIGHT },
           { value: personalInfo.weight?.toString()?.trim(), required: false, weight: OPTIONAL_WEIGHT },
           { value: personalInfo.bloodGroup, required: false, weight: OPTIONAL_WEIGHT },
@@ -750,8 +1431,6 @@ const Profile = () => {
           { value: familyInfo.motherName?.trim(), required: true, weight: REQUIRED_WEIGHT },
           { value: familyInfo.familyType, required: true, weight: REQUIRED_WEIGHT },
           { value: familyInfo.familyStatus, required: true, weight: REQUIRED_WEIGHT },
-
-          // Optional fields
           { value: familyInfo.motherOccupation?.trim(), required: false, weight: OPTIONAL_WEIGHT },
           { value: familyInfo.brothers?.toString()?.trim(), required: false, weight: OPTIONAL_WEIGHT },
           { value: familyInfo.sisters?.toString()?.trim(), required: false, weight: OPTIONAL_WEIGHT },
@@ -778,8 +1457,6 @@ const Profile = () => {
           { value: partnerInfo.preferredProfession, required: true, weight: REQUIRED_WEIGHT },
           { value: partnerInfo.preferredIncome, required: true, weight: REQUIRED_WEIGHT },
           { value: partnerInfo.preferredLocation?.trim(), required: true, weight: REQUIRED_WEIGHT },
-
-          // Optional fields
           { value: partnerInfo.preferredHeight?.toString()?.trim(), required: false, weight: OPTIONAL_WEIGHT },
           { value: partnerInfo.preferredMotherTongue, required: false, weight: OPTIONAL_WEIGHT },
           { value: partnerInfo.settledIn, required: false, weight: OPTIONAL_WEIGHT },
@@ -798,7 +1475,6 @@ const Profile = () => {
     return totalWeight > 0 ? Math.round((filledFields / totalWeight) * 100) : 0;
   };
 
-  // Calculate all section progress
   const calculateAllProgress = () => {
     const selfProgress = calculateSectionCompletion('self');
     const familyProgress = calculateSectionCompletion('family');
@@ -818,7 +1494,6 @@ const Profile = () => {
     return { progress, allComplete };
   };
 
-  // Update progress when form data changes
   useEffect(() => {
     if (user) {
       calculateAllProgress();
@@ -835,26 +1510,20 @@ const Profile = () => {
     aboutFamily
   ]);
 
-  // Check membership status and dates
   const checkMembershipStatus = async () => {
     try {
-
-      // Use ONLY the payment endpoint which now updates the database
       const paymentResponse = await axios.get(
         `${BACKEND_URL}/payment/check-membership/${user.email}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
       if (paymentResponse.data) {
-        // Update state with the CORRECT plan (will be "free" if expired)
         setMembershipPlan(paymentResponse.data.membership_plan);
-
         setMembershipDates({
           membershipStartDate: paymentResponse.data.membershipStartDate || "",
           membershipExpiryDate: paymentResponse.data.membershipExpiryDate || ""
         });
 
-        // Show notification if membership just expired
         if (paymentResponse.data.membership_plan === "free" &&
           paymentResponse.data.membershipExpiryDate) {
           const expiryDate = new Date(paymentResponse.data.membershipExpiryDate);
@@ -870,7 +1539,6 @@ const Profile = () => {
     }
   };
 
-  // Call this when profile loads
   useEffect(() => {
     if (user) {
       checkMembershipStatus();
@@ -885,7 +1553,6 @@ const Profile = () => {
     }
   }, []);
 
-  // Function to update membership plan
   const updateMembershipPlanInProfile = async (planType) => {
     if (membershipPlan === "premium" && planType === "free") {
       toast.error("Cannot switch back to Free plan once upgraded to Premium.");
@@ -916,14 +1583,12 @@ const Profile = () => {
 
       setMembershipPlan(planType);
       toast.success(`Plan updated to ${planType === "premium" ? "Premium" : "Free"}`);
-
     } catch (error) {
       console.error("Error updating plan:", error);
       toast.error("Failed to update plan");
     }
   };
 
-  // Set loading state
   const setLoadingState = (key, value) => {
     setLoadingStates(prev => ({ ...prev, [key]: value }));
   };
@@ -956,17 +1621,28 @@ const Profile = () => {
 
         setUser(parsedUser);
 
-        // Load existing profile data
+        // ✅ FIXED: Test backend connection first
+        try {
+          await axios.get(`${BACKEND_URL}/health`, {
+            headers: { Authorization: `Bearer ${token}` },
+            timeout: 5000
+          });
+        } catch (healthError) {
+          console.warn("Health check failed:", healthError);
+          // Continue anyway - backend might not have health endpoint
+        }
+
         try {
           const response = await axios.get(
             `${BACKEND_URL}/profile/get/${parsedUser.email}`,
-            { headers: { Authorization: `Bearer ${token}` } }
+            {
+              headers: { Authorization: `Bearer ${token}` },
+              timeout: 10000
+            }
           );
 
           if (response.data && response.data.profile) {
             const profile = response.data.profile;
-
-            // Set all form states with existing data
             setPersonalInfo(profile.personalInfo || personalInfo);
             setLocationInfo(profile.locationInfo || locationInfo);
             setReligionInfo(profile.religionInfo || religionInfo);
@@ -979,13 +1655,11 @@ const Profile = () => {
             setIsProfilePublished(profile.isPublished || false);
             setMembershipPlan(profile.membershipPlan || "free");
 
-            // Check if core fields are already set
             const hasCoreFields = profile.personalInfo?.fullName &&
               profile.personalInfo?.dob &&
               profile.personalInfo?.gender;
             setCoreFieldsSet(!!hasCoreFields);
 
-            // Set membership dates from profile
             if (profile.membershipStartDate || profile.membershipExpiryDate) {
               setMembershipDates({
                 membershipStartDate: profile.membershipStartDate || "",
@@ -993,9 +1667,7 @@ const Profile = () => {
               });
             }
 
-            // Calculate initial profile completion
             calculateAllProgress();
-            // Update user context
             updateUserProfile({
               userEmail: parsedUser.email,
               isProfilePublished: profile.isPublished || false,
@@ -1003,7 +1675,7 @@ const Profile = () => {
             });
           }
         } catch (error) {
-          console.log("No existing profile found, starting fresh");
+          console.log("No existing profile found or error loading profile:", error.message);
           setCoreFieldsSet(false);
         }
       } catch (err) {
@@ -1152,7 +1824,7 @@ const Profile = () => {
     }
   };
 
-  // Validation functions
+  // ✅ FIXED: validateSelfInfo function with proper image validation
   const validateSelfInfo = () => {
     const trimmedPersonalInfo = {
       ...personalInfo,
@@ -1207,12 +1879,24 @@ const Profile = () => {
 
     const missingFields = requiredFields.filter(item => !item.field || item.field.toString().trim() === "");
 
-    if (!personalInfo.profileImg ||
-      personalInfo.profileImg.trim() === "" ||
-      personalInfo.profileImg === "data:," ||
-      personalInfo.profileImg.includes("data:image/") && personalInfo.profileImg.length < 100 ||
-      personalInfo.profileImg.includes("placeholder")) {
-      return { isValid: false, message: "Valid profile image is required. Please upload a clear profile picture." };
+    // ✅ FIXED: Better profile image validation
+    const hasValidProfileImage = () => {
+      if (!personalInfo.profileImg || personalInfo.profileImg.trim() === "") {
+        return false;
+      }
+
+      // Check for placeholder or empty data URL
+      if (personalInfo.profileImg === "data:," ||
+        personalInfo.profileImg.includes("placeholder") ||
+        (personalInfo.profileImg.includes("data:image/") && personalInfo.profileImg.length < 100)) {
+        return false;
+      }
+
+      return true;
+    };
+
+    if (!hasValidProfileImage()) {
+      return { isValid: false, message: "Profile image is required. Please upload a clear profile picture." };
     }
 
     if (missingFields.length > 0) {
@@ -1353,7 +2037,6 @@ const Profile = () => {
       return;
     }
 
-    // Trim all fields
     const trimmedPersonalInfo = {
       ...personalInfo,
       fullName: personalInfo.fullName?.trim(),
@@ -1407,7 +2090,6 @@ const Profile = () => {
     const trimmedAboutYourself = aboutYourself?.trim() || "";
     const trimmedAboutFamily = aboutFamily?.trim() || "";
 
-    // Validate based on section
     let validationResult = { isValid: false, message: "" };
 
     if (section === "Self") {
@@ -1426,53 +2108,14 @@ const Profile = () => {
     }
 
     setLoadingState('saveProfile', true);
-    try {
-      if (section === "Membership Plan") {
-        const profileResponse = await axios.get(
-          `${BACKEND_URL}/profile/get/${user.email}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
 
-        let profileData;
+    // ✅ FIXED: Add retry mechanism for network errors
+    const maxRetries = 2;
+    let retryCount = 0;
+    let lastError = null;
 
-        if (profileResponse.data && profileResponse.data.profile) {
-          profileData = {
-            ...profileResponse.data.profile,
-            membershipPlan: membershipPlan,
-            lastUpdated: new Date().toISOString()
-          };
-        } else {
-          profileData = {
-            email: user.email,
-            personalInfo: trimmedPersonalInfo,
-            locationInfo: trimmedLocationInfo,
-            religionInfo: trimmedReligionInfo,
-            educationInfo: trimmedEducationInfo,
-            careerInfo: trimmedCareerInfo,
-            familyInfo: trimmedFamilyInfo,
-            partnerInfo: trimmedPartnerInfo,
-            aboutYourself: trimmedAboutYourself,
-            aboutFamily: trimmedAboutFamily,
-            membershipPlan: membershipPlan,
-            lastUpdated: new Date().toISOString()
-          };
-        }
-
-        await axios.post(
-          `${BACKEND_URL}/profile/save`,
-          profileData,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-
-        toast.success(`Membership plan updated to ${membershipPlan === "premium" ? "Premium" : "Free"} successfully!`);
-        setMembershipPlan(membershipPlan);
-
-        if (membershipPlan === "free") {
-          toast.info("You have switched to Free plan. Premium features are now disabled.");
-        } else if (membershipPlan === "premium") {
-          toast.success("Premium membership activated! You can now access all premium features.");
-        }
-      } else {
+    while (retryCount < maxRetries) {
+      try {
         const profileData = {
           email: user.email,
           personalInfo: trimmedPersonalInfo,
@@ -1485,20 +2128,40 @@ const Profile = () => {
           aboutYourself: trimmedAboutYourself,
           aboutFamily: trimmedAboutFamily,
           membershipPlan: membershipPlan,
-          isPublished: isProfilePublished,
           lastUpdated: new Date().toISOString()
         };
 
-        await axios.post(
+        if (isProfilePublished) {
+          profileData.isPublished = true;
+        }
+
+        console.log(`Attempt ${retryCount + 1}: Saving profile data...`);
+
+        const response = await axios.post(
           `${BACKEND_URL}/profile/save`,
           profileData,
-          { headers: { Authorization: `Bearer ${token}` } }
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            timeout: 10000 // 10 second timeout
+          }
         );
 
+        console.log("Save response:", response.data);
         toast.success(`${section} information saved successfully!`);
-        setIsEditing(false);
 
-        // Update form states with trimmed values
+        // Turn off edit mode after save
+        if (section === "Self") {
+          setIsEditingSelf(false);
+        } else if (section === "Family") {
+          setIsEditingFamily(false);
+        } else if (section === "Partner Preferences") {
+          setIsEditingPartner(false);
+        }
+
+        // Update state with trimmed values
         setPersonalInfo(trimmedPersonalInfo);
         setLocationInfo(trimmedLocationInfo);
         setReligionInfo(trimmedReligionInfo);
@@ -1509,27 +2172,54 @@ const Profile = () => {
         setAboutYourself(trimmedAboutYourself);
         setAboutFamily(trimmedAboutFamily);
 
-        // Update core fields status
         if (section === "Self" && !coreFieldsSet) {
           setCoreFieldsSet(true);
         }
 
-        // Recalculate completion status
         calculateAllProgress();
-      }
 
-    } catch (err) {
-      console.error("Save profile error:", err);
-      if (section === "Membership Plan") {
-        toast.error(err.response?.data?.detail || "Failed to update membership plan. Please try again.");
-      } else {
-        toast.error(err.response?.data?.detail || "Failed to save profile information");
+        // ✅ Success - break the retry loop
+        setLoadingState('saveProfile', false);
+        return;
+
+      } catch (err) {
+        lastError = err;
+        retryCount++;
+
+        console.error(`Attempt ${retryCount} failed:`, err);
+
+        // If it's not a network error, don't retry
+        if (err.message !== "Network Error" && !err.code === 'ECONNABORTED') {
+          break;
+        }
+
+        // Wait before retrying (exponential backoff)
+        if (retryCount < maxRetries) {
+          await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+        }
       }
-    } finally {
-      setLoadingState('saveProfile', false);
     }
+
+    // ✅ All retries failed
+    console.error("Save profile error after retries:", lastError);
+
+    if (lastError?.message === "Network Error") {
+      toast.error("Unable to connect to server. Please check your internet connection and try again.");
+    } else if (lastError?.code === 'ECONNABORTED') {
+      toast.error("Request timeout. Please try again.");
+    } else if (lastError?.response?.status === 401) {
+      toast.error("Session expired. Please login again.");
+      navigate("/login");
+    } else if (lastError?.response?.status === 400) {
+      toast.error(lastError.response.data?.detail || "Invalid data. Please check all fields.");
+    } else {
+      toast.error(lastError?.response?.data?.detail || "Failed to save profile information. Please try again.");
+    }
+
+    setLoadingState('saveProfile', false);
   };
 
+  // ✅ FIXED: handlePostProfile function with proper image validation
   const handlePostProfile = async () => {
     const { progress, allComplete } = calculateAllProgress();
 
@@ -1542,11 +2232,22 @@ const Profile = () => {
       return;
     }
 
-    // Double-check profile image exists
-    if (!personalInfo.profileImg ||
-      personalInfo.profileImg.trim() === "" ||
-      personalInfo.profileImg === "data:," ||
-      personalInfo.profileImg.includes("placeholder")) {
+    // ✅ FIXED: Better profile image validation for publishing
+    const hasValidProfileImage = () => {
+      if (!personalInfo.profileImg || personalInfo.profileImg.trim() === "") {
+        return false;
+      }
+
+      if (personalInfo.profileImg === "data:," ||
+        personalInfo.profileImg.includes("placeholder") ||
+        (personalInfo.profileImg.includes("data:image/") && personalInfo.profileImg.length < 100)) {
+        return false;
+      }
+
+      return true;
+    };
+
+    if (!hasValidProfileImage()) {
       toast.error("Please upload a valid profile image before publishing");
       return;
     }
@@ -1632,7 +2333,6 @@ const Profile = () => {
       toast.dismiss("publishing");
       setIsProfilePublished(true);
       toast.success("🎉 Profile published successfully! Now visible to other members.");
-
     } catch (err) {
       console.error("Publish error:", err);
       toast.dismiss("publishing");
@@ -1640,7 +2340,6 @@ const Profile = () => {
       if (err.response?.status === 400) {
         const errorDetail = err.response.data.detail;
         if (errorDetail?.completion?.sectionCompletion) {
-          // Show which sections are incomplete
           const incomplete = Object.entries(errorDetail.completion.sectionCompletion)
             .filter(([_, percentage]) => percentage < 80)
             .map(([section, percentage]) => `${section}: ${percentage}%`);
@@ -1689,17 +2388,16 @@ const Profile = () => {
       confirmButtonText: 'Yes, Delete',
       cancelButtonText: 'Cancel',
       buttonsStyling: false,
-
       customClass: {
         popup: 'rounded-xl p-6',
         actions: 'gap-3 mt-4',
         confirmButton:
           'px-5 py-2.5 min-w-[120px] rounded-lg font-medium text-white ' +
-          'bg-red-400 hover:bg-red-400 ' +
-          'transition shadow-md',
+          'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 ' +
+          'transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-[1.02]',
         cancelButton:
           'px-5 py-2.5 min-w-[120px] rounded-lg font-medium text-gray-700 ' +
-          'bg-gray-200 hover:bg-gray-300 transition shadow-sm'
+          'bg-gray-200 hover:bg-gray-300 transition-all duration-200 shadow-sm hover:shadow-md'
       }
     });
 
@@ -1729,7 +2427,6 @@ const Profile = () => {
     }
   };
 
-  // Razorpay payment integration
   const handlePayment = async (planType, amount) => {
     setLoadingState('payment', true);
     try {
@@ -1822,15 +2519,11 @@ const Profile = () => {
 
                 setMembershipPlan(planType);
                 toast.success("Premium membership saved to your profile!");
-
-                // Update membership dates
                 checkMembershipStatus();
-
               } catch (error) {
                 console.error("Error saving premium membership:", error);
                 toast.error("Payment successful but failed to save to profile. Please refresh the page.");
               }
-
             } else {
               toast.error("Payment verification failed. Please contact support.");
             }
@@ -1869,7 +2562,6 @@ const Profile = () => {
         toast.error(`Payment failed: ${response.error.description || 'Unknown error'}`);
         setLoadingState('payment', false);
       });
-
     } catch (error) {
       console.error("Payment initiation error:", error);
       toast.error(error.response?.data?.detail || "Failed to initiate payment");
@@ -1877,7 +2569,6 @@ const Profile = () => {
     }
   };
 
-  // Load Razorpay script
   useEffect(() => {
     const script = document.createElement('script');
     script.src = 'https://checkout.razorpay.com/v1/checkout.js';
@@ -1895,7 +2586,7 @@ const Profile = () => {
         <Navbar />
         <div className="min-h-screen flex justify-center items-center pt-20 bg-gray-50">
           <div className="flex flex-col items-center gap-4">
-            <FiLoader className="text-red-400 animate-spin text-4xl" />
+            <FiLoader className="text-red-500 animate-spin text-4xl" />
             <p className="text-gray-500">Loading profile...</p>
           </div>
         </div>
@@ -1908,178 +2599,178 @@ const Profile = () => {
 
   return (
     <>
-      <ToastContainer position="top-right" />
+      <ToastContainer
+        position="top-right"
+        toastClassName="rounded-lg shadow-lg"
+      />
       <Navbar />
 
-      <div className="min-h-screen bg-gray-50 pt-20 md:pt-24 pb-12">
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pt-20 md:pt-24 pb-12">
         <div className="container mx-auto px-3 md:px-4">
-          {/* User Profile Header - Jeewansathi Premium Style */}
-          <div className="bg-gradient-to-br from-white via-white to-red-50/30 rounded-xl shadow-md p-3 md:p-4 mb-4 md:mb-5 relative border border-red-100/80 backdrop-blur-sm max-w-4xl mx-auto"> {/* Changed max-w-2xl to max-w-4xl */}
-            {/* Settings Icon with Premium Style */}
-            <div className="absolute top-3 right-3 z-20">
-              <div className="relative">
-                <button
-                  onClick={() => setShowSettings(!showSettings)}
-                  className="p-2 rounded-full bg-gray-50 hover:bg-red-50 transition-all duration-300 group"
-                >
-                  <FiSettings
-                    className="w-5 h-5 text-gray-600 group-hover:text-red-400 transition-transform duration-300 group-hover:rotate-90"
-                  />
-                </button>
-                {showSettings && (
-                  <div className="absolute right-0 mt-2 w-64 bg-white/95 backdrop-blur-sm border border-red-100 shadow-xl rounded-xl text-left z-50 overflow-hidden animate-fadeIn">
-                    <div className="py-1">
-                      <button
-                        className="flex items-center gap-2 w-full text-left px-3 py-2.5 hover:bg-gradient-to-r hover:from-red-50/50 hover:to-transparent transition-all duration-200 disabled:opacity-50 group text-base"
-                        onClick={() => {
-                          setShowPasswordBox(true);
-                          setShowFeedbackBox(false);
-                          setShowDeleteConfirm(false);
-                          setShowSettings(false);
-                        }}
-                        disabled={loadingStates.passwordUpdate}
-                      >
-                        <div className="p-1.5 rounded-lg bg-red-50 group-hover:bg-red-100 transition-colors">
-                          <FiEdit2 className="w-4 h-4 text-red-400" />
-                        </div>
-                        <span className="font-medium text-gray-700">Change Password</span>
-                      </button>
-                      <button
-                        className="flex items-center gap-2 w-full text-left px-3 py-2.5 hover:bg-gradient-to-r hover:from-red-50/50 hover:to-transparent transition-all duration-200 disabled:opacity-50 group text-base"
-                        onClick={() => {
-                          setShowFeedbackBox(true);
-                          setShowPasswordBox(false);
-                          setShowDeleteConfirm(false);
-                          setShowSettings(false);
-                        }}
-                        disabled={loadingStates.feedbackSubmit}
-                      >
-                        <div className="p-1.5 rounded-lg bg-red-50 group-hover:bg-red-100 transition-colors">
-                          <FiMessageSquare className="w-4 h-4 text-red-400" />
-                        </div>
-                        <span className="font-medium text-gray-700">Give Feedback</span>
-                      </button>
-                      {isProfilePublished && (
+          {/* ========== NEW 1.5:3 LAYOUT ========== */}
+          <div className="flex flex-col lg:flex-row gap-8">
+            {/* LEFT SIDEBAR: PROFILE BOX (1.5 ratio on desktop) */}
+            <div className="lg:w-[30%] w-full lg:h-[calc(100vh-120px)] lg:sticky lg:top-24">              <div ref={sidebarRef} className="bg-gradient-to-br from-white via-white to-red-50/30 rounded-2xl shadow-xl p-4 md:p-6 relative border border-red-100/80 backdrop-blur-sm h-full overflow-y-auto scrollbar-hide">
+              <div className="absolute top-4 right-4 z-20">
+                <div className="relative">
+                  <IconButton
+                    onClick={() => setShowSettings(!showSettings)}
+                    loading={false}
+                  >
+                    <FiSettings className="w-5 h-5" />
+                  </IconButton>
+                  {showSettings && (
+                    <div className="absolute right-0 mt-2 w-64 bg-white/95 backdrop-blur-sm border border-red-100 shadow-xl rounded-xl text-left z-50 overflow-hidden animate-fadeIn">
+                      <div className="py-1">
                         <button
-                          className="flex items-center gap-2 w-full text-left px-3 py-2.5 hover:bg-gradient-to-r hover:from-red-50/50 hover:to-transparent transition-all duration-200 disabled:opacity-50 group text-base"
+                          className="flex items-center gap-3 w-full text-left px-4 py-3 hover:bg-gradient-to-r hover:from-red-50/50 hover:to-transparent transition-all duration-200 disabled:opacity-50 group"
                           onClick={() => {
-                            handleRemoveProfile();
+                            setShowPasswordBox(true);
+                            setShowFeedbackBox(false);
+                            setShowDeleteConfirm(false);
                             setShowSettings(false);
+                            sidebarRef.current?.scrollTo({ top: 500, behavior: "smooth" });
                           }}
-                          disabled={loadingStates.removeProfile}
+                          disabled={loadingStates.passwordUpdate}
                         >
                           <div className="p-1.5 rounded-lg bg-red-50 group-hover:bg-red-100 transition-colors">
-                            <MdOutlineRemoveCircle className="w-4 h-4 text-red-400" />
+                            <FiEdit2 className="w-4 h-4 text-red-500" />
                           </div>
-                          <span className="font-medium text-gray-700">Hide Profile</span>
+                          <span className="font-medium text-gray-700">Change Password</span>
                         </button>
-                      )}
-                      <button
-                        className="flex items-center gap-2 w-full text-left px-3 py-2.5 hover:bg-gradient-to-r hover:from-red-50/50 hover:to-transparent transition-all duration-200 disabled:opacity-50 group text-base"
-                        onClick={() => {
-                          setShowDeleteConfirm(true);
-                          setShowPasswordBox(false);
-                          setShowFeedbackBox(false);
-                          setShowSettings(false);
-                        }}
-                        disabled={loadingStates.deleteProfile}
-                      >
-                        <div className="p-1.5 rounded-lg bg-red-50 group-hover:bg-red-100 transition-colors">
-                          <FiTrash2 className="w-4 h-4 text-red-400" />
-                        </div>
-                        <span className="font-medium text-red-400">Delete Profile</span>
-                      </button>
+                        <button
+                          className="flex items-center gap-3 w-full text-left px-4 py-3 hover:bg-gradient-to-r hover:from-red-50/50 hover:to-transparent transition-all duration-200 disabled:opacity-50 group"
+                          onClick={() => {
+                            setShowFeedbackBox(true);
+                            setShowPasswordBox(false);
+                            setShowDeleteConfirm(false);
+                            setShowSettings(false);
+                            sidebarRef.current?.scrollTo({ top: 500, behavior: "smooth" });
+                          }}
+                          disabled={loadingStates.feedbackSubmit}
+                        >
+                          <div className="p-1.5 rounded-lg bg-red-50 group-hover:bg-red-100 transition-colors">
+                            <FiMessageSquare className="w-4 h-4 text-red-500" />
+                          </div>
+                          <span className="font-medium text-gray-700">Give Feedback</span>
+                        </button>
+                        {isProfilePublished && (
+                          <button
+                            className="flex items-center gap-3 w-full text-left px-4 py-3 hover:bg-gradient-to-r hover:from-red-50/50 hover:to-transparent transition-all duration-200 disabled:opacity-50 group"
+                            onClick={() => {
+                              handleRemoveProfile();
+                              setShowSettings(false);
+                            }}
+                            disabled={loadingStates.removeProfile}
+                          >
+                            <div className="p-1.5 rounded-lg bg-red-50 group-hover:bg-red-100 transition-colors">
+                              <MdOutlineRemoveCircle className="w-4 h-4 text-red-500" />
+                            </div>
+                            <span className="font-medium text-gray-700">Hide Profile</span>
+                          </button>
+                        )}
+                        <button
+                          className="flex items-center gap-3 w-full text-left px-4 py-3 hover:bg-gradient-to-r hover:from-red-50/50 hover:to-transparent transition-all duration-200 disabled:opacity-50 group"
+                          onClick={() => {
+                            setShowDeleteConfirm(true);
+                            setShowPasswordBox(false);
+                            setShowFeedbackBox(false);
+                            setShowSettings(false);
+                            sidebarRef.current?.scrollTo({ top: 600, behavior: "smooth" });
+                          }}
+                          disabled={loadingStates.deleteProfile}
+                        >
+                          <div className="p-1.5 rounded-lg bg-red-50 group-hover:bg-red-100 transition-colors">
+                            <FiTrash2 className="w-4 h-4 text-red-500" />
+                          </div>
+                          <span className="font-medium text-red-500">Delete Profile</span>
+                        </button>
+                      </div>
+                      <div className="border-t border-gray-100 bg-gradient-to-r from-gray-50/50 to-transparent">
+                        <button
+                          className="flex items-center gap-3 w-full text-left px-4 py-3 hover:bg-gradient-to-r hover:from-red-50/50 hover:to-transparent transition-all duration-200 disabled:opacity-50 group"
+                          onClick={handleLogout}
+                          disabled={loadingStates.logout}
+                        >
+                          <div className="p-1.5 rounded-lg bg-gray-100 group-hover:bg-red-100 transition-colors">
+                            {loadingStates.logout ? (
+                              <FiLoader className="animate-spin w-4 h-4 text-gray-600" />
+                            ) : (
+                              <FiLogOut className="w-4 h-4 text-gray-600 group-hover:text-red-500" />
+                            )}
+                          </div>
+                          <span className="font-medium text-gray-700">Logout</span>
+                        </button>
+                      </div>
                     </div>
-                    <div className="border-t border-gray-100 bg-gradient-to-r from-gray-50/50 to-transparent">
-                      <button
-                        className="flex items-center gap-2 w-full text-left px-3 py-2.5 hover:bg-gradient-to-r hover:from-red-50/50 hover:to-transparent transition-all duration-200 disabled:opacity-50 group text-base"
-                        onClick={handleLogout}
-                        disabled={loadingStates.logout}
-                      >
-                        <div className="p-1.5 rounded-lg bg-gray-100 group-hover:bg-red-100 transition-colors">
-                          {loadingStates.logout ? (
-                            <FiLoader className="animate-spin w-4 h-4 text-gray-600" />
-                          ) : (
-                            <FiLogOut className="w-4 h-4 text-gray-600 group-hover:text-red-400" />
-                          )}
-                        </div>
-                        <span className="font-medium text-gray-700">Logout</span>
-                      </button>
-                    </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
-            </div>
 
-            {/* Main Profile Content */}
-            <div className="flex flex-col items-center gap-6 md:flex-row md:items-start md:gap-8"> {/* Increased gap */}
-              {/* Avatar - Full Height Desktop / Square Mobile */}
-              <div className="relative flex-shrink-0 w-36 h-36 md:w-44 md:h-auto md:self-stretch">
-                <div
-                  className="w-full h-full aspect-square overflow-hidden rounded-lg border"
-                  style={{ borderColor: "#d7d4d1", borderWidth: "2px" }}
-                >
-                  <img
-                    src={personalInfo.profileImg ? personalInfo.profileImg : "/5.png"}
-                    alt="Profile"
-                    className="w-full h-full object-cover"
-                  />
+              {/* Profile Image & Basic Info */}
+              <div className="flex flex-col items-center text-center mt-4">
+                <div className="relative w-36 h-36 md:w-40 md:h-40 mb-4">
+                  <div className="w-full h-full overflow-hidden rounded-xl border-4 border-white shadow-lg">
+                    <img
+                      src={personalInfo.profileImg ? personalInfo.profileImg : "/5.png"}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  {isProfilePublished && (
+                    <div className="absolute -bottom-1 -right-1 bg-green-500 border-2 border-white rounded-full p-1.5">
+                      <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                    </div>
+                  )}
                 </div>
 
-                {isProfilePublished && (
-                  <div className="absolute -bottom-1 -right-1 bg-green-500 border-2 border-white rounded-full p-1">
-                    <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
-                  </div>
-                )}
-              </div>
+                <h1 className="text-xl md:text-2xl font-semibold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                  {user.name}
+                </h1>
 
-              {/* User Info */}
-              <div className="flex-1 w-full text-center md:text-left">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-1 mb-2">
-                  <div>
-                    <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                      {user.name}
-                    </h1>
-                    <p className="text-base text-gray-500 flex items-center gap-1.5 justify-center md:justify-start">
-                      <span className="w-1 h-1 bg-red-400 rounded-full"></span>
-                      {user.email}
-                    </p>
-                  </div>
-                </div>
+                <p className="text-sm text-gray-500 flex items-center gap-2 justify-center mt-1">
+                  <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+                  {user.email}
+                </p>
 
-                {/* Premium Progress Bar - Compact */}
-                <div className="mb-3 bg-white/50 backdrop-blur-sm rounded-lg p-3 border border-red-100/50">
-                  <div className="flex items-center justify-between mb-1.5">
+                {/* Profile Strength */}
+                <div className="mt-6 w-full bg-white/50 backdrop-blur-sm rounded-xl p-4 border border-red-100/50">
+                  <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 bg-red-400 rounded-full animate-pulse"></span>
+                      <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
                       Profile Strength
                     </span>
-                    <span className="text-sm font-bold text-red-400">
+                    <span className="text-lg font-bold text-red-500">
                       {Math.round((Object.values(profileProgress).reduce((a, b) => a + b, 0) / 3))}%
                     </span>
                   </div>
                   <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
                     <div
-                      className="bg-gradient-to-r from-red-400 to-red-300 h-2 rounded-full transition-all duration-700 ease-out relative"
-                      style={{ width: `${Math.round((Object.values(profileProgress).reduce((a, b) => a + b, 0) / 3))}%` }}
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"></div>
-                    </div>
+                      className="bg-gradient-to-r from-red-500 to-red-400 h-2 rounded-full transition-all duration-700 ease-out"
+                      style={{
+                        width: `${Math.round(
+                          Object.values(profileProgress).reduce((a, b) => a + b, 0) / 3
+                        )}%`,
+                      }}
+                    ></div>
                   </div>
+                  <p className="text-xs text-gray-500 mt-2">
+                    {profileCompleted ? '✓ Ready to publish!' : '⚠ Complete all sections to 80%'}
+                  </p>
                 </div>
 
                 {user.google_id && (
-                  <div className="flex justify-center md:justify-start mb-3 animate-fadeIn">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-green-50 to-emerald-50 text-green-700 rounded-lg text-sm font-medium border border-green-200/50 shadow-sm">
+                  <div className="mt-4 animate-fadeIn">
+                    <span className="inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-green-50 to-emerald-50 text-green-700 rounded-lg text-sm font-medium border border-green-200/50 shadow-sm">
                       <FiCheckCircle className="w-4 h-4" />
-                      Google Account
+                      Connected with Google
                     </span>
                   </div>
                 )}
 
-                {/* Action Buttons - Smaller */}
-                <div className="flex flex-wrap gap-3 justify-center md:justify-start">
-                  <button
+                {/* Action Buttons */}
+                <div className="flex flex-wrap gap-3 justify-center mt-6 w-full">
+                  <PrimaryButton
                     onClick={() => {
                       setLoadingState('viewMatches', true);
                       const userData = {
@@ -2090,20 +2781,14 @@ const Profile = () => {
                       updateUserProfile(userData);
                       navigate("/matches", { state: userData });
                     }}
+                    loading={loadingStates.viewMatches}
                     disabled={loadingStates.viewMatches}
-                    className="group relative px-4 py-2 bg-gradient-to-r from-red-400 to-red-500 text-white rounded-lg text-base font-semibold shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-50 overflow-hidden"
+                    className="flex-1 min-w-[130px]"
+                    icon={FiEye}
                   >
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-                    <div className="relative flex items-center gap-1.5">
-                      {loadingStates.viewMatches ? (
-                        <FiLoader className="animate-spin w-4 h-4" />
-                      ) : (
-                        <FiEye className="w-4 h-4" />
-                      )}
-                      <span>View Matches</span>
-                    </div>
-                  </button>
-                  <button
+                    Matches
+                  </PrimaryButton>
+                  <SecondaryButton
                     onClick={() => {
                       setLoadingState('watchlist', true);
                       const userData = {
@@ -2114,301 +2799,159 @@ const Profile = () => {
                       updateUserProfile(userData);
                       navigate("/watchlist", { state: userData });
                     }}
+                    loading={loadingStates.watchlist}
                     disabled={loadingStates.watchlist}
-                    className="group relative px-4 py-2 bg-white text-gray-700 rounded-lg text-base font-semibold border border-red-100 hover:border-red-400 shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-50"
+                    className="flex-1 min-w-[130px]"
+                    icon={FiHeart}
                   >
-                    <div className="absolute inset-0 bg-gradient-to-r from-red-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg"></div>
-                    <div className="relative flex items-center gap-1.5">
-                      {loadingStates.watchlist ? (
-                        <FiLoader className="animate-spin w-4 h-4" />
-                      ) : (
-                        <FiHeart className="w-4 h-4 text-red-400" />
-                      )}
-                      <span>Watchlist</span>
-                    </div>
-                  </button>
+                    Watchlist
+                  </SecondaryButton>
+                </div>
+
+                {/* Profile Status Badge */}
+                <div className="mt-6 w-full">
+                  <div
+                    className={`px-4 py-3 rounded-xl text-sm font-medium shadow-md backdrop-blur-sm flex items-center justify-center gap-2
+                        ${isProfilePublished
+                        ? "bg-gradient-to-r from-green-50 to-emerald-50 text-green-700 border border-green-200/50"
+                        : "bg-gradient-to-r from-amber-50 to-orange-50 text-amber-700 border border-amber-200/50"
+                      }`}
+                  >
+                    {isProfilePublished ? (
+                      <>
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                        <MdPublishedWithChanges className="w-5 h-5" />
+                        <span className="font-semibold">Published & Visible</span>
+                      </>
+                    ) : (
+                      <>
+                        <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
+                        <MdWarning className="w-5 h-5" />
+                        <span className="font-semibold">Not Published</span>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Profile Status Badge - Compact */}
-            <div className="mt-4 flex items-center justify-center">
-              <div
-                className={`px-4 py-1.5 rounded-lg text-base font-medium shadow-md backdrop-blur-sm flex items-center gap-1.5
-${isProfilePublished
-                    ? "bg-gradient-to-r from-green-50 to-emerald-50 text-green-700 border border-green-200/50"
-                    : "bg-gradient-to-r from-amber-50 to-orange-50 text-amber-700 border border-amber-200/50"
-                  }`}
-              >
-                {isProfilePublished ? (
-                  <>
-                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
-                    <MdPublishedWithChanges className="w-5 h-5" />
-                    <span className="font-medium">Profile Published</span>
-                  </>
-                ) : (
-                  <>
-                    <div className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse"></div>
-                    <MdWarning className="w-5 h-5" />
-                    <span className="font-medium">Profile Not Published</span>
-                  </>
-                )}
-              </div>
-            </div>
-
-            {/* Change Password Box - Compact */}
-            {showPasswordBox && (
-              <div className="mt-4 p-4 md:p-5 bg-gradient-to-br from-white to-gray-50/80 backdrop-blur-sm rounded-lg border border-red-100 shadow-lg animate-slideDown">
-                <div className="flex justify-between items-center mb-3">
-                  <h3 className="text-lg font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                    Change Password
-                  </h3>
-                  <button
-                    onClick={() => { setShowPasswordBox(false); setNewPassword(""); }}
-                    className="p-1.5 hover:bg-red-50 rounded-full transition-all duration-300 group"
-                    disabled={loadingStates.passwordUpdate}
-                  >
-                    <FiX size={20} className="text-gray-500 group-hover:text-red-400 group-hover:rotate-90 transition-all duration-300" />
-                  </button>
-                </div>
-                <div className="space-y-3">
-                  <div className="relative">
+              {/* Change Password Box - inside sidebar */}
+              {showPasswordBox && (
+                <div className="mt-6 p-5 bg-gradient-to-br from-white to-gray-50/80 backdrop-blur-sm rounded-xl border border-red-100 shadow-lg animate-slideDown">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent flex items-center gap-2">
+                      <FiEdit2 className="text-red-500" />
+                      Change Password
+                    </h3>
+                    <IconButton
+                      onClick={() => { setShowPasswordBox(false); setNewPassword(""); }}
+                      disabled={loadingStates.passwordUpdate}
+                    >
+                      <FiX size={18} />
+                    </IconButton>
+                  </div>
+                  <div className="space-y-4">
                     <PasswordInput
                       label="New Password"
                       value={newPassword}
                       onChange={setNewPassword}
-                      placeholder="Enter new password (min 8 characters)"
+                      placeholder="Enter new password"
                       isEditing={true}
-                      className="!bg-white/50 backdrop-blur-sm text-base"
                     />
-                    <p className="mt-1.5 text-sm text-gray-500 flex items-center gap-1">
-                      <span className="w-1 h-1 bg-red-400 rounded-full"></span>
-                      Minimum 8 characters
+                    <p className="text-xs text-gray-500 flex items-center gap-1">
+                      <span className="w-1 h-1 bg-red-500 rounded-full"></span>
+                      Minimum 8 characters required
                     </p>
-                  </div>
-                  <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                    <button
-                      onClick={handlePasswordUpdate}
-                      disabled={loadingStates.passwordUpdate}
-                      className="group relative flex-1 py-2 bg-gradient-to-r from-red-400 to-red-500 text-white rounded-lg text-base font-semibold shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-50 overflow-hidden"
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-                      <span className="relative">
-                        {loadingStates.passwordUpdate ? 'Updating...' : 'Update Password'}
-                      </span>
-                    </button>
-                    <button
-                      onClick={() => { setShowPasswordBox(false); setNewPassword(""); }}
-                      className="flex-1 py-2 bg-white text-gray-700 rounded-lg text-base font-semibold border border-gray-200 hover:border-red-400 hover:bg-red-50/30 transition-all duration-300 disabled:opacity-50"
-                      disabled={loadingStates.passwordUpdate}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Delete Profile Confirmation - Compact */}
-            {showDeleteConfirm && (
-              <div className="mt-4 p-4 md:p-5 bg-gradient-to-br from-red-50/90 to-red-50/70 backdrop-blur-sm rounded-lg border border-red-200 shadow-lg animate-slideDown">
-                <div className="flex justify-between items-center mb-3">
-                  <h3 className="text-lg font-bold text-red-500 flex items-center gap-1.5">
-                    <FiTrash2 className="w-5 h-5" />
-                    Delete Profile
-                  </h3>
-                  <button
-                    onClick={() => setShowDeleteConfirm(false)}
-                    className="p-1.5 hover:bg-red-100 rounded-full transition-all duration-300 group"
-                    disabled={loadingStates.deleteProfile}
-                  >
-                    <FiX size={20} className="text-red-400 group-hover:text-red-500 group-hover:rotate-90 transition-all duration-300" />
-                  </button>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3 p-3 bg-white/80 backdrop-blur-sm rounded-lg border border-red-200 shadow-sm">
-                    <div className="p-2 bg-red-100 rounded-full flex-shrink-0">
-                      <MdWarning className="text-red-500 text-lg" />
+                    <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                      <PrimaryButton
+                        onClick={handlePasswordUpdate}
+                        loading={loadingStates.passwordUpdate}
+                        disabled={loadingStates.passwordUpdate}
+                        className="flex-1"
+                      >
+                        Update
+                      </PrimaryButton>
+                      <SecondaryButton
+                        onClick={() => { setShowPasswordBox(false); setNewPassword(""); }}
+                        disabled={loadingStates.passwordUpdate}
+                        className="flex-1"
+                      >
+                        Cancel
+                      </SecondaryButton>
                     </div>
-                    <div className="flex-1">
-                      <h4 className="font-bold text-red-600 text-base mb-0.5">Warning: Permanent Action!</h4>
-                      <p className="text-gray-600 text-sm leading-relaxed">
-                        All your data will be permanently deleted.
+                  </div>
+                </div>
+              )}
+
+              {/* Delete Profile Confirmation - inside sidebar */}
+              {showDeleteConfirm && (
+                <div className="mt-6 p-5 bg-gradient-to-br from-red-50/90 to-red-50/70 backdrop-blur-sm rounded-xl border border-red-200 shadow-lg animate-slideDown">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-bold text-red-500 flex items-center gap-2">
+                      <FiTrash2 className="w-5 h-5" />
+                      Delete Profile
+                    </h3>
+                    <IconButton
+                      onClick={() => setShowDeleteConfirm(false)}
+                      disabled={loadingStates.deleteProfile}
+                    >
+                      <FiX size={18} />
+                    </IconButton>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="flex items-start gap-3 p-4 bg-white/80 backdrop-blur-sm rounded-lg border border-red-200 shadow-sm">
+                      <div className="p-2 bg-red-100 rounded-full flex-shrink-0">
+                        <MdWarning className="text-red-500 text-lg" />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-bold text-red-600 text-sm mb-1">Warning: Permanent Action!</h4>
+                        <p className="text-gray-600 text-sm">
+                          All your data will be permanently deleted. This cannot be undone.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="p-3 bg-white/50 backdrop-blur-sm rounded-lg border border-amber-200">
+                      <p className="text-gray-700 text-sm flex items-start gap-2">
+                        <FiInfo className="text-amber-500 w-4 h-4 flex-shrink-0 mt-0.5" />
+                        <span>
+                          {isProfilePublished ?
+                            "Use 'Hide Profile' to temporarily hide instead of permanent deletion." :
+                            "Profile is currently hidden. You can publish it anytime."}
+                        </span>
                       </p>
                     </div>
-                  </div>
 
-                  <div className="p-3 bg-white/50 backdrop-blur-sm rounded-lg border border-amber-200">
-                    <p className="text-gray-700 text-sm flex items-start gap-1.5">
-                      <FiInfo className="text-amber-500 w-4 h-4 flex-shrink-0 mt-0.5" />
-                      <span>
-                        {isProfilePublished ?
-                          "Use 'Hide Profile' to temporarily hide instead." :
-                          "Profile is currently hidden."}
-                      </span>
-                    </p>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                    <button
-                      onClick={handleDeleteProfile}
-                      disabled={loadingStates.deleteProfile}
-                      className="group relative flex-1 py-2.5 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg text-base font-bold shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-50 overflow-hidden"
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-                      <div className="relative flex items-center justify-center gap-1.5">
-                        {loadingStates.deleteProfile ? (
-                          <>
-                            <FiLoader className="animate-spin w-4 h-4" />
-                            <span>Deleting...</span>
-                          </>
-                        ) : (
-                          <>
-                            <FiTrash2 className="w-4 h-4" />
-                            <span>Delete</span>
-                          </>
-                        )}
-                      </div>
-                    </button>
-                    <button
-                      onClick={() => setShowDeleteConfirm(false)}
-                      className="flex-1 py-2.5 bg-white text-gray-700 rounded-lg text-base font-semibold border border-gray-200 hover:border-red-400 hover:bg-red-50/30 transition-all duration-300 disabled:opacity-50"
-                      disabled={loadingStates.deleteProfile}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Feedback Form Box - Compact */}
-            {showFeedbackBox && (
-              <div className="mt-4 p-4 md:p-5 bg-gradient-to-br from-purple-50/90 via-white to-red-50/30 backdrop-blur-sm rounded-lg border border-purple-100 shadow-lg animate-slideDown">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent flex items-center gap-1.5">
-                    <FiMessageSquare className="w-5 h-5 text-red-400" />
-                    Share Feedback
-                  </h3>
-                  <button
-                    onClick={() => {
-                      setShowFeedbackBox(false);
-                      setFeedback({
-                        experience: "",
-                        rating: 0,
-                        suggestions: ""
-                      });
-                    }}
-                    className="p-1.5 hover:bg-purple-100 rounded-full transition-all duration-300 group"
-                    disabled={loadingStates.feedbackSubmit}
-                  >
-                    <FiX size={20} className="text-gray-500 group-hover:text-red-400 group-hover:rotate-90 transition-all duration-300" />
-                  </button>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="group">
-                    <label className="block text-base font-semibold text-gray-700 mb-1.5 flex items-center gap-1.5">
-                      <span className="w-1 h-1 bg-red-400 rounded-full group-hover:animate-pulse"></span>
-                      Your Experience <span className="text-red-400">*</span>
-                    </label>
-                    <textarea
-                      className="w-full px-4 py-2.5 bg-white/70 backdrop-blur-sm border border-gray-200 focus:border-red-400 rounded-lg focus:ring-2 focus:ring-red-100 transition-all duration-300 resize-none text-base"
-                      rows={2}
-                      value={feedback.experience}
-                      onChange={(e) => {
-                        const safeValue = e.target.value
-                          .replace(/[^a-zA-Z0-9\s.,'-]/g, "")
-                          .replace(/\s{2,}/g, " ");
-                        setFeedback({ ...feedback, experience: safeValue });
-                      }}
-                      onBlur={(e) => {
-                        const trimmedValue = e.target.value.trim();
-                        if (trimmedValue !== e.target.value) {
-                          setFeedback({ ...feedback, experience: trimmedValue });
-                        }
-                      }}
-                      placeholder="Your experience..."
-                      disabled={loadingStates.feedbackSubmit}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-base font-semibold text-gray-700 mb-2 flex items-center gap-1.5">
-                      <span className="w-1 h-1 bg-red-400 rounded-full"></span>
-                      Rating <span className="text-red-400">*</span>
-                    </label>
-                    <div className="flex items-center gap-1.5 p-1.5 bg-white/50 backdrop-blur-sm rounded-lg inline-flex">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <button
-                          key={star}
-                          type="button"
-                          className="p-1.5 hover:scale-110 transition-all duration-200 focus:outline-none group"
-                          onClick={() => setFeedback({ ...feedback, rating: star })}
-                          disabled={loadingStates.feedbackSubmit}
-                        >
-                          {star <= feedback.rating ? (
-                            <FiStar className="w-6 h-6 fill-red-400 text-red-400 filter drop-shadow" />
-                          ) : (
-                            <FiStar className="w-6 h-6 text-gray-300 group-hover:text-red-200 transition-colors" />
-                          )}
-                        </button>
-                      ))}
-                      <span className="ml-2 text-base font-medium text-gray-600 bg-white px-3 py-1.5 rounded-lg shadow-sm">
-                        {feedback.rating > 0 ? `${feedback.rating}/5` : 'Select'}
-                      </span>
+                    <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                      <PrimaryButton
+                        onClick={handleDeleteProfile}
+                        loading={loadingStates.deleteProfile}
+                        disabled={loadingStates.deleteProfile}
+                        className="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700"
+                      >
+                        Yes
+                      </PrimaryButton>
+                      <SecondaryButton
+                        onClick={() => setShowDeleteConfirm(false)}
+                        disabled={loadingStates.deleteProfile}
+                        className="flex-1"
+                      >
+                        Cancel
+                      </SecondaryButton>
                     </div>
                   </div>
+                </div>
+              )}
 
-                  <div className="group">
-                    <label className="block text-base font-semibold text-gray-700 mb-1.5 flex items-center gap-1.5">
-                      <span className="w-1 h-1 bg-red-400 rounded-full"></span>
-                      Suggestions
-                    </label>
-                    <textarea
-                      className="w-full px-4 py-2.5 bg-white/70 backdrop-blur-sm border border-gray-200 focus:border-red-400 rounded-lg focus:ring-2 focus:ring-red-100 transition-all duration-300 resize-none text-base"
-                      rows={1}
-                      value={feedback.suggestions}
-                      onChange={(e) => {
-                        const safeValue = e.target.value
-                          .replace(/[^a-zA-Z0-9\s.,'-]/g, "")
-                          .replace(/\s{2,}/g, " ");
-                        setFeedback({ ...feedback, suggestions: safeValue });
-                      }}
-                      onBlur={(e) => {
-                        const trimmedValue = e.target.value.trim();
-                        if (trimmedValue !== e.target.value) {
-                          setFeedback({ ...feedback, suggestions: trimmedValue });
-                        }
-                      }}
-                      placeholder="Suggestions to improve..."
-                      disabled={loadingStates.feedbackSubmit}
-                    />
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                    <button
-                      onClick={handleFeedbackSubmit}
-                      disabled={loadingStates.feedbackSubmit}
-                      className="group relative flex-1 py-2.5 bg-gradient-to-r from-red-400 to-red-500 text-white rounded-lg text-base font-semibold shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-50 overflow-hidden"
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-                      <div className="relative flex items-center justify-center gap-1.5">
-                        {loadingStates.feedbackSubmit ? (
-                          <>
-                            <FiLoader className="animate-spin w-4 h-4" />
-                            <span>Submitting...</span>
-                          </>
-                        ) : (
-                          <>
-                            <FiSend className="w-4 h-4" />
-                            <span>Submit</span>
-                          </>
-                        )}
-                      </div>
-                    </button>
-                    <button
+              {/* Feedback Form Box - inside sidebar */}
+              {showFeedbackBox && (
+                <div className="mt-6 p-5 bg-gradient-to-br from-purple-50/90 via-white to-red-50/30 backdrop-blur-sm rounded-xl border border-purple-100 shadow-lg animate-slideDown">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent flex items-center gap-2">
+                      <FiMessageSquare className="text-red-500" />
+                      Share Feedback
+                    </h3>
+                    <IconButton
                       onClick={() => {
                         setShowFeedbackBox(false);
                         setFeedback({
@@ -2417,913 +2960,1065 @@ ${isProfilePublished
                           suggestions: ""
                         });
                       }}
-                      className="flex-1 py-2.5 bg-white text-gray-700 rounded-lg text-base font-semibold border border-gray-200 hover:border-red-400 hover:bg-red-50/30 transition-all duration-300 disabled:opacity-50"
                       disabled={loadingStates.feedbackSubmit}
                     >
-                      Cancel
-                    </button>
+                      <FiX size={18} />
+                    </IconButton>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1.5 flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+                        Your Experience <span className="text-red-500">*</span>
+                      </label>
+                      <textarea
+                        className="w-full px-4 py-2.5 bg-white/70 backdrop-blur-sm border border-gray-200 focus:border-red-500 rounded-lg focus:ring-2 focus:ring-red-100 transition-all duration-300 resize-none"
+                        rows={3}
+                        value={feedback.experience}
+                        onChange={(e) => {
+                          const safeValue = e.target.value
+                            .replace(/[^a-zA-Z0-9\s.,'-]/g, "")
+                            .replace(/\s{2,}/g, " ");
+                          setFeedback({ ...feedback, experience: safeValue });
+                        }}
+                        onBlur={(e) => {
+                          const trimmedValue = e.target.value.trim();
+                          if (trimmedValue !== e.target.value) {
+                            setFeedback({ ...feedback, experience: trimmedValue });
+                          }
+                        }}
+                        placeholder="Share your experience with Paarsh Matrimony..."
+                        disabled={loadingStates.feedbackSubmit}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+                        Rating <span className="text-red-500">*</span>
+                      </label>
+                      <div className="flex items-center gap-2 p-2 bg-white/50 backdrop-blur-sm rounded-lg inline-flex">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            key={star}
+                            type="button"
+                            className="p-1.5 hover:scale-110 transition-all duration-200 focus:outline-none group"
+                            onClick={() => setFeedback({ ...feedback, rating: star })}
+                            disabled={loadingStates.feedbackSubmit}
+                          >
+                            {star <= feedback.rating ? (
+                              <FiStar className="w-6 h-6 fill-red-500 text-red-500 filter drop-shadow" />
+                            ) : (
+                              <FiStar className="w-6 h-6 text-gray-300 group-hover:text-red-300 transition-colors" />
+                            )}
+                          </button>
+                        ))}
+                        <span className="ml-2 text-sm font-medium text-gray-600 bg-white px-3 py-1.5">
+                          {feedback.rating > 0 ? `${feedback.rating}/5` : null}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1.5 flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+                        Suggestions
+                      </label>
+                      <textarea
+                        className="w-full px-4 py-2.5 bg-white/70 backdrop-blur-sm border border-gray-200 focus:border-red-500 rounded-lg focus:ring-2 focus:ring-red-100 transition-all duration-300 resize-none"
+                        rows={2}
+                        value={feedback.suggestions}
+                        onChange={(e) => {
+                          const safeValue = e.target.value
+                            .replace(/[^a-zA-Z0-9\s.,'-]/g, "")
+                            .replace(/\s{2,}/g, " ");
+                          setFeedback({ ...feedback, suggestions: safeValue });
+                        }}
+                        onBlur={(e) => {
+                          const trimmedValue = e.target.value.trim();
+                          if (trimmedValue !== e.target.value) {
+                            setFeedback({ ...feedback, suggestions: trimmedValue });
+                          }
+                        }}
+                        placeholder="Suggestions to improve our service..."
+                        disabled={loadingStates.feedbackSubmit}
+                      />
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                      <PrimaryButton
+                        onClick={handleFeedbackSubmit}
+                        loading={loadingStates.feedbackSubmit}
+                        disabled={loadingStates.feedbackSubmit}
+                        className="flex-1"
+                        icon={FiSend}
+                      >
+                        Submit
+                      </PrimaryButton>
+                      <SecondaryButton
+                        onClick={() => {
+                          setShowFeedbackBox(false);
+                          setFeedback({
+                            experience: "",
+                            rating: 0,
+                            suggestions: ""
+                          });
+                        }}
+                        disabled={loadingStates.feedbackSubmit}
+                        className="flex-1"
+                      >
+                        Cancel
+                      </SecondaryButton>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
-
-          {/* Navigation Tabs - Jeewansathi Style */}
-          <div className="w-full flex justify-center mb-6 md:mb-8">
-            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 px-1 max-w-full">
-              {[
-                { id: "self", label: "Self", icon: FiUser },
-                { id: "family", label: "Family", icon: MdFamilyRestroom },
-                { id: "partner", label: "Partner", icon: FiUsers },
-                { id: "plan", label: "Plan", icon: MdOutlineWorkspacePremium },
-                { id: "post", label: "Post", icon: MdPublishedWithChanges }
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => {
-                    setActiveSection(tab.id);
-                    window.location.hash = tab.id;
-                  }}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium transition whitespace-nowrap text-sm
-          ${activeSection === tab.id
-                      ? "bg-red-500 text-white shadow-lg scale-105"
-                      : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-100"
-                    }`}
-                  disabled={loadingStates.saveProfile}
-                >
-                  <tab.icon size={16} />
-                  <span className="hidden sm:inline">{tab.label}</span>
-                </button>
-              ))}
+              )}
             </div>
-          </div>
+            </div>
 
-          {/* Content Sections */}
-          <div className="max-w-6xl mx-auto">
-            {activeSection === "self" && (
-              <FormBox
-                title="Self Data"
-                isEditing={isEditing}
-                setIsEditing={setIsEditing}
-                loadingSaveProfile={loadingStates.saveProfile}
-                sectionProgress={profileProgress.self}
+            {/* RIGHT CONTENT: FORM SECTIONS (70% width on desktop) */}
+            <div className="lg:w-[70%] w-full">
+              {/* ========== SELF SECTION ========== */}
+              <AccordionFormBox
+                title="Self Information"
+                isOpen={openSections.self}
+                onToggle={() => toggleSection('self')}
                 icon={FiUser}
+                sectionProgress={profileProgress.self}
               >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Profile Image Upload */}
-                  <div className="md:col-span-2">
-                    <Section title="Profile Picture *" icon={FiCamera}>
-                      <div className="flex flex-col sm:flex-row items-center gap-6">
-                        <div className="relative w-32 h-32 rounded-full bg-red-50 flex items-center justify-center text-4xl font-bold text-red-400 border-4 border-white shadow-lg">
-                          {personalInfo.profileImg ? (
-                            <img
-                              src={personalInfo.profileImg}
-                              alt="Profile"
-                              className="w-full h-full rounded-full object-cover"
-                            />
-                          ) : (
-                            user.name[0].toUpperCase()
-                          )}
-                          {isEditing && (
-                            <label className="absolute bottom-0 right-0 bg-red-400 text-white p-2 rounded-full cursor-pointer hover:bg-red-400 disabled:opacity-50 shadow-md">
-                              {loadingStates.imageUpload ? (
-                                <FiLoader className="animate-spin" size={20} />
+                {isEditingSelf ? (
+                  /* ========== EDIT MODE - SHOW FORM ========== */
+                  <div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* Profile Image Upload */}
+                      <div className="md:col-span-2">
+                        <Section title="Profile Picture *" icon={FiCamera}>
+                          <div className="flex flex-col sm:flex-row items-center gap-6">
+                            <div className="relative w-32 h-32 rounded-full bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center text-4xl font-bold text-red-500 border-4 border-white shadow-lg">
+                              {personalInfo.profileImg ? (
+                                <img
+                                  src={personalInfo.profileImg}
+                                  alt="Profile"
+                                  className="w-full h-full rounded-full object-cover"
+                                />
                               ) : (
-                                <FiCamera size={20} />
+                                user.name[0].toUpperCase()
                               )}
-                              <input
-                                type="file"
-                                accept="image/*"
-                                className="hidden"
-                                onChange={handleImageUpload}
-                                disabled={!isEditing || loadingStates.imageUpload}
-                              />
-                            </label>
-                          )}
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-gray-600 mb-2">
-                            <span className="font-semibold text-red-400">* Required:</span> Upload a clear profile picture for better matches (.jpg, .png).
-                          </p>
-                          <p className="text-sm text-gray-500 mb-4">
-                            Recommended size: 500x500px, Max size: 2MB
-                          </p>
-                          {isEditing && (
-                            <>
-                              <label className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg cursor-pointer transition disabled:opacity-50 mb-2 border border-gray-300">
+                              <label className="absolute bottom-0 right-0 bg-gradient-to-r from-red-500 to-red-600 text-white p-2 rounded-full cursor-pointer hover:scale-110 transition-all duration-200 shadow-lg">
                                 {loadingStates.imageUpload ? (
-                                  <FiLoader className="animate-spin" />
+                                  <FiLoader className="animate-spin" size={18} />
                                 ) : (
-                                  <FiUpload />
+                                  <FiCamera size={18} />
                                 )}
-                                Upload Image
                                 <input
                                   type="file"
                                   accept="image/*"
                                   className="hidden"
                                   onChange={handleImageUpload}
-                                  disabled={!isEditing || loadingStates.imageUpload}
+                                  disabled={!isEditingSelf || loadingStates.imageUpload}
                                 />
                               </label>
-                              {!personalInfo.profileImg && (
-                                <p className="text-sm text-red-400 mt-2">
-                                  Profile image is required to save Self Information
-                                </p>
-                              )}
-                            </>
-                          )}
+                            </div>
+                            <div className="flex-1 text-center sm:text-left">
+                              <p className="text-gray-600 mb-2">
+                                <span className="font-semibold text-red-500">* Required:</span> Upload a clear profile picture for better matches
+                              </p>
+                              <p className="text-sm text-gray-500 mb-3">
+                                Recommended: 500x500px, Max size: 2MB
+                              </p>
+                              <>
+                                <label className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg cursor-pointer transition-all duration-200 border border-gray-300 hover:border-red-500 group">
+                                  {loadingStates.imageUpload ? (
+                                    <FiLoader className="animate-spin" />
+                                  ) : (
+                                    <FiUpload className="group-hover:text-red-500" />
+                                  )}
+                                  <span className="group-hover:text-red-500">Upload Image</span>
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={handleImageUpload}
+                                    disabled={!isEditingSelf || loadingStates.imageUpload}
+                                  />
+                                </label>
+                                {!personalInfo.profileImg && (
+                                  <p className="text-sm text-red-500 mt-2 font-medium">
+                                    Profile image is required
+                                  </p>
+                                )}
+                              </>
+                            </div>
+                          </div>
+                        </Section>
+                      </div>
+
+                      {/* Personal Info */}
+                      <Section title="Personal Details" icon={FiUser}>
+                        <div className="space-y-4">
+                          <Input
+                            label="Full Name *"
+                            value={personalInfo.fullName}
+                            onChange={(val) => {
+                              let safeValue = val
+                                .replace(/[^a-zA-Z\s]/g, "")
+                                .replace(/\s{2,}/g, " ")
+                                .trimStart()
+                                .slice(0, 50);
+                              setPersonalInfo(prev => ({ ...prev, fullName: safeValue }));
+                            }}
+                            placeholder="Enter your full name"
+                            isEditing={isEditingSelf}
+                            isProtected={coreFieldsSet && personalInfo.fullName}
+                            icon={FiUser}
+                          />
+                          <Input
+                            label="Gender *"
+                            type="select"
+                            options={["Male", "Female", "Other"]}
+                            value={personalInfo.gender}
+                            onChange={(val) => setPersonalInfo(prev => ({ ...prev, gender: val }))}
+                            isEditing={isEditingSelf}
+                            isProtected={coreFieldsSet && personalInfo.gender}
+                            icon={FiUser}
+                          />
+                          <Input
+                            label="Date of Birth *"
+                            type="date"
+                            value={personalInfo.dob}
+                            onChange={(val) => setPersonalInfo(prev => ({ ...prev, dob: val }))}
+                            isEditing={isEditingSelf}
+                            isProtected={coreFieldsSet && personalInfo.dob}
+                            icon={MdDateRange}
+                          />
+                          <Input
+                            label="Age *"
+                            type="number"
+                            value={personalInfo.age}
+                            onChange={(val) => {
+                              const safeValue = val.replace(/\D/g, "").slice(0, 3);
+                              setPersonalInfo(prev => ({ ...prev, age: safeValue }));
+                            }}
+                            placeholder="Enter your age"
+                            isEditing={isEditingSelf}
+                          />
+                          <Input
+                            label="Marital Status *"
+                            type="select"
+                            options={["Never Married", "Divorced", "Widowed", "Separated"]}
+                            value={personalInfo.maritalStatus}
+                            onChange={(val) => setPersonalInfo(prev => ({ ...prev, maritalStatus: val }))}
+                            isEditing={isEditingSelf}
+                          />
+                          <div className="grid grid-cols-2 gap-4">
+                            <Input
+                              label="Height (cm)"
+                              value={personalInfo.height}
+                              onChange={(val) => {
+                                const safeValue = val.replace(/\D/g, "").slice(0, 3);
+                                setPersonalInfo(prev => ({ ...prev, height: safeValue }));
+                              }}
+                              placeholder="Height in cm"
+                              isEditing={isEditingSelf}
+                            />
+                            <Input
+                              label="Weight (kg)"
+                              value={personalInfo.weight}
+                              onChange={(val) => {
+                                const safeValue = val.replace(/\D/g, "").slice(0, 3);
+                                setPersonalInfo(prev => ({ ...prev, weight: safeValue }));
+                              }}
+                              placeholder="Weight in kg"
+                              isEditing={isEditingSelf}
+                            />
+                          </div>
+                          <Input
+                            label="Blood Group"
+                            type="select"
+                            options={["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-", "Other"]}
+                            value={personalInfo.bloodGroup}
+                            onChange={(val) => setPersonalInfo(prev => ({ ...prev, bloodGroup: val }))}
+                            isEditing={isEditingSelf}
+                          />
+                          <Input
+                            label="Disability"
+                            type="select"
+                            options={["No", "Yes"]}
+                            value={personalInfo.disability}
+                            onChange={(val) => setPersonalInfo(prev => ({ ...prev, disability: val }))}
+                            isEditing={isEditingSelf}
+                          />
+                          <Input
+                            label="Contact Number *"
+                            type="tel"
+                            value={personalInfo.contactNumber}
+                            onChange={(val) => setPersonalInfo(prev => ({ ...prev, contactNumber: val }))}
+                            isEditing={isEditingSelf}
+                          />
+                          <Input
+                            label="WhatsApp Number"
+                            type="tel"
+                            value={personalInfo.whatsappNumber}
+                            onChange={(val) => setPersonalInfo(prev => ({ ...prev, whatsappNumber: val }))}
+                            isEditing={isEditingSelf}
+                          />
                         </div>
-                      </div>
-                    </Section>
-                  </div>
+                      </Section>
 
-                  {/* Personal Info */}
-                  <Section title="Personal Details" icon={FiUser}>
-                    <div className="space-y-4">
-                      <Input
-                        label="Full Name *"
-                        value={personalInfo.fullName}
-                        onChange={(val) => {
-                          let safeValue = val
-                            .replace(/[^a-zA-Z\s]/g, "")
-                            .replace(/\s{2,}/g, " ")
-                            .trimStart()
-                            .slice(0, 50);
-                          setPersonalInfo(prev => ({ ...prev, fullName: safeValue }));
-                        }}
-                        placeholder="Enter your full name"
-                        isEditing={isEditing}
-                        isProtected={coreFieldsSet && personalInfo.fullName}
-                        icon={FiUser}
-                        maxLength={50}
-                      />
-                      <Input
-                        label="Gender *"
-                        type="select"
-                        options={["Male", "Female", "Other"]}
-                        value={personalInfo.gender}
-                        onChange={(val) => setPersonalInfo(prev => ({ ...prev, gender: val }))}
-                        isEditing={isEditing}
-                        isProtected={coreFieldsSet && personalInfo.gender}
-                        icon={FiUser}
-                      />
-                      <Input
-                        label="Date of Birth *"
-                        type="date"
-                        value={personalInfo.dob}
-                        onChange={(val) => setPersonalInfo(prev => ({ ...prev, dob: val }))}
-                        isEditing={isEditing}
-                        isProtected={coreFieldsSet && personalInfo.dob}
-                        icon={MdDateRange}
-                      />
-                      <Input
-                        label="Age *"
-                        type="number"
-                        value={personalInfo.age}
-                        onChange={(val) => {
-                          const safeValue = val.replace(/\D/g, "").slice(0, 3);
-                          setPersonalInfo(prev => ({ ...prev, age: safeValue }));
-                        }}
-                        placeholder="Enter your age"
-                        isEditing={isEditing}
-                        min={0}
-                        maxLength={3}
-                      />
-                      <Input
-                        label="Marital Status *"
-                        type="select"
-                        options={["Never Married", "Divorced", "Widowed", "Separated"]}
-                        value={personalInfo.maritalStatus}
-                        onChange={(val) => setPersonalInfo(prev => ({ ...prev, maritalStatus: val }))}
-                        isEditing={isEditing}
-                      />
-                      <div className="grid grid-cols-2 gap-4">
-                        <Input
-                          label="Height (cm)"
-                          value={personalInfo.height}
-                          onChange={(val) => {
-                            const safeValue = val.replace(/\D/g, "").slice(0, 3);
-                            setPersonalInfo(prev => ({ ...prev, height: safeValue }));
-                          }}
-                          placeholder="Height in cm"
-                          isEditing={isEditing}
-                          maxLength={3}
-                        />
-                        <Input
-                          label="Weight (kg)"
-                          value={personalInfo.weight}
-                          onChange={(val) => {
-                            const safeValue = val.replace(/\D/g, "").slice(0, 3);
-                            setPersonalInfo(prev => ({ ...prev, weight: safeValue }));
-                          }}
-                          placeholder="Weight in kg"
-                          isEditing={isEditing}
-                          maxLength={3}
-                        />
-                      </div>
-                      <Input
-                        label="Blood Group"
-                        type="select"
-                        options={["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-", "Other"]}
-                        value={personalInfo.bloodGroup}
-                        onChange={(val) => setPersonalInfo(prev => ({ ...prev, bloodGroup: val }))}
-                        isEditing={isEditing}
-                      />
-                      <Input
-                        label="Disability"
-                        type="select"
-                        options={["No", "Yes"]}
-                        value={personalInfo.disability}
-                        onChange={(val) => setPersonalInfo(prev => ({ ...prev, disability: val }))}
-                        isEditing={isEditing}
-                      />
-                      <Input
-                        label="Contact Number *"
-                        type="tel"
-                        value={personalInfo.contactNumber}
-                        onChange={(val) => setPersonalInfo(prev => ({ ...prev, contactNumber: val }))}
-                        isEditing={isEditing}
-                      />
-                      <Input
-                        label="WhatsApp Number"
-                        type="tel"
-                        value={personalInfo.whatsappNumber}
-                        onChange={(val) => setPersonalInfo(prev => ({ ...prev, whatsappNumber: val }))}
-                        isEditing={isEditing}
-                      />
-                    </div>
-                  </Section>
+                      <div className="space-y-6">
+                        {/* Location */}
+                        <Section title="Location" icon={MdLocationOn}>
+                          <div className="space-y-4">
+                            <Input
+                              label="Country *"
+                              type="select"
+                              options={["India", "USA", "UK", "Canada", "Australia", "Other"]}
+                              value={locationInfo.country}
+                              onChange={(val) => setLocationInfo(prev => ({ ...prev, country: val }))}
+                              isEditing={isEditingSelf}
+                              icon={MdLocationOn}
+                            />
+                            <Input
+                              label="State *"
+                              value={locationInfo.state}
+                              onChange={(val) => {
+                                const safeValue = val
+                                  .replace(/[^a-zA-Z\s]/g, "")
+                                  .replace(/\s{2,}/g, " ");
+                                setLocationInfo(prev => ({ ...prev, state: safeValue }));
+                              }}
+                              placeholder="Enter your state"
+                              isEditing={isEditingSelf}
+                              icon={MdLocationOn}
+                            />
+                            <Input
+                              label="City *"
+                              value={locationInfo.city}
+                              onChange={(val) => {
+                                const safeValue = val
+                                  .replace(/[^a-zA-Z\s]/g, "")
+                                  .replace(/\s{2,}/g, " ");
+                                setLocationInfo(prev => ({ ...prev, city: safeValue }));
+                              }}
+                              placeholder="Enter your city"
+                              isEditing={isEditingSelf}
+                              icon={MdLocationOn}
+                            />
+                            <Input
+                              label="Pin Code"
+                              value={locationInfo.pinCode}
+                              onChange={(val) => {
+                                const safeValue = val.replace(/\D/g, "").slice(0, 6);
+                                setLocationInfo(prev => ({ ...prev, pinCode: safeValue }));
+                              }}
+                              placeholder="Enter pin code"
+                              isEditing={isEditingSelf}
+                            />
+                            <Input
+                              label="Current Town"
+                              value={locationInfo.currentLocation}
+                              onChange={(val) => {
+                                const safeValue = val
+                                  .replace(/[^a-zA-Z\s]/g, "")
+                                  .replace(/\s{2,}/g, " ");
+                                setLocationInfo(prev => ({ ...prev, currentLocation: safeValue }));
+                              }}
+                              placeholder="Current location"
+                              isEditing={isEditingSelf}
+                            />
+                            <Textarea
+                              label="Permanent Address"
+                              value={locationInfo.permanentAddress}
+                              onChange={(val) => {
+                                const safeValue = val
+                                  .replace(/[^a-zA-Z0-9\s,./-]/g, "")
+                                  .replace(/\s{2,}/g, " ");
+                                setLocationInfo(prev => ({ ...prev, permanentAddress: safeValue }));
+                              }}
+                              rows={3}
+                              placeholder="Enter your permanent address..."
+                              isEditing={isEditingSelf}
+                              icon={FiHome}
+                            />
+                          </div>
+                        </Section>
 
-                  <div className="space-y-6">
-                    {/* Location */}
-                    <Section title="Location" icon={MdLocationOn}>
-                      <div className="space-y-4">
-                        <Input
-                          label="Country *"
-                          type="select"
-                          options={["India", "USA", "UK", "Canada", "Australia", "Other"]}
-                          value={locationInfo.country}
-                          onChange={(val) => setLocationInfo(prev => ({ ...prev, country: val }))}
-                          isEditing={isEditing}
-                          icon={MdLocationOn}
-                        />
-                        <Input
-                          label="State *"
-                          value={locationInfo.state}
-                          onChange={(val) => {
-                            const safeValue = val
-                              .replace(/[^a-zA-Z\s]/g, "")
-                              .replace(/\s{2,}/g, " ");
-                            setLocationInfo(prev => ({ ...prev, state: safeValue }));
-                          }}
-                          placeholder="Enter your state"
-                          isEditing={isEditing}
-                          icon={MdLocationOn}
-                        />
-                        <Input
-                          label="City *"
-                          value={locationInfo.city}
-                          onChange={(val) => {
-                            const safeValue = val
-                              .replace(/[^a-zA-Z\s]/g, "")
-                              .replace(/\s{2,}/g, " ");
-                            setLocationInfo(prev => ({ ...prev, city: safeValue }));
-                          }}
-                          placeholder="Enter your city"
-                          isEditing={isEditing}
-                          icon={MdLocationOn}
-                        />
-                        <Input
-                          label="Pin Code"
-                          value={locationInfo.pinCode}
-                          onChange={(val) => {
-                            const safeValue = val.replace(/\D/g, "").slice(0, 6);
-                            setLocationInfo(prev => ({ ...prev, pinCode: safeValue }));
-                          }}
-                          placeholder="Enter pin code"
-                          isEditing={isEditing}
-                          maxLength={6}
-                        />
-                        <Input
-                          label="Current Town"
-                          value={locationInfo.currentLocation}
-                          onChange={(val) => {
-                            const safeValue = val
-                              .replace(/[^a-zA-Z\s]/g, "")
-                              .replace(/\s{2,}/g, " ");
-                            setLocationInfo(prev => ({ ...prev, currentLocation: safeValue }));
-                          }}
-                          placeholder="Current location"
-                          isEditing={isEditing}
-                        />
+                        {/* Religion & Caste */}
+                        <Section title="Religion & Caste" icon={MdFamilyRestroom}>
+                          <div className="space-y-4">
+                            <Input
+                              label="Religion *"
+                              type="select"
+                              options={["Hindu", "Muslim", "Christian", "Sikh", "Jain", "Buddhist", "Other"]}
+                              value={religionInfo.religion}
+                              onChange={(val) => setReligionInfo(prev => ({ ...prev, religion: val }))}
+                              isEditing={isEditingSelf}
+                            />
+                            <Input
+                              label="Caste *"
+                              value={religionInfo.caste}
+                              onChange={(val) => {
+                                const safeValue = val
+                                  .replace(/[^a-zA-Z\s]/g, "")
+                                  .replace(/\s{2,}/g, " ");
+                                setReligionInfo(prev => ({ ...prev, caste: safeValue }));
+                              }}
+                              placeholder="Enter your caste"
+                              isEditing={isEditingSelf}
+                            />
+                            <Input
+                              label="Mother Tongue"
+                              type="select"
+                              options={["Marathi", "Hindi", "English", "Gujarati", "Tamil", "Telugu", "Bengali", "Other"]}
+                              value={religionInfo.motherTongue}
+                              onChange={(val) => setReligionInfo(prev => ({ ...prev, motherTongue: val }))}
+                              isEditing={isEditingSelf}
+                            />
+                          </div>
+                        </Section>
+                      </div>
+
+                      {/* Education */}
+                      <Section title="Education" icon={MdSchool}>
+                        <div className="space-y-4">
+                          <Input
+                            label="Highest Education *"
+                            type="select"
+                            options={[
+                              "High School",
+                              "Diploma",
+                              "Bachelor's Degree",
+                              "Master's Degree",
+                              "PhD",
+                              "Post Doctorate"
+                            ]}
+                            value={educationInfo.highestEducation}
+                            onChange={(val) => setEducationInfo(prev => ({ ...prev, highestEducation: val }))}
+                            isEditing={isEditingSelf}
+                            icon={MdSchool}
+                          />
+                          <Input
+                            label="Year of Passing"
+                            type="date"
+                            value={educationInfo.yearOfPassing}
+                            onChange={(val) => setEducationInfo(prev => ({ ...prev, yearOfPassing: val }))}
+                            isEditing={isEditingSelf}
+                            icon={MdDateRange}
+                          />
+                          <Input
+                            label="University/College"
+                            value={educationInfo.university}
+                            onChange={(val) => {
+                              const safeValue = val
+                                .replace(/[^a-zA-Z\s.&-]/g, "")
+                                .replace(/\s{2,}/g, " ");
+                              setEducationInfo(prev => ({ ...prev, university: safeValue }));
+                            }}
+                            placeholder="Enter university/college name"
+                            isEditing={isEditingSelf}
+                            icon={MdSchool}
+                          />
+                        </div>
+                      </Section>
+
+                      {/* Career */}
+                      <Section title="Career" icon={MdWork}>
+                        <div className="space-y-4">
+                          <Input
+                            label="Profession *"
+                            type="select"
+                            options={[
+                              "Engineer",
+                              "Doctor",
+                              "Teacher",
+                              "Business",
+                              "Government Employee",
+                              "Private Employee",
+                              "Student",
+                              "Other"
+                            ]}
+                            value={careerInfo.profession}
+                            onChange={(val) => setCareerInfo(prev => ({ ...prev, profession: val }))}
+                            isEditing={isEditingSelf}
+                            icon={MdWork}
+                          />
+                          <Input
+                            label="Job Title"
+                            value={careerInfo.jobTitle}
+                            onChange={(val) => {
+                              const safeValue = val
+                                .replace(/[^a-zA-Z\s.&/-]/g, "")
+                                .replace(/\s{2,}/g, " ");
+                              setCareerInfo(prev => ({ ...prev, jobTitle: safeValue }));
+                            }}
+                            placeholder="Enter your job title"
+                            isEditing={isEditingSelf}
+                            icon={MdWork}
+                          />
+                          <Input
+                            label="Company Name"
+                            value={careerInfo.companyName}
+                            onChange={(val) => {
+                              const safeValue = val
+                                .replace(/[^a-zA-Z\s.&/-]/g, "")
+                                .replace(/\s{2,}/g, " ");
+                              setCareerInfo(prev => ({ ...prev, companyName: safeValue }));
+                            }}
+                            placeholder="Enter company name"
+                            isEditing={isEditingSelf}
+                          />
+                          <Input
+                            label="Employment Type *"
+                            type="select"
+                            options={["Private", "Government", "Business", "Self-employed", "Unemployed"]}
+                            value={careerInfo.employmentType}
+                            onChange={(val) => setCareerInfo(prev => ({ ...prev, employmentType: val }))}
+                            isEditing={isEditingSelf}
+                          />
+                          <Input
+                            label="Annual Income (₹) *"
+                            type="select"
+                            options={["1-3 LPA", "3-5 LPA", "5-10 LPA", "10-20 LPA", "20-50 LPA", "50+ LPA"]}
+                            value={careerInfo.annualIncome}
+                            onChange={(val) => setCareerInfo(prev => ({ ...prev, annualIncome: val }))}
+                            isEditing={isEditingSelf}
+                            icon={FiDollarSign}
+                          />
+                          <Input
+                            label="Work Location"
+                            value={careerInfo.workLocation}
+                            onChange={(val) => {
+                              const safeValue = val
+                                .replace(/[^a-zA-Z\s.-]/g, "")
+                                .replace(/\s{2,}/g, " ");
+                              setCareerInfo(prev => ({ ...prev, workLocation: safeValue }));
+                            }}
+                            placeholder="Enter work location"
+                            isEditing={isEditingSelf}
+                            icon={MdLocationOn}
+                          />
+                        </div>
+                      </Section>
+
+                      {/* About Yourself */}
+                      <div className="md:col-span-2">
                         <Textarea
-                          label="Permanent Address"
-                          value={locationInfo.permanentAddress}
+                          label="About Yourself"
+                          value={aboutYourself}
                           onChange={(val) => {
                             const safeValue = val
-                              .replace(/[^a-zA-Z0-9\s,./-]/g, "")
+                              .replace(/[^a-zA-Z0-9\s.,'-]/g, "")
                               .replace(/\s{2,}/g, " ");
-                            setLocationInfo(prev => ({ ...prev, permanentAddress: safeValue }));
+                            setAboutYourself(safeValue);
                           }}
-                          rows={3}
-                          placeholder="Enter your permanent address..."
-                          isEditing={isEditing}
-                          icon={FiHome}
-                        />
-                      </div>
-                    </Section>
-
-                    {/* Religion & Caste */}
-                    <Section title="Religion & Caste" icon={MdFamilyRestroom}>
-                      <div className="space-y-4">
-                        <Input
-                          label="Religion *"
-                          type="select"
-                          options={["Hindu", "Muslim", "Christian", "Sikh", "Jain", "Buddhist", "Other"]}
-                          value={religionInfo.religion}
-                          onChange={(val) => setReligionInfo(prev => ({ ...prev, religion: val }))}
-                          isEditing={isEditing}
-                        />
-                        <Input
-                          label="Caste *"
-                          value={religionInfo.caste}
-                          onChange={(val) => {
-                            const safeValue = val
-                              .replace(/[^a-zA-Z\s]/g, "")
-                              .replace(/\s{2,}/g, " ");
-                            setReligionInfo(prev => ({ ...prev, caste: safeValue }));
-                          }}
-                          placeholder="Enter your caste"
-                          isEditing={isEditing}
-                        />
-                        <Input
-                          label="Mother Tongue"
-                          type="select"
-                          options={["Marathi", "Hindi", "English", "Gujarati", "Tamil", "Telugu", "Bengali", "Other"]}
-                          value={religionInfo.motherTongue}
-                          onChange={(val) => setReligionInfo(prev => ({ ...prev, motherTongue: val }))}
-                          isEditing={isEditing}
-                        />
-                      </div>
-                    </Section>
-                  </div>
-
-                  {/* Education */}
-                  <Section title="Education" icon={MdSchool}>
-                    <div className="space-y-4">
-                      <Input
-                        label="Highest Education *"
-                        type="select"
-                        options={[
-                          "High School",
-                          "Diploma",
-                          "Bachelor's Degree",
-                          "Master's Degree",
-                          "PhD",
-                          "Post Doctorate"
-                        ]}
-                        value={educationInfo.highestEducation}
-                        onChange={(val) => setEducationInfo(prev => ({ ...prev, highestEducation: val }))}
-                        isEditing={isEditing}
-                        icon={MdSchool}
-                      />
-                      <Input
-                        label="Year of Passing"
-                        type="date"
-                        value={educationInfo.yearOfPassing}
-                        onChange={(val) => setEducationInfo(prev => ({ ...prev, yearOfPassing: val }))}
-                        isEditing={isEditing}
-                        icon={MdDateRange}
-                      />
-                      <Input
-                        label="University/College"
-                        value={educationInfo.university}
-                        onChange={(val) => {
-                          const safeValue = val
-                            .replace(/[^a-zA-Z\s.&-]/g, "")
-                            .replace(/\s{2,}/g, " ");
-                          setEducationInfo(prev => ({ ...prev, university: safeValue }));
-                        }}
-                        placeholder="Enter university/college name"
-                        isEditing={isEditing}
-                        icon={MdSchool}
-                      />
-                    </div>
-                  </Section>
-
-                  {/* Career */}
-                  <Section title="Career" icon={MdWork}>
-                    <div className="space-y-4">
-                      <Input
-                        label="Profession *"
-                        type="select"
-                        options={[
-                          "Engineer",
-                          "Doctor",
-                          "Teacher",
-                          "Business",
-                          "Government Employee",
-                          "Private Employee",
-                          "Student",
-                          "Other"
-                        ]}
-                        value={careerInfo.profession}
-                        onChange={(val) => setCareerInfo(prev => ({ ...prev, profession: val }))}
-                        isEditing={isEditing}
-                        icon={MdWork}
-                      />
-                      <Input
-                        label="Job Title"
-                        value={careerInfo.jobTitle}
-                        onChange={(val) => {
-                          const safeValue = val
-                            .replace(/[^a-zA-Z\s.&/-]/g, "")
-                            .replace(/\s{2,}/g, " ");
-                          setCareerInfo(prev => ({ ...prev, jobTitle: safeValue }));
-                        }}
-                        placeholder="Enter your job title"
-                        isEditing={isEditing}
-                        icon={MdWork}
-                      />
-                      <Input
-                        label="Company Name"
-                        value={careerInfo.companyName}
-                        onChange={(val) => {
-                          const safeValue = val
-                            .replace(/[^a-zA-Z\s.&/-]/g, "")
-                            .replace(/\s{2,}/g, " ");
-                          setCareerInfo(prev => ({ ...prev, companyName: safeValue }));
-                        }}
-                        placeholder="Enter company name"
-                        isEditing={isEditing}
-                      />
-                      <Input
-                        label="Employment Type *"
-                        type="select"
-                        options={["Private", "Government", "Business", "Self-employed", "Unemployed"]}
-                        value={careerInfo.employmentType}
-                        onChange={(val) => setCareerInfo(prev => ({ ...prev, employmentType: val }))}
-                        isEditing={isEditing}
-                      />
-                      <Input
-                        label="Annual Income (₹) *"
-                        type="select"
-                        options={["1-3 LPA", "3-5 LPA", "5-10 LPA", "10-20 LPA", "20-50 LPA", "50+ LPA"]}
-                        value={careerInfo.annualIncome}
-                        onChange={(val) => setCareerInfo(prev => ({ ...prev, annualIncome: val }))}
-                        isEditing={isEditing}
-                        icon={FiDollarSign}
-                      />
-                      <Input
-                        label="Work Location"
-                        value={careerInfo.workLocation}
-                        onChange={(val) => {
-                          const safeValue = val
-                            .replace(/[^a-zA-Z\s.-]/g, "")
-                            .replace(/\s{2,}/g, " ");
-                          setCareerInfo(prev => ({ ...prev, workLocation: safeValue }));
-                        }}
-                        placeholder="Enter work location"
-                        isEditing={isEditing}
-                        icon={MdLocationOn}
-                      />
-                    </div>
-                  </Section>
-
-                  {/* About Yourself */}
-                  <div className="md:col-span-2">
-                    <Textarea
-                      label="About Yourself"
-                      value={aboutYourself}
-                      onChange={(val) => {
-                        const safeValue = val
-                          .replace(/[^a-zA-Z0-9\s.,'-]/g, "")
-                          .replace(/\s{2,}/g, " ");
-                        setAboutYourself(safeValue);
-                      }}
-                      rows={5}
-                      placeholder="Tell us about yourself, your interests, hobbies, and personality..."
-                      isEditing={isEditing}
-                      icon={FiUser}
-                    />
-                  </div>
-                </div>
-                <SubmitButton
-                  text="Save Self Data"
-                  onClick={() => handleSubmit("Self")}
-                  loading={loadingStates.saveProfile}
-                  disabled={profileProgress.self < 80}
-                />
-                {profileProgress.self < 80 && (
-                  <p className="text-center text-red-400 text-sm mt-2">
-                    Self information must be at least 80% complete to save. Current: {profileProgress.self}%
-                  </p>
-                )}
-              </FormBox>
-            )}
-
-            {activeSection === "family" && (
-              <FormBox
-                title="Family Data"
-                isEditing={isEditing}
-                setIsEditing={setIsEditing}
-                loadingSaveProfile={loadingStates.saveProfile}
-                sectionProgress={profileProgress.family}
-                icon={MdFamilyRestroom}
-              >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-6">
-                    <Section title="Parents Information" icon={MdFamilyRestroom}>
-                      <div className="space-y-4">
-                        <Input
-                          label="Father's Name *"
-                          value={familyInfo.fatherName}
-                          onChange={(val) => {
-                            const safeValue = val
-                              .replace(/[^a-zA-Z\s.'-]/g, "")
-                              .replace(/\s{2,}/g, " ");
-                            setFamilyInfo(prev => ({ ...prev, fatherName: safeValue }));
-                          }}
-                          placeholder="Enter father's name"
-                          isEditing={isEditing}
+                          rows={5}
+                          placeholder="Tell us about yourself, your interests, hobbies, and personality..."
+                          isEditing={isEditingSelf}
                           icon={FiUser}
                         />
-                        <Input
-                          label="Father's Occupation *"
-                          value={familyInfo.fatherOccupation}
-                          onChange={(val) => {
-                            const safeValue = val
-                              .replace(/[^a-zA-Z\s.'-]/g, "")
-                              .replace(/\s{2,}/g, " ");
-                            setFamilyInfo(prev => ({ ...prev, fatherOccupation: safeValue }));
-                          }}
-                          placeholder="Enter father's occupation"
-                          isEditing={isEditing}
-                          icon={MdWork}
-                        />
-                        <Input
-                          label="Mother's Name *"
-                          value={familyInfo.motherName}
-                          onChange={(val) => {
-                            const safeValue = val
-                              .replace(/[^a-zA-Z\s.'-]/g, "")
-                              .replace(/\s{2,}/g, " ");
-                            setFamilyInfo(prev => ({ ...prev, motherName: safeValue }));
-                          }}
-                          placeholder="Enter mother's name"
-                          isEditing={isEditing}
-                          icon={FiUser}
-                        />
-                        <Input
-                          label="Mother's Occupation"
-                          value={familyInfo.motherOccupation}
-                          onChange={(val) => {
-                            const safeValue = val
-                              .replace(/[^a-zA-Z\s.'-]/g, "")
-                              .replace(/\s{2,}/g, " ");
-                            setFamilyInfo(prev => ({ ...prev, motherOccupation: safeValue }));
-                          }}
-                          placeholder="Enter mother's occupation"
-                          isEditing={isEditing}
-                          icon={MdWork}
-                        />
                       </div>
-                    </Section>
-
-                    <Section title="Siblings" icon={FiUsers}>
-                      <div className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                          <Input
-                            label="Number of Brothers"
-                            type="number"
-                            value={familyInfo.brothers}
-                            onChange={(val) => {
-                              const safeValue = val.replace(/\D/g, "").slice(0, 2);
-                              setFamilyInfo(prev => ({ ...prev, brothers: safeValue }));
-                            }}
-                            placeholder="0"
-                            isEditing={isEditing}
-                            min={0}
-                            maxLength={2}
-                          />
-                          <Input
-                            label="Number of Sisters"
-                            type="number"
-                            value={familyInfo.sisters}
-                            onChange={(val) => {
-                              const safeValue = val.replace(/\D/g, "").slice(0, 2);
-                              setFamilyInfo(prev => ({ ...prev, sisters: safeValue }));
-                            }}
-                            placeholder="0"
-                            isEditing={isEditing}
-                            min={0}
-                            maxLength={2}
-                          />
-                        </div>
-                      </div>
-                    </Section>
+                    </div>
+                    <div className="flex justify-end gap-3 mt-6">
+                      <SecondaryButton
+                        onClick={() => setIsEditingSelf(false)}
+                        disabled={loadingStates.saveProfile}
+                        icon={FiX}
+                      >
+                        Cancel
+                      </SecondaryButton>
+                      <PrimaryButton
+                        onClick={() => handleSubmit("Self")}
+                        loading={loadingStates.saveProfile}
+                        disabled={profileProgress.self < 80}
+                        icon={FiSave}
+                      >
+                        Save Self Data
+                      </PrimaryButton>
+                    </div>
+                    {profileProgress.self < 80 && (
+                      <p className="text-center text-red-500 text-sm mt-3 font-medium">
+                        Self information must be at least 80% complete to save. Current: {profileProgress.self}%
+                      </p>
+                    )}
                   </div>
-
-                  <div className="space-y-6">
-                    <Section title="Family Background" icon={FiHome}>
-                      <div className="space-y-4">
-                        <Input
-                          label="Family Type *"
-                          type="select"
-                          options={["Joint", "Nuclear", "Extended"]}
-                          value={familyInfo.familyType}
-                          onChange={(val) => setFamilyInfo(prev => ({ ...prev, familyType: val }))}
-                          isEditing={isEditing}
-                        />
-                        <Input
-                          label="Family Status *"
-                          type="select"
-                          options={["Middle Class", "Upper Middle Class", "Affluent", "Wealthy"]}
-                          value={familyInfo.familyStatus}
-                          onChange={(val) => setFamilyInfo(prev => ({ ...prev, familyStatus: val }))}
-                          isEditing={isEditing}
-                        />
-                        <Input
-                          label="Family Location"
-                          value={familyInfo.familyLocation}
-                          onChange={(val) => {
-                            const safeValue = val
-                              .replace(/[^a-zA-Z\s]/g, "")
-                              .replace(/\s{2,}/g, " ");
-                            setFamilyInfo(prev => ({ ...prev, familyLocation: safeValue }));
-                          }}
-                          placeholder="Enter family location"
-                          isEditing={isEditing}
-                          icon={MdLocationOn}
-                        />
-                        <Input
-                          label="Native Place"
-                          value={familyInfo.nativePlace}
-                          onChange={(val) => {
-                            const safeValue = val
-                              .replace(/[^a-zA-Z\s]/g, "")
-                              .replace(/\s{2,}/g, " ");
-                            setFamilyInfo(prev => ({ ...prev, nativePlace: safeValue }));
-                          }}
-                          placeholder="Enter native place"
-                          isEditing={isEditing}
-                          icon={MdLocationOn}
-                        />
-                      </div>
-                    </Section>
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <Textarea
-                      label="About Family"
-                      value={aboutFamily}
-                      onChange={(val) => {
-                        const safeValue = val
-                          .replace(/[^a-zA-Z0-9\s.,'-]/g, "")
-                          .replace(/\s{2,}/g, " ");
-                        setAboutFamily(safeValue);
-                      }}
-                      rows={5}
-                      placeholder="Tell us about your family background, values, and traditions..."
-                      isEditing={isEditing}
-                      icon={MdFamilyRestroom}
-                    />
-                  </div>
-                </div>
-                <SubmitButton
-                  text="Save Family Data"
-                  onClick={() => handleSubmit("Family")}
-                  loading={loadingStates.saveProfile}
-                  disabled={profileProgress.family < 80}
-                />
-                {profileProgress.family < 80 && (
-                  <p className="text-center text-red-400 text-sm mt-2">
-                    Family information must be at least 80% complete to save. Current: {profileProgress.family}%
-                  </p>
-                )}
-              </FormBox>
-            )}
-
-            {activeSection === "partner" && (
-              <FormBox
-                title="Partner Preferences"
-                isEditing={isEditing}
-                setIsEditing={setIsEditing}
-                loadingSaveProfile={loadingStates.saveProfile}
-                sectionProgress={profileProgress.partner}
-                icon={FiUsers}
-              >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-6">
-                    <Section title="Basic Preferences" icon={FiUsers}>
-                      <div className="space-y-4">
-                        <Input
-                          label="Preferred Age Range *"
-                          type="select"
-                          options={["18-25", "26-30", "31-35", "36-40", "41-45", "46-50"]}
-                          value={partnerInfo.preferredAgeRange}
-                          onChange={(val) => setPartnerInfo(prev => ({ ...prev, preferredAgeRange: val }))}
-                          isEditing={isEditing}
-                        />
-                        <Input
-                          label="Preferred Height (cm)"
-                          value={partnerInfo.preferredHeight}
-                          onChange={(val) => {
-                            const safeValue = val.replace(/\D/g, "").slice(0, 3);
-                            setPartnerInfo(prev => ({ ...prev, preferredHeight: safeValue }));
-                          }}
-                          placeholder="Preferred height in cm"
-                          isEditing={isEditing}
-                          maxLength={3}
-                          min={0}
-                        />
-                        <Input
-                          label="Preferred Marital Status *"
-                          type="select"
-                          options={["Never Married", "Divorced", "Widowed", "No Preference"]}
-                          value={partnerInfo.preferredMaritalStatus}
-                          onChange={(val) => setPartnerInfo(prev => ({ ...prev, preferredMaritalStatus: val }))}
-                          isEditing={isEditing}
-                        />
-                      </div>
-                    </Section>
-
-                    <Section title="Background Preferences" icon={MdFamilyRestroom}>
-                      <div className="space-y-4">
-                        <Input
-                          label="Preferred Religion *"
-                          type="select"
-                          options={["Hindu", "Muslim", "Christian", "Sikh", "Jain", "Buddhist", "No Preference"]}
-                          value={partnerInfo.preferredReligion}
-                          onChange={(val) => setPartnerInfo(prev => ({ ...prev, preferredReligion: val }))}
-                          isEditing={isEditing}
-                        />
-                        <Input
-                          label="Preferred Caste *"
-                          value={partnerInfo.preferredCaste}
-                          onChange={(val) => {
-                            const safeValue = val
-                              .replace(/[^a-zA-Z\s]/g, "")
-                              .replace(/\s{2,}/g, " ");
-                            setPartnerInfo(prev => ({ ...prev, preferredCaste: safeValue }));
-                          }}
-                          placeholder="Enter preferred caste"
-                          isEditing={isEditing}
-                        />
-                        <Input
-                          label="Preferred Mother Tongue"
-                          type="select"
-                          options={["Marathi", "Hindi", "English", "Gujarati", "No Preference", "Other"]}
-                          value={partnerInfo.preferredMotherTongue}
-                          onChange={(val) => setPartnerInfo(prev => ({ ...prev, preferredMotherTongue: val }))}
-                          isEditing={isEditing}
-                        />
-                      </div>
-                    </Section>
-                  </div>
-
-                  <div className="space-y-6">
-                    <Section title="Career & Education" icon={MdSchool}>
-                      <div className="space-y-4">
-                        <Input
-                          label="Preferred Education *"
-                          type="select"
-                          options={[
-                            "High School",
-                            "Diploma",
-                            "Bachelor's Degree",
-                            "Master's Degree",
-                            "PhD",
-                            "No Preference"
-                          ]}
-                          value={partnerInfo.preferredEducation}
-                          onChange={(val) => setPartnerInfo(prev => ({ ...prev, preferredEducation: val }))}
-                          isEditing={isEditing}
-                        />
-                        <Input
-                          label="Preferred Profession *"
-                          type="select"
-                          options={[
-                            "Engineer",
-                            "Doctor",
-                            "Teacher",
-                            "Business",
-                            "Government Employee",
-                            "No Preference",
-                            "Other"
-                          ]}
-                          value={partnerInfo.preferredProfession}
-                          onChange={(val) => setPartnerInfo(prev => ({ ...prev, preferredProfession: val }))}
-                          isEditing={isEditing}
-                        />
-                        <Input
-                          label="Preferred Annual Income *"
-                          type="select"
-                          options={[
-                            "Any",
-                            "1-3 LPA",
-                            "3-5 LPA",
-                            "5-10 LPA",
-                            "10-20 LPA",
-                            "20+ LPA"
-                          ]}
-                          value={partnerInfo.preferredIncome}
-                          onChange={(val) => setPartnerInfo(prev => ({ ...prev, preferredIncome: val }))}
-                          isEditing={isEditing}
-                        />
-                      </div>
-                    </Section>
-
-                    <Section title="Location Preferences" icon={MdLocationOn}>
-                      <div className="space-y-4">
-                        <Input
-                          label="Preferred Location *"
-                          value={partnerInfo.preferredLocation}
-                          onChange={(val) => {
-                            const safeValue = val
-                              .replace(/[^a-zA-Z\s.-]/g, "")
-                              .replace(/\s{2,}/g, " ");
-                            setPartnerInfo(prev => ({ ...prev, preferredLocation: safeValue }));
-                          }}
-                          placeholder="Enter preferred location"
-                          isEditing={isEditing}
-                          icon={MdLocationOn}
-                        />
-                        <Input
-                          label="Settled In"
-                          type="select"
-                          options={["India", "Abroad", "Any"]}
-                          value={partnerInfo.settledIn}
-                          onChange={(val) => setPartnerInfo(prev => ({ ...prev, settledIn: val }))}
-                          isEditing={isEditing}
-                        />
-                      </div>
-                    </Section>
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <Textarea
-                      label="What are you looking for in a partner?"
-                      value={partnerInfo.lookingFor}
-                      onChange={(val) => {
-                        const safeValue = val
-                          .replace(/[^a-zA-Z0-9\s.,'-]/g, "")
-                          .replace(/\s{2,}/g, " ");
-                        setPartnerInfo(prev => ({ ...prev, lookingFor: safeValue }));
-                      }}
-                      rows={5}
-                      placeholder="Describe the qualities and characteristics you are looking for in a partner..."
-                      isEditing={isEditing}
-                      icon={FiUsers}
-                    />
-                  </div>
-                </div>
-                <SubmitButton
-                  text="Save Partner Preferences"
-                  onClick={() => handleSubmit("Partner Preferences")}
-                  loading={loadingStates.saveProfile}
-                  disabled={profileProgress.partner < 80}
-                />
-                {profileProgress.partner < 80 && (
-                  <p className="text-center text-red-400 text-sm mt-2">
-                    Partner preferences must be at least 80% complete to save. Current: {profileProgress.partner}%
-                  </p>
-                )}
-              </FormBox>
-            )}
-
-            {activeSection === "plan" && (
-              <div className="bg-white rounded-xl shadow-lg p-4 md:p-6 mb-6 border border-gray-200">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="p-2 bg-red-100 rounded-lg">
-                    <MdOutlineWorkspacePremium className="text-2xl text-red-400" />
-                  </div>
+                ) : (
+                  /* ========== PREVIEW MODE - ENHANCED PREVIEW ========== */
                   <div>
-                    <h2 className="text-xl font-bold text-gray-800">Choose Your Plan</h2>
-                    <p className="text-sm text-gray-600">Select the plan that best suits your needs</p>
+                    <SelfPreview
+                      personalInfo={personalInfo}
+                      locationInfo={locationInfo}
+                      religionInfo={religionInfo}
+                      educationInfo={educationInfo}
+                      careerInfo={careerInfo}
+                      aboutYourself={aboutYourself}
+                      onEdit={() => setIsEditingSelf(true)}
+                    />
+                    <div className="flex justify-end mt-6">
+                      <PrimaryButton
+                        onClick={() => setIsEditingSelf(true)}
+                        icon={FiEdit2}
+                      >
+                        Edit Self Information
+                      </PrimaryButton>
+                    </div>
                   </div>
-                </div>
+                )}
+              </AccordionFormBox>
 
+              {/* ========== FAMILY SECTION ========== */}
+              <AccordionFormBox
+                title="Family Information"
+                isOpen={openSections.family}
+                onToggle={() => toggleSection('family')}
+                icon={MdFamilyRestroom}
+                sectionProgress={profileProgress.family}
+              >
+                {isEditingFamily ? (
+                  /* ========== EDIT MODE - SHOW FORM ========== */
+                  <div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-6">
+                        <Section title="Parents Information" icon={MdFamilyRestroom}>
+                          <div className="space-y-4">
+                            <Input
+                              label="Father's Name *"
+                              value={familyInfo.fatherName}
+                              onChange={(val) => {
+                                const safeValue = val
+                                  .replace(/[^a-zA-Z\s.'-]/g, "")
+                                  .replace(/\s{2,}/g, " ");
+                                setFamilyInfo(prev => ({ ...prev, fatherName: safeValue }));
+                              }}
+                              placeholder="Enter father's name"
+                              isEditing={isEditingFamily}
+                              icon={FiUser}
+                            />
+                            <Input
+                              label="Father's Occupation *"
+                              value={familyInfo.fatherOccupation}
+                              onChange={(val) => {
+                                const safeValue = val
+                                  .replace(/[^a-zA-Z\s.'-]/g, "")
+                                  .replace(/\s{2,}/g, " ");
+                                setFamilyInfo(prev => ({ ...prev, fatherOccupation: safeValue }));
+                              }}
+                              placeholder="Enter father's occupation"
+                              isEditing={isEditingFamily}
+                              icon={MdWork}
+                            />
+                            <Input
+                              label="Mother's Name *"
+                              value={familyInfo.motherName}
+                              onChange={(val) => {
+                                const safeValue = val
+                                  .replace(/[^a-zA-Z\s.'-]/g, "")
+                                  .replace(/\s{2,}/g, " ");
+                                setFamilyInfo(prev => ({ ...prev, motherName: safeValue }));
+                              }}
+                              placeholder="Enter mother's name"
+                              isEditing={isEditingFamily}
+                              icon={FiUser}
+                            />
+                            <Input
+                              label="Mother's Occupation"
+                              value={familyInfo.motherOccupation}
+                              onChange={(val) => {
+                                const safeValue = val
+                                  .replace(/[^a-zA-Z\s.'-]/g, "")
+                                  .replace(/\s{2,}/g, " ");
+                                setFamilyInfo(prev => ({ ...prev, motherOccupation: safeValue }));
+                              }}
+                              placeholder="Enter mother's occupation"
+                              isEditing={isEditingFamily}
+                              icon={MdWork}
+                            />
+                          </div>
+                        </Section>
+
+                        <Section title="Siblings" icon={FiUsers}>
+                          <div className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                              <Input
+                                label="Number of Brothers"
+                                type="number"
+                                value={familyInfo.brothers}
+                                onChange={(val) => {
+                                  const safeValue = val.replace(/\D/g, "").slice(0, 2);
+                                  setFamilyInfo(prev => ({ ...prev, brothers: safeValue }));
+                                }}
+                                placeholder="0"
+                                isEditing={isEditingFamily}
+                              />
+                              <Input
+                                label="Number of Sisters"
+                                type="number"
+                                value={familyInfo.sisters}
+                                onChange={(val) => {
+                                  const safeValue = val.replace(/\D/g, "").slice(0, 2);
+                                  setFamilyInfo(prev => ({ ...prev, sisters: safeValue }));
+                                }}
+                                placeholder="0"
+                                isEditing={isEditingFamily}
+                              />
+                            </div>
+                          </div>
+                        </Section>
+                      </div>
+
+                      <div className="space-y-6">
+                        <Section title="Family Background" icon={FiHome}>
+                          <div className="space-y-4">
+                            <Input
+                              label="Family Type *"
+                              type="select"
+                              options={["Joint", "Nuclear", "Extended"]}
+                              value={familyInfo.familyType}
+                              onChange={(val) => setFamilyInfo(prev => ({ ...prev, familyType: val }))}
+                              isEditing={isEditingFamily}
+                            />
+                            <Input
+                              label="Family Status *"
+                              type="select"
+                              options={["Middle Class", "Upper Middle Class", "Affluent", "Wealthy"]}
+                              value={familyInfo.familyStatus}
+                              onChange={(val) => setFamilyInfo(prev => ({ ...prev, familyStatus: val }))}
+                              isEditing={isEditingFamily}
+                            />
+                            <Input
+                              label="Family Location"
+                              value={familyInfo.familyLocation}
+                              onChange={(val) => {
+                                const safeValue = val
+                                  .replace(/[^a-zA-Z\s]/g, "")
+                                  .replace(/\s{2,}/g, " ");
+                                setFamilyInfo(prev => ({ ...prev, familyLocation: safeValue }));
+                              }}
+                              placeholder="Enter family location"
+                              isEditing={isEditingFamily}
+                              icon={MdLocationOn}
+                            />
+                            <Input
+                              label="Native Place"
+                              value={familyInfo.nativePlace}
+                              onChange={(val) => {
+                                const safeValue = val
+                                  .replace(/[^a-zA-Z\s]/g, "")
+                                  .replace(/\s{2,}/g, " ");
+                                setFamilyInfo(prev => ({ ...prev, nativePlace: safeValue }));
+                              }}
+                              placeholder="Enter native place"
+                              isEditing={isEditingFamily}
+                              icon={MdLocationOn}
+                            />
+                          </div>
+                        </Section>
+                      </div>
+
+                      <div className="md:col-span-2">
+                        <Textarea
+                          label="About Family"
+                          value={aboutFamily}
+                          onChange={(val) => {
+                            const safeValue = val
+                              .replace(/[^a-zA-Z0-9\s.,'-]/g, "")
+                              .replace(/\s{2,}/g, " ");
+                            setAboutFamily(safeValue);
+                          }}
+                          rows={5}
+                          placeholder="Tell us about your family background, values, and traditions..."
+                          isEditing={isEditingFamily}
+                          icon={MdFamilyRestroom}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex justify-end gap-3 mt-6">
+                      <SecondaryButton
+                        onClick={() => setIsEditingFamily(false)}
+                        disabled={loadingStates.saveProfile}
+                        icon={FiX}
+                      >
+                        Cancel
+                      </SecondaryButton>
+                      <PrimaryButton
+                        onClick={() => handleSubmit("Family")}
+                        loading={loadingStates.saveProfile}
+                        disabled={profileProgress.family < 80}
+                        icon={FiSave}
+                      >
+                        Save Family Data
+                      </PrimaryButton>
+                    </div>
+                    {profileProgress.family < 80 && (
+                      <p className="text-center text-red-500 text-sm mt-3 font-medium">
+                        Family information must be at least 80% complete to save. Current: {profileProgress.family}%
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  /* ========== PREVIEW MODE - ENHANCED PREVIEW ========== */
+                  <div>
+                    <FamilyPreview
+                      familyInfo={familyInfo}
+                      aboutFamily={aboutFamily}
+                      onEdit={() => setIsEditingFamily(true)}
+                    />
+                    <div className="flex justify-end mt-6">
+                      <PrimaryButton
+                        onClick={() => setIsEditingFamily(true)}
+                        icon={FiEdit2}
+                      >
+                        Edit Family Information
+                      </PrimaryButton>
+                    </div>
+                  </div>
+                )}
+              </AccordionFormBox>
+
+              {/* ========== PARTNER SECTION ========== */}
+              <AccordionFormBox
+                title="Partner Preferences"
+                isOpen={openSections.partner}
+                onToggle={() => toggleSection('partner')}
+                icon={FiUsers}
+                sectionProgress={profileProgress.partner}
+              >
+                {isEditingPartner ? (
+                  /* ========== EDIT MODE - SHOW FORM ========== */
+                  <div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-6">
+                        <Section title="Basic Preferences" icon={FiUsers}>
+                          <div className="space-y-4">
+                            <Input
+                              label="Preferred Age Range *"
+                              type="select"
+                              options={["18-25", "26-30", "31-35", "36-40", "41-45", "46-50"]}
+                              value={partnerInfo.preferredAgeRange}
+                              onChange={(val) => setPartnerInfo(prev => ({ ...prev, preferredAgeRange: val }))}
+                              isEditing={isEditingPartner}
+                            />
+                            <Input
+                              label="Preferred Height (cm)"
+                              value={partnerInfo.preferredHeight}
+                              onChange={(val) => {
+                                const safeValue = val.replace(/\D/g, "").slice(0, 3);
+                                setPartnerInfo(prev => ({ ...prev, preferredHeight: safeValue }));
+                              }}
+                              placeholder="Preferred height in cm"
+                              isEditing={isEditingPartner}
+                            />
+                            <Input
+                              label="Preferred Marital Status *"
+                              type="select"
+                              options={["Never Married", "Divorced", "Widowed", "No Preference"]}
+                              value={partnerInfo.preferredMaritalStatus}
+                              onChange={(val) => setPartnerInfo(prev => ({ ...prev, preferredMaritalStatus: val }))}
+                              isEditing={isEditingPartner}
+                            />
+                          </div>
+                        </Section>
+
+                        <Section title="Background Preferences" icon={MdFamilyRestroom}>
+                          <div className="space-y-4">
+                            <Input
+                              label="Preferred Religion *"
+                              type="select"
+                              options={["Hindu", "Muslim", "Christian", "Sikh", "Jain", "Buddhist", "No Preference"]}
+                              value={partnerInfo.preferredReligion}
+                              onChange={(val) => setPartnerInfo(prev => ({ ...prev, preferredReligion: val }))}
+                              isEditing={isEditingPartner}
+                            />
+                            <Input
+                              label="Preferred Caste *"
+                              value={partnerInfo.preferredCaste}
+                              onChange={(val) => {
+                                const safeValue = val
+                                  .replace(/[^a-zA-Z\s]/g, "")
+                                  .replace(/\s{2,}/g, " ");
+                                setPartnerInfo(prev => ({ ...prev, preferredCaste: safeValue }));
+                              }}
+                              placeholder="Enter preferred caste"
+                              isEditing={isEditingPartner}
+                            />
+                            <Input
+                              label="Preferred Mother Tongue"
+                              type="select"
+                              options={["Marathi", "Hindi", "English", "Gujarati", "No Preference", "Other"]}
+                              value={partnerInfo.preferredMotherTongue}
+                              onChange={(val) => setPartnerInfo(prev => ({ ...prev, preferredMotherTongue: val }))}
+                              isEditing={isEditingPartner}
+                            />
+                          </div>
+                        </Section>
+                      </div>
+
+                      <div className="space-y-6">
+                        <Section title="Career & Education" icon={MdSchool}>
+                          <div className="space-y-4">
+                            <Input
+                              label="Preferred Education *"
+                              type="select"
+                              options={[
+                                "High School",
+                                "Diploma",
+                                "Bachelor's Degree",
+                                "Master's Degree",
+                                "PhD",
+                                "No Preference"
+                              ]}
+                              value={partnerInfo.preferredEducation}
+                              onChange={(val) => setPartnerInfo(prev => ({ ...prev, preferredEducation: val }))}
+                              isEditing={isEditingPartner}
+                            />
+                            <Input
+                              label="Preferred Profession *"
+                              type="select"
+                              options={[
+                                "Engineer",
+                                "Doctor",
+                                "Teacher",
+                                "Business",
+                                "Government Employee",
+                                "No Preference",
+                                "Other"
+                              ]}
+                              value={partnerInfo.preferredProfession}
+                              onChange={(val) => setPartnerInfo(prev => ({ ...prev, preferredProfession: val }))}
+                              isEditing={isEditingPartner}
+                            />
+                            <Input
+                              label="Preferred Annual Income *"
+                              type="select"
+                              options={[
+                                "Any",
+                                "1-3 LPA",
+                                "3-5 LPA",
+                                "5-10 LPA",
+                                "10-20 LPA",
+                                "20+ LPA"
+                              ]}
+                              value={partnerInfo.preferredIncome}
+                              onChange={(val) => setPartnerInfo(prev => ({ ...prev, preferredIncome: val }))}
+                              isEditing={isEditingPartner}
+                            />
+                          </div>
+                        </Section>
+
+                        <Section title="Location Preferences" icon={MdLocationOn}>
+                          <div className="space-y-4">
+                            <Input
+                              label="Preferred Location *"
+                              value={partnerInfo.preferredLocation}
+                              onChange={(val) => {
+                                const safeValue = val
+                                  .replace(/[^a-zA-Z\s.-]/g, "")
+                                  .replace(/\s{2,}/g, " ");
+                                setPartnerInfo(prev => ({ ...prev, preferredLocation: safeValue }));
+                              }}
+                              placeholder="Enter preferred location"
+                              isEditing={isEditingPartner}
+                              icon={MdLocationOn}
+                            />
+                            <Input
+                              label="Settled In"
+                              type="select"
+                              options={["India", "Abroad", "Any"]}
+                              value={partnerInfo.settledIn}
+                              onChange={(val) => setPartnerInfo(prev => ({ ...prev, settledIn: val }))}
+                              isEditing={isEditingPartner}
+                            />
+                          </div>
+                        </Section>
+                      </div>
+
+                      <div className="md:col-span-2">
+                        <Textarea
+                          label="What are you looking for in a partner?"
+                          value={partnerInfo.lookingFor}
+                          onChange={(val) => {
+                            const safeValue = val
+                              .replace(/[^a-zA-Z0-9\s.,'-]/g, "")
+                              .replace(/\s{2,}/g, " ");
+                            setPartnerInfo(prev => ({ ...prev, lookingFor: safeValue }));
+                          }}
+                          rows={5}
+                          placeholder="Describe the qualities and characteristics you are looking for in a partner..."
+                          isEditing={isEditingPartner}
+                          icon={FiUsers}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex justify-end gap-3 mt-6">
+                      <SecondaryButton
+                        onClick={() => setIsEditingPartner(false)}
+                        disabled={loadingStates.saveProfile}
+                        icon={FiX}
+                      >
+                        Cancel
+                      </SecondaryButton>
+                      <PrimaryButton
+                        onClick={() => handleSubmit("Partner Preferences")}
+                        loading={loadingStates.saveProfile}
+                        disabled={profileProgress.partner < 80}
+                        icon={FiSave}
+                      >
+                        Save Partner Preferences
+                      </PrimaryButton>
+                    </div>
+                    {profileProgress.partner < 80 && (
+                      <p className="text-center text-red-500 text-sm mt-3 font-medium">
+                        Partner preferences must be at least 80% complete to save. Current: {profileProgress.partner}%
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  /* ========== PREVIEW MODE - ENHANCED PREVIEW ========== */
+                  <div>
+                    <PartnerPreview
+                      partnerInfo={partnerInfo}
+                      onEdit={() => setIsEditingPartner(true)}
+                    />
+                    <div className="flex justify-end mt-6">
+                      <PrimaryButton
+                        onClick={() => setIsEditingPartner(true)}
+                        icon={FiEdit2}
+                      >
+                        Edit Partner Preferences
+                      </PrimaryButton>
+                    </div>
+                  </div>
+                )}
+              </AccordionFormBox>
+
+              {/* PLAN SECTION */}
+              <AccordionFormBox
+                title="Choose Your Plan"
+                isOpen={openSections.plan}
+                onToggle={() => toggleSection('plan')}
+                icon={MdOutlineWorkspacePremium}
+                sectionProgress={undefined}
+              >
                 {/* Premium Member Info with Dates */}
                 {membershipPlan === "premium" && (
-                  <div className="bg-gradient-to-r from-red-50 to-red-100 border border-red-200 rounded-lg p-4 mb-6">
+                  <div className="bg-gradient-to-r from-red-50 to-red-100 border border-red-200 rounded-xl p-5 mb-6">
                     <div className="flex items-start gap-3">
-                      <FiInfo className="text-red-400 text-xl mt-1 flex-shrink-0" />
+                      <div className="p-2 bg-red-500 text-white rounded-lg shadow-md">
+                        <MdOutlineWorkspacePremium className="text-xl" />
+                      </div>
                       <div className="flex-1">
-                        <p className="text-red-400 font-medium flex items-center gap-2">
-                          <MdOutlineWorkspacePremium />
-                          You are a Premium Member
+                        <p className="text-red-600 font-bold flex items-center gap-2 mb-1">
+                          Premium Member
                         </p>
-                        <p className="text-red-400 text-sm mb-2">
+                        <p className="text-red-500 text-sm mb-3">
                           You have access to all premium features. Free plan is no longer available.
                         </p>
 
-                        {/* Membership Dates Display - Always show if available */}
                         {membershipDates.membershipStartDate && (
-                          <div className="mt-3 bg-white rounded-lg p-3 border border-red-200">
+                          <div className="mt-2 bg-white rounded-lg p-3 border border-red-200 shadow-sm">
                             <div className="flex items-center gap-2 mb-2">
                               <FiCalendar className="text-gray-500" size={14} />
-                              <span className="text-xs font-medium text-gray-700">Membership Details:</span>
+                              <span className="text-xs font-semibold text-gray-700">Membership Details:</span>
                             </div>
                             <div className="flex flex-col sm:flex-row sm:items-center sm:gap-6 text-xs">
                               <div className="flex items-center gap-2">
@@ -3360,12 +4055,14 @@ ${isProfilePublished
 
                 {/* Free Member Info */}
                 {membershipPlan === "free" && !membershipDates.membershipStartDate && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                  <div className="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-5 mb-6">
                     <div className="flex items-start gap-3">
-                      <FiInfo className="text-blue-600 text-xl mt-1 flex-shrink-0" />
+                      <div className="p-2 bg-blue-500 text-white rounded-lg shadow-md">
+                        <FiInfo className="text-xl" />
+                      </div>
                       <div>
-                        <p className="text-blue-800 font-medium">You are on Free Plan</p>
-                        <p className="text-blue-700 text-sm">
+                        <p className="text-blue-700 font-bold mb-1">You are on Free Plan</p>
+                        <p className="text-blue-600 text-sm">
                           Upgrade to Premium to unlock all features including direct contact, unlimited matches, and more!
                         </p>
                       </div>
@@ -3414,38 +4111,33 @@ ${isProfilePublished
                     membershipDates={membershipDates}
                   />
                 </div>
-              </div>
-            )}
+              </AccordionFormBox>
 
-            {activeSection === "post" && (
-              <div className="bg-white rounded-xl shadow-lg p-4 md:p-6 mb-6 border border-gray-200">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="p-2 bg-red-100 rounded-lg">
-                    <MdPublishedWithChanges className="text-2xl text-red-400" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-bold text-gray-800">Profile Publishing</h2>
-                    <p className="text-sm text-gray-600">Make your profile visible to potential matches</p>
-                  </div>
-                </div>
-
+              {/* POST SECTION */}
+              <AccordionFormBox
+                title="Profile Publishing"
+                isOpen={openSections.post}
+                onToggle={() => toggleSection('post')}
+                icon={MdPublishedWithChanges}
+                sectionProgress={undefined}
+              >
                 {/* Completion Status */}
                 <div className="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-6 mb-6">
                   <div className="flex items-start gap-4">
-                    <div className="p-3 bg-blue-600 text-white rounded-lg shadow-md">
+                    <div className="p-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg shadow-md">
                       <FiInfo className="text-2xl" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-gray-800 mb-3">
+                      <h3 className="text-lg font-bold text-gray-800 mb-4">
                         Profile Completion Status
                       </h3>
                       <div className="space-y-4">
                         <div>
                           <div className="flex justify-between mb-1">
-                            <span className="text-sm font-medium text-gray-700 flex items-center gap-1">
+                            <span className="text-sm font-semibold text-gray-700 flex items-center gap-1">
                               <FiUser className="text-gray-500" /> Self Data
                             </span>
-                            <span className={`text-sm font-semibold ${profileProgress.self >= 80 ? 'text-green-600' : 'text-amber-600'}`}>
+                            <span className={`text-sm font-bold ${profileProgress.self >= 80 ? 'text-green-600' : 'text-amber-600'}`}>
                               {profileProgress.self}%
                             </span>
                           </div>
@@ -3459,10 +4151,10 @@ ${isProfilePublished
 
                         <div>
                           <div className="flex justify-between mb-1">
-                            <span className="text-sm font-medium text-gray-700 flex items-center gap-1">
+                            <span className="text-sm font-semibold text-gray-700 flex items-center gap-1">
                               <MdFamilyRestroom className="text-gray-500" /> Family Data
                             </span>
-                            <span className={`text-sm font-semibold ${profileProgress.family >= 80 ? 'text-green-600' : 'text-amber-600'}`}>
+                            <span className={`text-sm font-bold ${profileProgress.family >= 80 ? 'text-green-600' : 'text-amber-600'}`}>
                               {profileProgress.family}%
                             </span>
                           </div>
@@ -3476,10 +4168,10 @@ ${isProfilePublished
 
                         <div>
                           <div className="flex justify-between mb-1">
-                            <span className="text-sm font-medium text-gray-700 flex items-center gap-1">
+                            <span className="text-sm font-semibold text-gray-700 flex items-center gap-1">
                               <FiUsers className="text-gray-500" /> Partner Preferences
                             </span>
-                            <span className={`text-sm font-semibold ${profileProgress.partner >= 80 ? 'text-green-600' : 'text-amber-600'}`}>
+                            <span className={`text-sm font-bold ${profileProgress.partner >= 80 ? 'text-green-600' : 'text-amber-600'}`}>
                               {profileProgress.partner}%
                             </span>
                           </div>
@@ -3493,24 +4185,27 @@ ${isProfilePublished
 
                         <div className="pt-4 border-t border-blue-200">
                           <div className="flex justify-between items-center">
-                            <span className="font-semibold text-gray-800">Overall Progress</span>
+                            <span className="font-bold text-gray-800">Overall Progress</span>
                             <span className={`font-bold text-lg ${profileCompleted ? 'text-green-600' : 'text-amber-600'}`}>
                               {Math.round((profileProgress.self + profileProgress.family + profileProgress.partner) / 3)}%
                             </span>
                           </div>
-                          <p className={`text-sm mt-2 p-3 rounded-lg ${profileCompleted ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}`}>
+                          <div className={`text-sm mt-3 p-3 rounded-lg font-medium ${profileCompleted
+                            ? 'bg-green-100 text-green-800 border border-green-200'
+                            : 'bg-amber-100 text-amber-800 border border-amber-200'
+                            }`}>
                             {profileCompleted ? (
-                              <>
-                                <FiCheckCircle className="inline mr-1" />
+                              <div className="flex items-center gap-2">
+                                <FiCheckCircle className="text-green-600" />
                                 ✓ All sections have at least 80% completion. Ready to publish!
-                              </>
+                              </div>
                             ) : (
-                              <>
-                                <MdWarning className="inline mr-1" />
+                              <div className="flex items-center gap-2">
+                                <MdWarning className="text-amber-600" />
                                 ⚠ Need at least 80% in all sections. Current: Self {profileProgress.self}%, Family {profileProgress.family}%, Partner {profileProgress.partner}%
-                              </>
+                              </div>
                             )}
-                          </p>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -3518,34 +4213,34 @@ ${isProfilePublished
                 </div>
 
                 {/* Information Section */}
-                <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 mb-6">
+                <div className="bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-200 rounded-xl p-6 mb-6">
                   <div className="flex items-start gap-4">
-                    <div className="p-3 bg-gray-200 rounded-lg">
-                      <MdOutlineContactSupport className="text-gray-600 text-2xl" />
+                    <div className="p-3 bg-gray-600 text-white rounded-lg shadow-md">
+                      <MdOutlineContactSupport className="text-2xl" />
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-800 mb-3">
+                      <h3 className="text-lg font-bold text-gray-800 mb-3">
                         Important Information
                       </h3>
                       <ul className="grid grid-cols-1 md:grid-cols-2 gap-3 text-gray-600">
                         <li className="flex items-start gap-2">
-                          <FiCheckCircle className="text-green-500 mt-1 flex-shrink-0" />
+                          <FiCheckCircle className="text-green-500 mt-0.5 flex-shrink-0" />
                           <span className="text-sm">Complete all profile sections before publishing</span>
                         </li>
                         <li className="flex items-start gap-2">
-                          <FiCheckCircle className="text-green-500 mt-1 flex-shrink-0" />
+                          <FiCheckCircle className="text-green-500 mt-0.5 flex-shrink-0" />
                           <span className="text-sm">Published profiles are visible to all registered members</span>
                         </li>
                         <li className="flex items-start gap-2">
-                          <FiCheckCircle className="text-green-500 mt-1 flex-shrink-0" />
+                          <FiCheckCircle className="text-green-500 mt-0.5 flex-shrink-0" />
                           <span className="text-sm">You can edit your profile anytime</span>
                         </li>
                         <li className="flex items-start gap-2">
-                          <FiCheckCircle className="text-green-500 mt-1 flex-shrink-0" />
+                          <FiCheckCircle className="text-green-500 mt-0.5 flex-shrink-0" />
                           <span className="text-sm">Use "Hide Profile" to temporarily hide your profile</span>
                         </li>
                         <li className="flex items-start gap-2 md:col-span-2">
-                          <FiCheckCircle className="text-green-500 mt-1 flex-shrink-0" />
+                          <FiCheckCircle className="text-green-500 mt-0.5 flex-shrink-0" />
                           <span className="text-sm">Use "Delete Profile" to permanently remove all your data</span>
                         </li>
                       </ul>
@@ -3556,66 +4251,97 @@ ${isProfilePublished
                 {/* Publish/Unpublish Button */}
                 <div className="flex justify-center">
                   {isProfilePublished ? (
-                    <div className="text-center">
-                      <div className="flex items-center gap-2 text-green-600 font-medium mb-4 p-3 bg-green-50 rounded-lg border border-green-200">
+                    <div className="text-center w-full">
+                      <div className="flex items-center gap-2 text-green-600 font-medium mb-4 p-4 bg-green-50 rounded-xl border border-green-200">
                         <FiCheckCircle className="text-xl" />
                         <span>✓ Your profile is currently published and visible to other members.</span>
                       </div>
                       <div className="flex gap-4 justify-center">
-                        <button
+                        <SecondaryButton
                           onClick={handleRemoveProfile}
+                          loading={loadingStates.removeProfile}
                           disabled={loadingStates.removeProfile}
-                          className="px-6 py-3 bg-amber-500 text-white rounded-lg font-medium hover:bg-amber-600 transition disabled:opacity-70 disabled:cursor-not-allowed shadow-md flex items-center gap-2"
+                          icon={MdOutlineRemoveCircle}
+                          className="px-8 py-3"
                         >
-                          {loadingStates.removeProfile ? (
-                            <>
-                              <FiLoader className="animate-spin" />
-                              Hiding...
-                            </>
-                          ) : (
-                            <>
-                              <MdOutlineRemoveCircle />
-                              Hide Profile
-                            </>
-                          )}
-                        </button>
+                          Hide Profile
+                        </SecondaryButton>
                       </div>
                     </div>
                   ) : (
-                    <button
+                    <PrimaryButton
                       onClick={handlePostProfile}
+                      loading={loadingStates.postProfile}
                       disabled={!profileCompleted || loadingStates.postProfile}
-                      className={`px-8 py-3 rounded-lg font-medium transition flex items-center gap-2 shadow-md ${!profileCompleted || loadingStates.postProfile
-                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                        : 'bg-red-400 text-white hover:bg-red-400'
-                        }`}
+                      icon={MdPublishedWithChanges}
+                      className="px-10 py-3 text-lg"
                     >
-                      {loadingStates.postProfile ? (
-                        <>
-                          <FiLoader className="animate-spin" />
-                          Publishing...
-                        </>
-                      ) : (
-                        <>
-                          <MdPublishedWithChanges />
-                          Publish Profile
-                        </>
-                      )}
-                    </button>
+                      Publish Profile
+                    </PrimaryButton>
                   )}
                 </div>
                 {!profileCompleted && !isProfilePublished && (
-                  <p className="text-center text-red-400 text-sm mt-4 bg-red-50 p-3 rounded-lg border border-red-200">
-                    Cannot publish profile. All sections must be at least 80% complete.
-                  </p>
+                  <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg text-center">
+                    <p className="text-red-500 text-sm font-medium">
+                      Cannot publish profile. All sections must be at least 80% complete.
+                    </p>
+                  </div>
                 )}
-              </div>
-            )}
+              </AccordionFormBox>
+            </div>
           </div>
         </div>
       </div>
       <Chatbot />
       <Footer />
+
+      <style jsx>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(-10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes slideDown {
+          from { opacity: 0; transform: translateY(-20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-fadeIn {
+          animation: fadeIn 0.3s ease-out;
+        }
+        
+        .animate-slideDown {
+          animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(-10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes slideDown {
+          from { opacity: 0; transform: translateY(-20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-fadeIn {
+          animation: fadeIn 0.3s ease-out;
+        }
+        
+        .animate-slideDown {
+          animation: slideDown 0.3s ease-out;
+        }
+        
+        /* Hide scrollbar but keep functionality */
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        
+        .scrollbar-hide {
+          -ms-overflow-style: none;  /* IE and Edge */
+          scrollbar-width: none;  /* Firefox */
+        }
+      `}</style>
     </>
   );
 };

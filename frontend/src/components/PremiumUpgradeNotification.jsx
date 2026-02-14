@@ -107,13 +107,13 @@ const PremiumUpgradeNotification = ({
                 }`}
         >
             {/* Main Container */}
-            <div className="relative w-[92vw] max-w-[500px] min-w-[280px] bg-gradient-to-br from-white to-[#FFF8F3] rounded-2xl shadow-2xl overflow-hidden border border-[#FFEAD3] transform hover:scale-[1.01] transition-transform duration-300">
+            <div className="relative w-[92vw] max-w-[500px] min-w-[280px] bg-gradient-to-br from-white to-[oklch(96%_0.02_22.216)] rounded-2xl shadow-2xl overflow-hidden border border-[oklch(90%_0.05_22.216)] transform hover:scale-[1.01] transition-transform duration-300">
                 {/* Glow */}
-                <div className="absolute inset-0 bg-gradient-to-r from-[#EA7B7B]/10 via-[#D25353]/10 to-[#9E3B3B]/10 blur-lg -z-10"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-[oklch(70.4%_0.191_22.216/0.1)] via-[oklch(70.4%_0.191_22.216/0.1)] to-[oklch(70.4%_0.191_22.216/0.1)] blur-lg -z-10"></div>
 
                 <div className="flex flex-col md:flex-row">
                     {/* LEFT */}
-                    <div className="md:w-1/2 bg-gradient-to-r from-[#EA7B7B] via-[#D25353] to-[#9E3B3B] p-4 md:p-5 relative">
+                    <div className="md:w-1/2 bg-gradient-to-r from-[oklch(70.4%_0.191_22.216)] via-[oklch(65%_0.191_22.216)] to-[oklch(55%_0.191_22.216)] p-4 md:p-5 relative">
                         <button
                             onClick={handleClose}
                             className="absolute top-3 right-3 w-8 h-8 md:w-10 md:h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-all duration-300"
@@ -171,7 +171,7 @@ const PremiumUpgradeNotification = ({
                         {/* Upgrade Button */}
                         <button
                             onClick={handleUpgrade}
-                            className="w-full bg-gradient-to-r from-[#EA7B7B] to-[#9E3B3B] text-white font-bold py-3 md:py-4 rounded-xl text-base md:text-lg flex items-center justify-center gap-2"
+                            className="w-full bg-gradient-to-r from-[oklch(70.4%_0.191_22.216)] to-[oklch(55%_0.191_22.216)] text-white font-bold py-3 md:py-4 rounded-xl text-base md:text-lg flex items-center justify-center gap-2"
                         >
                             <FiStar />
                             Upgrade Now
@@ -180,15 +180,15 @@ const PremiumUpgradeNotification = ({
                     </div>
                 </div>
 
-                <div className="h-1 bg-gradient-to-r from-[#EA7B7B] to-[#9E3B3B] w-full animate-pulse"></div>
+                <div className="h-1 bg-gradient-to-r from-[oklch(70.4%_0.191_22.216)] to-[oklch(55%_0.191_22.216)] w-full animate-pulse"></div>
             </div>
         </div>
     );
 };
 
 const Feature = ({ icon, title }) => (
-    <div className="p-2 md:p-3 bg-white border border-[#FFEAD3] rounded-xl text-center text-xs md:text-sm">
-        <div className="flex justify-center mb-1 text-[#D25353] text-lg">
+    <div className="p-2 md:p-3 bg-white border border-[oklch(90%_0.05_22.216)] rounded-xl text-center text-xs md:text-sm">
+        <div className="flex justify-center mb-1 text-[oklch(70.4%_0.191_22.216)] text-lg">
             {icon}
         </div>
         {title}

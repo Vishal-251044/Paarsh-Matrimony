@@ -21,10 +21,6 @@ const AboutUs = () => {
                 <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                     {/* Header with Hero Section */}
                     <div className="text-center mb-16 relative">
-                        {/* You can also add a floating decorative element on the image */}
-                        <div className="absolute -top-10 -left-10 w-40 h-40 opacity-10 pointer-events-none">
-                            <div className="w-full h-full rounded-full border-4 border-[oklch(70.4%_0.191_22.216)]"></div>
-                        </div>
                         <h2
                             className="text-[oklch(70.4%_0.191_22.216)] text-3xl sm:text-4xl font-bold mb-6 select-none relative"
                             style={{ fontFamily: "'Poppins', sans-serif" }}

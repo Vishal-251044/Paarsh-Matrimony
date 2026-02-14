@@ -721,7 +721,7 @@ const Chatbot = () => {
                 {messages.map((message) => (
                   <div
                     key={message.id}
-                    className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                    className={`flex ${message.sender === 'user' ? 'justify-start' : 'justify-end'}`}
                   >
                     {message.sender === 'bot' && (
                       <div
