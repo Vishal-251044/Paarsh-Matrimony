@@ -2610,7 +2610,7 @@ const Profile = () => {
           {/* ========== NEW 1.5:3 LAYOUT ========== */}
           <div className="flex flex-col lg:flex-row gap-8">
             {/* LEFT SIDEBAR: PROFILE BOX (1.5 ratio on desktop) */}
-            <div className="lg:w-[30%] w-full lg:h-[calc(100vh-120px)] lg:sticky lg:top-24">              <div ref={sidebarRef} className="bg-gradient-to-br from-white via-white to-red-50/30 rounded-2xl shadow-xl p-4 md:p-6 relative border border-red-100/80 backdrop-blur-sm h-full overflow-y-auto scrollbar-hide">
+            <div className="lg:w-[30%] w-full lg:h-[calc(100vh-80px)] lg:sticky lg:top-20">              <div ref={sidebarRef} className="bg-gradient-to-br from-white via-white to-red-50/30 rounded-2xl shadow-xl p-4 md:p-6 relative border border-red-100/80 backdrop-blur-sm h-full overflow-y-auto scrollbar-hide">
               <div className="absolute top-4 right-4 z-20">
                 <div className="relative">
                   <IconButton
@@ -3533,7 +3533,7 @@ const Profile = () => {
                         disabled={profileProgress.self < 80}
                         icon={FiSave}
                       >
-                        Save Self Data
+                        Save
                       </PrimaryButton>
                     </div>
                     {profileProgress.self < 80 && (
@@ -3746,7 +3746,7 @@ const Profile = () => {
                         disabled={profileProgress.family < 80}
                         icon={FiSave}
                       >
-                        Save Family Data
+                        Save
                       </PrimaryButton>
                     </div>
                     {profileProgress.family < 80 && (
@@ -3963,7 +3963,7 @@ const Profile = () => {
                         disabled={profileProgress.partner < 80}
                         icon={FiSave}
                       >
-                        Save Partner Preferences
+                        Save
                       </PrimaryButton>
                     </div>
                     {profileProgress.partner < 80 && (

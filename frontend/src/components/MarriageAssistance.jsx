@@ -181,14 +181,14 @@ const Marriage = () => {
                     onChange={(e) => {
                         let val = e.target.value;
 
-                        val = val.replace(/[^a-zA-Z\s]/g, ""); 
-                        val = val.replace(/\s{2,}/g, " ");     
-                        val = val.replace(/^\s/, "");          
+                        val = val.replace(/[^a-zA-Z\s]/g, "");
+                        val = val.replace(/\s{2,}/g, " ");
+                        val = val.replace(/^\s/, "");
 
                         setForm({ ...form, location: val });
                     }}
                     onBlur={(e) => {
-                        setForm({ ...form, location: e.target.value.trim() }); 
+                        setForm({ ...form, location: e.target.value.trim() });
                     }}
                 />
 
@@ -261,7 +261,32 @@ const Marriage = () => {
         .input{width:100%;border:2px solid #FFEAD3;padding:12px;border-radius:12px}
         .expense{display:flex;gap:8px;padding:10px;border:2px solid #eee;border-radius:10px;cursor:pointer}
         .expense-active{border-color:#EA7B7B;background:#FFF5F5}
-        .submit-btn{width:100%;background:linear-gradient(90deg,#EA7B7B,#D25353);color:white;padding:14px;border-radius:12px;font-weight:600}
+        .submit-btn {
+          width: 100%;
+          background: linear-gradient(90deg, #f43f5e, #db2777); /* rose-500 → pink-600 */
+          color: white;
+          padding: 12px 16px;
+          border-radius: 12px;
+          font-weight: 700;
+          font-size: 14px;
+          box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+          transition: all 0.2s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+        }
+        
+        .submit-btn:hover {
+          box-shadow: 0 8px 18px rgba(0,0,0,0.15);
+        }
+        
+        .submit-btn:disabled {
+          opacity: 0.7;
+          cursor: not-allowed;
+          transform: none;
+          box-shadow: none;
+        }
       `}</style>
         </div>
     );

@@ -184,10 +184,11 @@ const WeddingServices = () => {
                 <button
                     onClick={searchVendors}
                     disabled={loading}
-                    className="w-full py-3 bg-gradient-to-r from-[#EA7B7B] to-[#D25353] text-white rounded-lg"
+                    className="w-full py-3 px-4 rounded-lg font-bold text-sm bg-gradient-to-r from-rose-500 to-pink-600 text-white shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-1.5 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                     {loading ? "Searching..." : "Find Wedding Vendors"}
                 </button>
+
             </div>
 
             {/* SEARCH RESULTS */}
