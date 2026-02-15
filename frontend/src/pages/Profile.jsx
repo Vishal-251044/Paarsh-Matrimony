@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import Chatbot from '../components/Chatbot';
+import Kundali from '../components/Kundali';
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import DatePicker from "react-datepicker";
@@ -1620,17 +1621,6 @@ const Profile = () => {
         }
 
         setUser(parsedUser);
-
-        // ✅ FIXED: Test backend connection first
-        try {
-          await axios.get(`${BACKEND_URL}/health`, {
-            headers: { Authorization: `Bearer ${token}` },
-            timeout: 5000
-          });
-        } catch (healthError) {
-          console.warn("Health check failed:", healthError);
-          // Continue anyway - backend might not have health endpoint
-        }
 
         try {
           const response = await axios.get(
@@ -4077,9 +4067,10 @@ const Profile = () => {
                       "Manage Profile",
                       "Partner Recommendations",
                       "View Limited Partner Details",
+                      "Interest Sending and Chatting",
                       "Apply Filters",
                       "Give feedbacks",
-                      "Chatbot Support and Chatting with Matches",
+                      "Chatbot Support",
                     ]}
                     price="0"
                     currentPlan={membershipPlan === "free" ? "Free Membership" :
@@ -4099,6 +4090,7 @@ const Profile = () => {
                       "Contact Partner Directly",
                       "Add to Watchlist for Shortlisting",
                       "View all Partner Data",
+                      "View your Kundali details",
                       "Marriage Planning Assistance",
                       "Extra Discounts on Wedding Services",
                     ]}
@@ -4294,6 +4286,14 @@ const Profile = () => {
       </div>
       <Chatbot />
       <Footer />
+      {/* Kundali Section - Auto display based on profile data */}
+      {personalInfo.dob && personalInfo.fullName && (
+        <Kundali
+          name={personalInfo.fullName?.trim() || user?.name || ""}
+          dob={personalInfo.dob || ""}
+          gender={personalInfo.gender || "male"}
+        />
+      )}
 
       <style jsx>{`
         @keyframes fadeIn {

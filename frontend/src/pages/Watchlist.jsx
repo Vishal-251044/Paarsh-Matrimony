@@ -6,6 +6,7 @@ import Footer from '../components/Footer';
 import Chatbot from '../components/Chatbot';
 import Marriage from "../components/MarriageAssistance";
 import WeddingServices from "../components/WeddingServices";
+import Kundali from "../components/Kundali";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -81,6 +82,7 @@ const Watchlist = () => {
   const [watchlistEmails, setWatchlistEmails] = useState([]);
   const [openMarriage, setOpenMarriage] = useState(false);
   const [openWedding, setOpenWedding] = useState(false);
+  const [openKundali, setOpenKundali] = useState(false);
   const [removingId, setRemovingId] = useState(null);
   const [activeFilters, setActiveFilters] = useState({
     maritalStatus: [],
@@ -162,11 +164,12 @@ const Watchlist = () => {
         if (showFilters) setShowFilters(false);
         if (openMarriage) setOpenMarriage(false);
         if (openWedding) setOpenWedding(false);
+        if (openKundali) setOpenKundali(false);
       }
     };
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
-  }, [showPartnerModal, showFilters, openMarriage, openWedding]);
+  }, [showPartnerModal, showFilters, openMarriage, openWedding, openKundali]);
 
   // Prevent body scroll when modals are open
   useEffect(() => {
@@ -178,7 +181,7 @@ const Watchlist = () => {
     return () => {
       document.body.style.overflow = 'auto';
     };
-  }, [showPartnerModal, showFilters, openMarriage, openWedding]);
+  }, [showPartnerModal, showFilters, openMarriage, openWedding, openKundali]);
 
   const isPremium = userData?.membershipType === 'premium';
 
@@ -636,14 +639,6 @@ const Watchlist = () => {
     // Then sort by score in descending order (highest score first)
     return scored.sort((a, b) => b.compare.score - a.compare.score);
   }, [filteredPartners, myProfile, comparePartner]);
-
-  // Optional: Add this useEffect to ensure sorting happens immediately after filter changes
-  useEffect(() => {
-    if (filteredPartners.length > 0 && myProfile) {
-      // This is already handled by the useMemo above, but if you want to be extra sure
-      console.log('Filters applied, partners sorted by score');
-    }
-  }, [activeFilters, filteredPartners.length]); // Just for logging/debugging
 
   // ======================== TICK COMPONENT ========================
   const Tick = ({ ok }) => (
@@ -1605,8 +1600,8 @@ const Watchlist = () => {
 
               <span
                 className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm ${userData?.isProfilePublished
-                    ? 'bg-emerald-400/20 text-emerald-100'
-                    : 'bg-amber-400/20 text-amber-100'
+                  ? 'bg-emerald-400/20 text-emerald-100'
+                  : 'bg-amber-400/20 text-amber-100'
                   }`}
               >
                 {userData?.isProfilePublished ? (
@@ -1686,7 +1681,7 @@ const Watchlist = () => {
                   <div className="px-5 pb-5 border-t border-gray-200">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-5">
                       {[
-                        { icon: FiHeart, title: "View All Details", desc: "Complete profile details with contact info" },
+                        { icon: FiStar, title: "View Kundali Details", desc: "Get your kundali checked", action: "kundali" },
                         { icon: HiOutlineSparkles, title: "Marriage Help", desc: "AI-powered marriage planning assistance", action: "marriage" },
                         { icon: FiTag, title: "Extra Discounts", desc: "Up to 25% off premium wedding services", action: "wedding" },
                       ].map((feature, index) => (
@@ -1698,6 +1693,7 @@ const Watchlist = () => {
                             {feature.action && (
                               <button
                                 onClick={() => {
+                                  if (feature.action === "kundali") setOpenKundali(true);
                                   if (feature.action === "marriage") setOpenMarriage(true);
                                   if (feature.action === "wedding") setOpenWedding(true);
                                 }}
@@ -1976,9 +1972,9 @@ const Watchlist = () => {
                   {/* FEATURES GRID */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mb-8">
                     {[
-                      { icon: FiBookmark, title: "Watchlist Access", description: "Save and manage profiles" },
+                      { icon: FiStar, title: "Kundali Analysis", description: "View your Kundali details" },
                       { icon: HiOutlineSparkles, title: "Marriage Planning", description: "Proper guidance" },
-                      { icon: FiCalendar, title: "Extra Discount", description: "Get up to 15% off on wedding services" }
+                      { icon: FiTag, title: "Extra Discount", description: "Get up to 15% off on wedding services" }
                     ].map((feature, index) => (
                       <div key={index} className="bg-gray-50 p-5 sm:p-6 rounded-xl border border-gray-200 hover:shadow-md transition">
                         <div className="w-10 h-10 bg-rose-50 rounded-lg flex items-center justify-center mb-3">
@@ -2011,8 +2007,8 @@ const Watchlist = () => {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-4">
                           {[
                             "Access all partner information",
+                            "View your Kundali details",
                             "Extra discount on wedding services",
-                            "Add to Watchlist for Shortlisting",
                             "Marriage Planning Assistance"
                           ].map((item, i) => (
                             <div key={i} className="flex items-center gap-2">
@@ -2113,6 +2109,34 @@ const Watchlist = () => {
             </div>
             <div className="max-h-[70vh] sm:max-h-[65vh] overflow-y-auto">
               <WeddingServices />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Kundali Modal */}
+      {openKundali && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white w-full max-w-4xl rounded-xl shadow-2xl overflow-hidden">
+            <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-rose-50 to-pink-50">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-md bg-gradient-to-r from-rose-500 to-pink-600">
+                    <FiStar className="text-white text-lg" />
+                  </div>
+                  <h2 className="text-lg sm:text-xl font-bold text-gray-900">Kundali Details</h2>
+                </div>
+                <button onClick={() => setOpenKundali(false)} className="p-2 rounded-full hover:bg-gray-100 transition-colors">
+                  <FiX size={18} className="text-gray-500" />
+                </button>
+              </div>
+            </div>
+            <div className="max-h-[70vh] sm:max-h-[65vh] overflow-y-auto">
+              <Kundali
+                name={myProfile?.personalInfo?.fullName || userData?.name || ""}
+                dob={myProfile?.personalInfo?.dob || ""}
+                gender={myProfile?.personalInfo?.gender || ""}
+              />
             </div>
           </div>
         </div>

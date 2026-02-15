@@ -23,7 +23,8 @@ from app.routes import (
     notification_admin_route,
     verification_admin_route,
     chatbot_route,
-    similarity_route
+    similarity_route,
+    kundali_route
 )
 
 load_dotenv()
@@ -61,6 +62,7 @@ app.include_router(notification_admin_route.router)
 app.include_router(verification_admin_route.router)
 app.include_router(chatbot_route.router)
 app.include_router(similarity_route.router, prefix="/profile")
+app.include_router(kundali_route.router)
 
 @app.get("/")
 async def root():

@@ -98,9 +98,10 @@ const Home = () => {
         "Manage Profile",
         "Partner Recommendations",
         "View Limited Partner Details",
+        "Interest Sending and Chatting",
         "Apply Filters",
         "Give feedbacks",
-        "Chatbot Support and Chatting with Matches",
+        "Chatbot Support",
       ]
     },
     {
@@ -110,6 +111,7 @@ const Home = () => {
         "Contact Partner Directly",
         "Add to Watchlist for Shortlisting",
         "View all Partner Data",
+        "View your Kundali details",
         "Marriage Planning Assistance",
         "Extra Discounts on Wedding Services",
       ],
@@ -196,10 +198,10 @@ const Home = () => {
   return (
     <>
       <Navbar />
-      <div className="pt-10">
+      <div className="pt-14 md:pt-10">
         {/* Hero Banner */}
         <section
-          className="relative min-h-[90vh] flex items-center justify-center overflow-hidden"
+          className="relative min-h-[60vh] md:min-h-[90vh] flex items-center justify-center overflow-hidden"
           style={{
             backgroundImage: "linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('/3.2.jpg')",
             backgroundSize: "cover",
@@ -207,7 +209,7 @@ const Home = () => {
             backgroundAttachment: "fixed"
           }}
         >
-          <div className="relative container mx-auto px-4 py-20">
+          <div className="relative container mx-auto px-4 py-8 md:py-20">
             <div className="max-w-4xl mx-auto text-center">
               <div className="inline-flex items-center gap-3 bg-white/10 backdrop-blur-sm text-white px-6 py-3 rounded-full mb-8">
                 <Heart className="w-6 h-6 animate-pulse text-red-500" />

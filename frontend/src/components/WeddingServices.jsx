@@ -109,7 +109,7 @@ const WeddingServices = () => {
         >
             {/* HEADER */}
             <div className="flex items-center gap-3 mb-5">
-                <div className="p-2 bg-gradient-to-br from-[#EA7B7B] to-[#D25353] rounded-xl shadow-sm">
+                <div className="p-2 bg-gradient-to-r from-rose-500 to-pink-600 rounded-xl shadow-sm">
                     <FiTag className="text-white" size={22} />
                 </div>
                 <div>
