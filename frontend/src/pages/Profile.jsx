@@ -1221,6 +1221,7 @@ const Profile = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [activeSection, setActiveSection] = useState("self");
+  const [showKundali, setShowKundali] = useState(false);
 
   // ========== NEW EDIT STATES ==========
   const [isEditingSelf, setIsEditingSelf] = useState(false);
@@ -4287,7 +4288,7 @@ const Profile = () => {
       <Chatbot />
       <Footer />
       {/* Kundali Section - Auto display based on profile data */}
-      {personalInfo.dob && personalInfo.fullName && (
+      {showKundali && personalInfo.dob && personalInfo.fullName && (
         <Kundali
           name={personalInfo.fullName?.trim() || user?.name || ""}
           dob={personalInfo.dob || ""}
