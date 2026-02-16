@@ -248,7 +248,7 @@ const Chatbot = () => {
   const [categoryQuestions, setCategoryQuestions] = useState([]);
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
   const messagesEndRef = useRef(null);
-  
+
   const location = useLocation();
   const navigate = useNavigate();
   let userProfile = null;
@@ -282,11 +282,11 @@ const Chatbot = () => {
       const token = localStorage.getItem('token') || location.state?.token || userProfile?.token;
 
       // Get membership from multiple possible sources
-      const membership = userProfile?.membershipPlan || 
-                        userProfile?.membershipType || 
-                        userProfile?.membership || 
-                        localStorage.getItem('membership') || 
-                        'free';
+      const membership = userProfile?.membershipPlan ||
+        userProfile?.membershipType ||
+        userProfile?.membership ||
+        localStorage.getItem('membership') ||
+        'free';
 
       if (userEmailValue && token) {
         setIsLoggedIn(true);
@@ -327,7 +327,7 @@ const Chatbot = () => {
         setSessionId(response.data.sessionId);
 
         let welcomeMessage = response.data.welcomeMessage;
-        
+
         // Add membership info for logged-in users
         if (isLoggedIn) {
           welcomeMessage += `\n\nYou are on **${userMembership.toUpperCase()}** plan.`;
@@ -427,7 +427,7 @@ const Chatbot = () => {
   // Fetch questions from backend for personalized categories
   const fetchCategoryQuestions = async (category) => {
     if (!category) return [];
-    
+
     // For general categories, return from static dataset
     if (['features', 'payment', 'verification'].includes(category)) {
       return STATIC_DATASET[category]?.questions.map(q => ({
@@ -453,7 +453,7 @@ const Chatbot = () => {
         const response = await axios.get(`${BACKEND_URL}/api/chat/questions/${category}`, {
           params: { user_email: userEmail }
         });
-        
+
         return response.data.questions.map(q => ({
           id: q.id,
           text: q.question,
@@ -465,18 +465,18 @@ const Chatbot = () => {
         }));
       } catch (error) {
         console.error('Failed to fetch questions:', error);
-        
+
         // Handle 401 specifically
         if (error.response?.status === 401) {
           setShowLoginPrompt(true);
         }
-        
+
         return [];
       } finally {
         setIsLoadingQuestions(false);
       }
     }
-    
+
     return [];
   };
 
@@ -564,7 +564,7 @@ const Chatbot = () => {
 
       // Handle specific error status codes
       let errorMessage = "I'm sorry, I'm having trouble connecting right now. Please try again in a moment.";
-      
+
       if (error.response?.status === 401) {
         errorMessage = "**Login Required**\n\nPlease login to access this information.";
         setShowLoginPrompt(true);
@@ -721,21 +721,21 @@ const Chatbot = () => {
                 {messages.map((message) => (
                   <div
                     key={message.id}
-                    className={`flex ${message.sender === 'user' ? 'justify-start' : 'justify-end'}`}
+                    className={`flex items-start gap-2 ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
                     {message.sender === 'bot' && (
                       <div
-                        className="w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center mr-2 flex-shrink-0 mt-1"
+                        className="w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center flex-shrink-0"
                         style={{ backgroundColor: `${themeColor}15` }}
                       >
                         <HeartIcon />
                       </div>
                     )}
-                    <div className={`max-w-[85%] md:max-w-[80%] ${message.sender === 'user' ? 'order-1' : 'order-2'}`}>
+                    <div className={message.sender === 'user' ? 'max-w-[85%]' : 'max-w-[78%]'}>
                       <div
                         className={`px-3.5 py-2.5 md:px-4 md:py-3 rounded-2xl ${message.sender === 'user'
                           ? 'text-white rounded-tr-none'
-                          : 'bg-gray-100 text-gray-800 rounded-tl-none'
+                          : 'bg-gray-100 text-gray-800 rounded-tl-none px-3 py-2'
                           }`}
                         style={message.sender === 'user' ? { backgroundColor: themeColor } : {}}
                       >
@@ -771,14 +771,14 @@ const Chatbot = () => {
                   </div>
                 ))}
                 {isTyping && (
-                  <div className="flex justify-start">
+                  <div className="flex items-start gap-2 justify-start">
                     <div
-                      className="w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center mr-2"
+                      className="w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center flex-shrink-0"
                       style={{ backgroundColor: `${themeColor}15` }}
                     >
                       <HeartIcon />
                     </div>
-                    <div className="bg-gray-100 px-4 py-3.5 md:px-5 md:py-3.5 rounded-2xl rounded-tl-none">
+                    <div className="max-w-[78%] bg-gray-100 px-4 py-3.5 md:px-5 md:py-3.5 rounded-2xl rounded-tl-none">
                       <div className="flex space-x-1.5">
                         <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-gray-400 rounded-full"
                           style={{ animation: 'bounce 1s infinite', animationDelay: '0ms' }}></div>
