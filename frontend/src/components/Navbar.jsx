@@ -44,6 +44,7 @@ const Navbar = memo(() => {
 
         const handleScroll = () => {
             setScrolled(window.scrollY > 20);
+            setIsMobileMenuOpen(false);
         };
 
         checkScreenSize();
@@ -59,6 +60,23 @@ const Navbar = memo(() => {
             window.removeEventListener("scroll", handleScroll);
         };
     }, []);
+
+    useEffect(() => {
+        const handleOutsideClick = (e) => {
+            if (isMobileMenuOpen) {
+                setIsMobileMenuOpen(false);
+            }
+        };
+
+        document.addEventListener("touchstart", handleOutsideClick);
+        document.addEventListener("mousedown", handleOutsideClick);
+
+        return () => {
+            document.removeEventListener("touchstart", handleOutsideClick);
+            document.removeEventListener("mousedown", handleOutsideClick);
+        };
+    }, [isMobileMenuOpen]);
+
 
     useEffect(() => {
         setIsMobileMenuOpen(false);

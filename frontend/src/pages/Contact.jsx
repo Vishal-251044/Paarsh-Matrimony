@@ -45,6 +45,12 @@ const Contact = () => {
             return;
         }
 
+        if (formData.phone.length !== 10) {
+            toast.dismiss();
+            toast.error("Phone number must be 10 digits");
+            return;
+        }
+
         setIsSubmitting(true);
         toast.dismiss();
         const toastId = toast.loading("Sending your message...");
@@ -227,7 +233,7 @@ const Contact = () => {
                             />
                             <FAQItem
                                 question="Is registration free?"
-                                answer="Yes, basic registration is free."
+                                answer="No, registration is free but premium plan is paid."
                             />
                             <FAQItem
                                 question="How can I search matches?"

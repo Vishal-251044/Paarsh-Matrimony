@@ -3,7 +3,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import {
     Calculator, TrendingUp, Percent, Users,
-    DollarSign, Calendar, BarChart3, PieChart,
+    IndianRupee, Calendar, BarChart3, PieChart,
     Target, RefreshCw, Download, FileText,
     CreditCard, Crown, Activity, TrendingDown,
     ChevronUp, ChevronDown, Info, Filter
@@ -274,7 +274,7 @@ const AdminFinance = () => {
                                 Premium Price (₹/year)
                             </label>
                             <div className="relative">
-                                <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                <IndianRupee className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                                 <input
                                     type="number"
                                     min="0"
@@ -389,7 +389,7 @@ const AdminFinance = () => {
                                 Average Service Revenue (₹)
                             </label>
                             <div className="relative">
-                                <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                <IndianRupee className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                                 <input
                                     type="number"
                                     min="0"
@@ -434,7 +434,7 @@ const AdminFinance = () => {
             {hasInputs && (
                 <div className="bg-white rounded-lg md:rounded-xl p-4 md:p-6 border shadow-sm">
                     <h2 className="text-lg md:text-xl font-bold mb-6 flex items-center gap-2">
-                        <DollarSign className="w-5 h-5" style={{ color: red400 }} />
+                        <IndianRupee className="w-5 h-5" style={{ color: red400 }} />
                         Current Revenue Calculation
                     </h2>
 

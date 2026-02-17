@@ -2,6 +2,16 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import os
+import logging
+
+# Only show ERROR logs, suppress INFO and WARNING
+logging.basicConfig(level=logging.ERROR)
+
+# Suppress specific loggers
+logging.getLogger("uvicorn").setLevel(logging.ERROR)
+logging.getLogger("uvicorn.access").setLevel(logging.ERROR)
+logging.getLogger("uvicorn.error").setLevel(logging.ERROR)
+logging.getLogger("fastapi").setLevel(logging.ERROR)
 
 from app.routes import (
     auth_route,
@@ -24,7 +34,11 @@ from app.routes import (
     verification_admin_route,
     chatbot_route,
     similarity_route,
-    kundali_route
+    kundali_route,
+    activity_route,
+    chat_route,
+    chat_websocket,
+    activityuserdata_route
 )
 
 load_dotenv()
@@ -42,6 +56,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Include all routers (same as before)
 app.include_router(auth_route.router)
 app.include_router(profile_route.router)
 app.include_router(payment_route.router)
@@ -63,6 +78,10 @@ app.include_router(verification_admin_route.router)
 app.include_router(chatbot_route.router)
 app.include_router(similarity_route.router, prefix="/profile")
 app.include_router(kundali_route.router)
+app.include_router(activity_route.router)
+app.include_router(chat_route.router)
+app.include_router(chat_websocket.router)
+app.include_router(activityuserdata_route.router)
 
 @app.get("/")
 async def root():
@@ -70,4 +89,12 @@ async def root():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("app.main:app", host="0.0.0.0", port=PORT, reload=True)
+    # Run with suppressed logs
+    uvicorn.run(
+        "app.main:app", 
+        host="0.0.0.0", 
+        port=PORT, 
+        reload=True,
+        log_level="error",
+        access_log=False
+    )

@@ -1560,7 +1560,7 @@ const Watchlist = () => {
       <div className="min-h-screen bg-gray-50 pt-16">
         {/* Hero Header - matching Matches page */}
         <div className="bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 text-white">
-          <div className="max-w-7xl mx-auto px-4 py-6 md:py-7">
+          <div className="max-w-7xl mx-auto px-4 py-6 md:py-5">
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">

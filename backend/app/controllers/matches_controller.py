@@ -69,19 +69,20 @@ class MatchesController:
         if user_gender == other_gender:
             return 0.0
         
-        # 2. Strict: Must have same religion
-        user_religion = self._clean_text(user_profile.get('religionInfo', {}).get('religion', ''))
+        # 2. Religion Preference Check (Partner Preference vs Other Self)
+        user_pref_religion = self._clean_text(user_profile.get('partnerInfo', {}).get('preferredReligion', ''))
         other_religion = self._clean_text(other_profile.get('religionInfo', {}).get('religion', ''))
-        
-        if not user_religion or not other_religion or user_religion != other_religion:
-            return 0.0
-        
-        # 3. Strict: Must have same caste (if user specified caste)
-        user_caste = self._clean_text(user_profile.get('religionInfo', {}).get('caste', ''))
+
+        if user_pref_religion and user_pref_religion not in ['', 'any', 'no preference', 'none', 'doesnt matter', 'no']:
+            if not other_religion or other_religion != user_pref_religion:
+                return 0.0
+
+        # 3. Caste Preference Check (Allow Inter-Caste)
+        user_pref_caste = self._clean_text(user_profile.get('partnerInfo', {}).get('preferredCaste', ''))
         other_caste = self._clean_text(other_profile.get('religionInfo', {}).get('caste', ''))
-        
-        if user_caste and user_caste not in ['', 'any', 'no preference', 'none', 'doesnt matter', 'no']:
-            if not other_caste or other_caste in ['', 'any', 'no preference', 'none'] or user_caste != other_caste:
+
+        if user_pref_caste and user_pref_caste not in ['', 'any', 'no preference', 'none', 'doesnt matter', 'no', 'intercaste']:
+            if not other_caste or other_caste != user_pref_caste:
                 return 0.0
         
         # 4. Strict: Must have same state
@@ -1164,11 +1165,11 @@ class MatchesController:
                 return []
             
             # Get strict rule values
-            user_religion = self._clean_text(user_profile.get('religionInfo', {}).get('religion', ''))
-            user_caste = self._clean_text(user_profile.get('religionInfo', {}).get('caste', ''))
+            user_pref_religion = self._clean_text(user_profile.get('partnerInfo', {}).get('preferredReligion', ''))
+            user_pref_caste = self._clean_text(user_profile.get('partnerInfo', {}).get('preferredCaste', ''))
             user_state = self._clean_text(user_profile.get('locationInfo', {}).get('state', ''))
             
-            if not user_religion or not user_state:
+            if not user_pref_religion or not user_state:
                 print(f"User missing required fields (religion/state): {user_email}")
                 return []
             
@@ -1193,14 +1194,16 @@ class MatchesController:
                 profile_caste = self._clean_text(profile.get('religionInfo', {}).get('caste', ''))
                 profile_state = self._clean_text(profile.get('locationInfo', {}).get('state', ''))
                 
-                # 1. Same religion
-                if not profile_religion or profile_religion != user_religion:
-                    continue
-                
-                # 2. Same caste (if user specified)
-                if user_caste and user_caste not in ['', 'any', 'no preference', 'none', 'doesnt matter', 'no']:
-                    if not profile_caste or profile_caste in ['', 'any', 'no preference', 'none'] or profile_caste != user_caste:
+                # 1. Religion Preference
+                if user_pref_religion and user_pref_religion not in ['', 'any', 'no preference', 'none', 'doesnt matter', 'no']:
+                    if not profile_religion or profile_religion != user_pref_religion:
                         continue
+
+                # 2. Caste Preference (Allow Inter-Caste)
+                if user_pref_caste and user_pref_caste not in ['', 'any', 'no preference', 'none', 'doesnt matter', 'no', 'intercaste']:
+                    if not profile_caste or profile_caste != user_pref_caste:
+                        continue
+
                 
                 # 3. Same state
                 if not profile_state or profile_state != user_state:
