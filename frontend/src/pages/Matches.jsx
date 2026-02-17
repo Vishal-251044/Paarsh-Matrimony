@@ -1799,8 +1799,8 @@ const Matches = () => {
                         {match.whatsappNumber && (
                           <a
                             href={`https://wa.me/${match.whatsappNumber.replace(/\D/g, '').length === 10
-                                ? '91' + match.whatsappNumber.replace(/\D/g, '')
-                                : match.whatsappNumber.replace(/\D/g, '')
+                              ? '91' + match.whatsappNumber.replace(/\D/g, '')
+                              : match.whatsappNumber.replace(/\D/g, '')
                               }`}
                             target="_blank"
                             rel="noopener noreferrer"
@@ -2059,8 +2059,8 @@ const Matches = () => {
                         {match.whatsappNumber && (
                           <a
                             href={`https://wa.me/${match.whatsappNumber.replace(/\D/g, '').length === 10
-                                ? '91' + match.whatsappNumber.replace(/\D/g, '')
-                                : match.whatsappNumber.replace(/\D/g, '')
+                              ? '91' + match.whatsappNumber.replace(/\D/g, '')
+                              : match.whatsappNumber.replace(/\D/g, '')
                               }`}
                             target="_blank"
                             rel="noopener noreferrer"
@@ -3306,7 +3306,7 @@ const Matches = () => {
                         : 'bg-white text-gray-800'} rounded-2xl px-3 py-2 md:px-4 md:py-3 shadow-sm ${isTemp ? 'opacity-70' : ''}`}>
                         <p className="text-xs md:text-sm break-words">{message.content}</p>
                         <div className={`text-[10px] md:text-xs mt-1 ${isOwn ? 'text-white/70' : 'text-gray-400'} flex items-center justify-end gap-1`}>
-                          {formatTimestamp(message.created_at)}
+                          {/* Time removed */}
                           {isOwn && message.read && <FaCheckDouble className="text-[10px] md:text-xs" />}
                           {isOwn && !message.read && <FiCheck className="text-[10px] md:text-xs" />}
                         </div>
