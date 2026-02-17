@@ -1551,48 +1551,49 @@ const Matches = () => {
     if (!timestamp) return '';
 
     try {
+      // Parse the timestamp and ensure it's treated as UTC
       const date = new Date(timestamp);
+
+      // Get current time in UTC
       const now = new Date();
 
-      // Get UTC timestamps for accurate comparison (server always uses UTC)
-      const utcTime = Date.UTC(
+      // Create UTC timestamps for both dates
+      const utcDate = new Date(Date.UTC(
         date.getUTCFullYear(),
         date.getUTCMonth(),
         date.getUTCDate(),
         date.getUTCHours(),
         date.getUTCMinutes(),
         date.getUTCSeconds()
-      );
+      ));
 
-      const nowUTC = Date.UTC(
+      const utcNow = new Date(Date.UTC(
         now.getUTCFullYear(),
         now.getUTCMonth(),
         now.getUTCDate(),
         now.getUTCHours(),
         now.getUTCMinutes(),
         now.getUTCSeconds()
-      );
+      ));
 
-      const diffMs = nowUTC - utcTime;
-      const diffMins = Math.floor(diffMs / 60000);
-      const diffHours = Math.floor(diffMs / 3600000);
-      const diffDays = Math.floor(diffMs / 86400000);
+      // Calculate difference in milliseconds
+      const diffMs = utcNow - utcDate;
+      const diffMins = Math.floor(diffMs / (1000 * 60));
+      const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-      // For very recent messages (less than 1 minute)
+      // For debugging - log the timestamps
+      console.log('Message timestamp (UTC):', utcDate.toISOString());
+      console.log('Current time (UTC):', utcNow.toISOString());
+      console.log('Difference (minutes):', diffMins);
+
       if (diffMins < 1) return 'Just now';
-
-      // For messages within last hour
       if (diffMins < 60) return `${diffMins}m ago`;
-
-      // For messages within last 24 hours
       if (diffHours < 24) return `${diffHours}h ago`;
-
-      // For messages within last 7 days
       if (diffDays < 7) return `${diffDays}d ago`;
 
-      // For older messages, show actual date in user's local format
-      // This part can use local time since it's just displaying the date
-      return date.toLocaleDateString("en-IN", {
+      // For older messages, show the actual date
+      return utcDate.toLocaleDateString("en-IN", {
         day: "2-digit",
         month: "short",
         year: "numeric"

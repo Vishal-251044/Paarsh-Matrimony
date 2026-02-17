@@ -70,6 +70,9 @@ async def signup(user: UserCreate):
         result = await db.users.insert_one(user_doc)
         user_id = str(result.inserted_id)
 
+        # ✅ Remove OTP after successful signup
+        await db.email_otps.delete_many({"email": user.email})
+
         token = create_access_token({"user_id": user_id})
 
         return {
@@ -468,10 +471,8 @@ async def verify_otp(email: str, otp: str):
         if record["otp"] != otp:
             raise HTTPException(status_code=400, detail="Invalid OTP")
 
-        await db.email_otps.update_one(
-            {"_id": record["_id"]},
-            {"$set": {"verified": True}}
-        )
+        # ✅ Delete OTP after successful verification
+        await db.email_otps.delete_one({"_id": record["_id"]})
 
         return {"message": "OTP verified successfully"}
     
