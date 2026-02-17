@@ -104,61 +104,6 @@ const AppContent = () => {
     };
   }, []);
 
-  /* ---------------- BLOCK REFRESH KEYS ---------------- */
-  useEffect(() => {
-    const blockRefresh = (e) => {
-      if (
-        e.key === "F5" ||
-        (e.ctrlKey && e.key.toLowerCase() === "r") ||
-        (e.metaKey && e.key.toLowerCase() === "r")
-      ) {
-        e.preventDefault();
-      }
-    };
-
-    window.addEventListener("keydown", blockRefresh);
-    return () => window.removeEventListener("keydown", blockRefresh);
-  }, []);
-
-  /* ---------------- MOBILE PULL REFRESH BLOCK ---------------- */
-  useEffect(() => {
-    let startY = 0;
-
-    const handleTouchStart = (e) => {
-      startY = e.touches[0].clientY;
-    };
-
-    const handleTouchMove = (e) => {
-      const currentY = e.touches[0].clientY;
-      const diffY = currentY - startY;
-
-      // If user is at top and pulling down more than 10px
-      if (window.scrollY === 0 && diffY > 10) {
-        e.preventDefault(); // block refresh
-      }
-    };
-
-    document.addEventListener("touchstart", handleTouchStart, {
-      passive: false,
-    });
-    document.addEventListener("touchmove", handleTouchMove, {
-      passive: false,
-    });
-
-    return () => {
-      document.removeEventListener("touchstart", handleTouchStart);
-      document.removeEventListener("touchmove", handleTouchMove);
-    };
-  }, []);
-
-  /* ---------------- PREVENT BACK NAVIGATION ---------------- */
-  useEffect(() => {
-    window.history.pushState(null, "", window.location.href);
-    window.onpopstate = () => {
-      window.history.pushState(null, "", window.location.href);
-    };
-  }, []);
-
   /* ---------------- SAVE & RESTORE ROUTE ---------------- */
   useEffect(() => {
     const savedRoute = sessionStorage.getItem("lastRoute");

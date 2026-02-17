@@ -9,12 +9,6 @@ body {
   background-color: oklch(97.1% 0.014 343.198);
 }
 
-html,
-body {
-  overscroll-behavior: none;
-  touch-action: pan-x pan-y;
-}
-
 /* Simple Matrimony-Themed Toast Notifications */
 .Toastify__toast-container {
   font-family: 'Poppins', sans-serif;

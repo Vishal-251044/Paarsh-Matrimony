@@ -48,7 +48,6 @@ const Navbar = memo(() => {
         };
 
         checkScreenSize();
-        handleScroll();
 
         window.addEventListener("storage", handleStorageChange);
         window.addEventListener("resize", checkScreenSize);
@@ -63,7 +62,8 @@ const Navbar = memo(() => {
 
     useEffect(() => {
         const handleOutsideClick = (e) => {
-            if (isMobileMenuOpen) {
+            const sidebar = document.getElementById("mobile-sidebar");
+            if (sidebar && !sidebar.contains(e.target) && isMobileMenuOpen) {
                 setIsMobileMenuOpen(false);
             }
         };
@@ -76,7 +76,6 @@ const Navbar = memo(() => {
             document.removeEventListener("mousedown", handleOutsideClick);
         };
     }, [isMobileMenuOpen]);
-
 
     useEffect(() => {
         setIsMobileMenuOpen(false);
@@ -148,7 +147,9 @@ const Navbar = memo(() => {
                             transition-all duration-300
                         "
                         style={{ fontFamily: "'Great Vibes', cursive" }}
-                        onClick={() => navigate("/")}
+                        onClick={() => {
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
                     >
                         <span className="relative inline-block">
                             Paarsh Matrimony
@@ -328,6 +329,7 @@ const Navbar = memo(() => {
 
             {/* Mobile & Tablet Sidebar */}
             <div
+                id="mobile-sidebar"
                 className={`
                     fixed inset-y-0 right-0 z-40
                     w-64 bg-white/95 backdrop-blur-xl

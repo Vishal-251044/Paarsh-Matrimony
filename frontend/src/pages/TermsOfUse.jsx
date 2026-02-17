@@ -18,6 +18,7 @@ import {
   FiFlag,
   FiClipboard,
 } from "react-icons/fi";
+import { CiPhone } from "react-icons/ci";
 
 const TermsOfUse = () => {
   return (
@@ -196,7 +197,7 @@ const TermsOfUse = () => {
                   <div className="bg-white rounded-xl p-4 border border-gray-200">
                     <div className="flex items-center gap-3 mb-2">
                       <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center">
-                        <FiFlag className="text-green-500" />
+                        <CiPhone className="text-green-500" />
                       </div>
                       <div>
                         <p className="font-medium text-gray-700">Phone</p>

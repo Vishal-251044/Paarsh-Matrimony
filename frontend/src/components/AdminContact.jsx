@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
+import Swal from 'sweetalert2';
+import 'sweetalert2/dist/sweetalert2.min.css';
 import {
     Trash2, Mail, Phone, User, MessageCircle,
     Search, Calendar, Filter, ChevronDown, ChevronUp,
@@ -139,11 +141,18 @@ const AdminContact = () => {
             return;
         }
 
-        const confirmDelete = window.confirm(
-            `Are you sure you want to delete ${selectedItems.length} contact message${selectedItems.length > 1 ? 's' : ''}?`
-        );
+        const confirmDelete = await Swal.fire({
+            title: 'Are you sure?',
+            text: `Are you sure you want to delete ${selectedItems.length} contact message${selectedItems.length > 1 ? 's' : ''}?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel',
+        });
 
-        if (!confirmDelete) return;
+        if (!confirmDelete.isConfirmed) return;
 
         const loadingToast = toast.loading(`Deleting ${selectedItems.length} message${selectedItems.length > 1 ? 's' : ''}...`);
 

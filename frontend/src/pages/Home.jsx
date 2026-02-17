@@ -599,14 +599,26 @@ const Home = () => {
                 </div>
 
                 {/* CTA Button */}
-                <div className="mt-12 md:mt-16 px-4">
-                  <button className="px-6 py-3 md:px-8 md:py-3 bg-gradient-to-r from-[oklch(70.4%_0.191_22.216)] to-[oklch(60%_0.2_22.216)] text-white rounded-full font-semibold hover:shadow-xl hover:scale-105 transition-all duration-300 flex items-center gap-2 mx-auto text-sm md:text-base">
+                <div className="mt-12 md:mt-16 px-4 text-center">
+                  <p
+                    className="
+      text-2xl md:text-3xl font-bold 
+      text-transparent bg-clip-text bg-gradient-to-r 
+      from-[oklch(70.4%_0.191_22.216)] to-[oklch(60%_0.2_22.216)]
+      cursor-pointer
+      relative
+      inline-block
+      transition-all duration-300
+    "
+                  >
                     Start Your Journey Today
-                  </button>
-                  <p className="text-gray-400 text-xs md:text-sm mt-3 md:mt-4">
+                    <span className="absolute -bottom-1 left-0 w-full h-1 bg-[oklch(70.4%_0.191_22.216)] scale-x-0 origin-left transition-transform duration-300 group-hover:scale-x-100"></span>
+                  </p>
+                  <p className="text-gray-400 text-sm md:text-base mt-3 md:mt-4">
                     Join thousands finding their perfect match
                   </p>
                 </div>
+
               </div>
             </div>
           </div>

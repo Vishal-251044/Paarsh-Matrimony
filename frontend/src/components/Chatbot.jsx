@@ -633,12 +633,6 @@ const Chatbot = () => {
 
   const userStatus = getUserData();
 
-  // FIXED: Show chatbot to ALL logged-in users, not just premium
-  // Only hide if not logged in at all
-  if (!userStatus.isLoggedIn) {
-    return null;
-  }
-
   const showBackButton = activeCategory !== null;
   const currentQuestions = activeCategory ? categoryQuestions : categories.filter(cat => !cat.requiresLogin || isLoggedIn);
 

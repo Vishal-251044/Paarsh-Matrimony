@@ -278,13 +278,17 @@ async def verify_email_exists(email: str) -> bool:
                 data = response.json()
                 
                 status = data.get("status")
-                if status == "valid":
+
+                if status in ["valid", "catch-all"]:
                     return True
-                elif status == "catch-all":
-                    # Catch-all domains accept all emails
-                    return True
-                else:
+                
+                # Only block clearly bad emails
+                if status in ["invalid", "spamtrap", "abuse", "do_not_mail", "unknown"]:
                     return False
+                
+                # Fallback allow
+                return True
+
             else:
                 print(f"API error: {response.status_code}")
                 return True  # Allow on API error to prevent blocking legitimate users
