@@ -14,6 +14,9 @@ export default function LoginPage() {
   const [isSignup, setIsSignup] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [loading, setLoading] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [otp, setOtp] = useState("");
+  const existingUser = localStorage.getItem("user");
 
   // Matrimony theme: elegant rose gold / blush
   const primaryColor = "oklch(70.4% 0.191 22.216)"; // warm peach/pink
@@ -29,30 +32,102 @@ export default function LoginPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Trim email first
+    const trimmedEmail = form.email.trim();
+
+    // Simple email validation for signup
+    if (isSignup) {
+      // Check if email ends with @gmail.com
+      if (!trimmedEmail.endsWith('@gmail.com')) {
+        toast.error("Only Gmail addresses are allowed");
+        return;
+      }
+
+      // Check if there's any text before @gmail.com
+      const localPart = trimmedEmail.replace('@gmail.com', '');
+      if (!localPart || localPart.length === 0) {
+        toast.error("Please enter a valid Gmail address");
+        return;
+      }
+    }
+
     if (form.password.length < 8) {
       toast.error("Password must be at least 8 characters long");
       return;
     }
 
-    setLoading(true);
-    try {
-      const url = isSignup
-        ? `${BACKEND_URL}/auth/signup`
-        : `${BACKEND_URL}/auth/login`;
+    if (existingUser && isSignup) {
+      toast.error("You are already logged in");
+      return;
+    }
 
-      const { data } = await axios.post(url, form);
+    if (isSignup && !otpSent) {
+      // SEND OTP
+      try {
+        setLoading(true);
+        await axios.post(`${BACKEND_URL}/auth/send-otp`, {
+          email: trimmedEmail, // Use trimmed email
+        });
+        toast.success("OTP sent to email");
+        setOtpSent(true);
+      } catch (err) {
+        const msg =
+          err?.response?.data?.detail ||
+          err?.response?.data?.message ||
+          "Failed to send OTP";
 
-      if (!data?.user || !data?.token) {
-        throw new Error("Invalid response from server");
+        toast.error(msg);
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
+    if (isSignup && otpSent) {
+      // VERIFY OTP - Add length check
+      if (otp.length !== 6) {
+        toast.error("Enter valid 6 digit OTP");
+        return;
       }
 
+      try {
+        setLoading(true);
+        await axios.post(`${BACKEND_URL}/auth/verify-otp`, {
+          email: trimmedEmail, // Use trimmed email
+          otp,
+        });
+
+        // AFTER OTP VERIFIED → SIGNUP
+        const { data } = await axios.post(
+          `${BACKEND_URL}/auth/signup`,
+          { ...form, email: trimmedEmail } // Use trimmed email
+        );
+
+        localStorage.setItem("user", JSON.stringify(data.user));
+        localStorage.setItem("token", data.token);
+        toast.success("Signup successful!");
+        navigate("/profile");
+      } catch {
+        toast.error("Invalid OTP");
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
+    // LOGIN FLOW (UNCHANGED)
+    try {
+      setLoading(true);
+      const { data } = await axios.post(`${BACKEND_URL}/auth/login`, {
+        ...form,
+        email: trimmedEmail // Use trimmed email
+      });
       localStorage.setItem("user", JSON.stringify(data.user));
       localStorage.setItem("token", data.token);
-
-      toast.success(isSignup ? "Signup successful!" : "Login successful!");
+      toast.success("Login successful!");
       navigate("/profile");
-    } catch (err) {
-      toast.error(err.response?.data?.detail || "Something went wrong");
+    } catch {
+      toast.error("Login failed");
     } finally {
       setLoading(false);
     }
@@ -76,6 +151,13 @@ export default function LoginPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Handle toggle between login and signup - Reset OTP state
+  const handleToggleMode = () => {
+    setIsSignup(!isSignup);
+    setOtpSent(false);
+    setOtp("");
   };
 
   return (
@@ -144,6 +226,7 @@ export default function LoginPage() {
                   value={form.name}
                   onChange={handleChange}
                   primaryColor={primaryColor}
+                  disabled={otpSent} // Disable after OTP sent
                 />
               )}
 
@@ -155,6 +238,7 @@ export default function LoginPage() {
                 onChange={handleChange}
                 type="email"
                 primaryColor={primaryColor}
+                disabled={otpSent} // Disable after OTP sent
               />
 
               <div className="relative">
@@ -166,11 +250,13 @@ export default function LoginPage() {
                   onChange={handleChange}
                   type={showPassword ? "text" : "password"}
                   primaryColor={primaryColor}
+                  disabled={otpSent} // Disable after OTP sent
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 transition"
+                  disabled={otpSent}
                 >
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
@@ -190,7 +276,18 @@ export default function LoginPage() {
                 </div>
               )}
 
-              {/* BUTTON - elegant matrimony rose */}
+              {isSignup && otpSent && (
+                <InputField
+                  icon={<Lock size={16} style={{ color: primaryColor }} />}
+                  placeholder="Enter 6-digit OTP"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  maxLength={6}
+                  primaryColor={primaryColor}
+                />
+              )}
+
+              {/* BUTTON - elegant matrimony rose with dynamic text */}
               <button
                 disabled={loading}
                 className="
@@ -207,7 +304,7 @@ export default function LoginPage() {
                 {loading
                   ? "Please wait..."
                   : isSignup
-                    ? "Create Account"
+                    ? otpSent ? "Verify OTP" : "Send OTP"
                     : "Sign In"}
               </button>
             </form>
@@ -232,11 +329,11 @@ export default function LoginPage() {
               />
             </div>
 
-            {/* TOGGLE SIGNUP/LOGIN - COMPACT */}
+            {/* TOGGLE SIGNUP/LOGIN - COMPACT with reset */}
             <p className="mt-5 text-xs text-gray-600 text-center">
               {isSignup ? "Already have an account?" : "New to Paarsh?"}
               <button
-                onClick={() => setIsSignup(!isSignup)}
+                onClick={handleToggleMode}
                 className="ml-1.5 font-medium hover:underline transition text-xs"
                 style={{ color: primaryColor }}
               >
@@ -278,36 +375,43 @@ export default function LoginPage() {
 }
 
 /* INPUT COMPONENT - matrimony clean style, smaller */
-function InputField({ icon, primaryColor, ...props }) {
+function InputField({ icon, primaryColor, disabled, ...props }) {
   return (
     <div
-      className="
+      className={`
         flex items-center gap-2
         bg-gray-50
         border border-gray-200
         rounded-lg px-3 py-2
         focus-within:border-opacity-100 focus-within:border-2
         transition-all
-      "
+        ${disabled ? 'opacity-60 bg-gray-100' : ''}
+      `}
       style={{
         focusWithin: { borderColor: primaryColor },
       }}
       onFocusCapture={(e) => {
-        e.currentTarget.style.borderColor = primaryColor;
-        e.currentTarget.style.borderWidth = '2px';
+        if (!disabled) {
+          e.currentTarget.style.borderColor = primaryColor;
+          e.currentTarget.style.borderWidth = '2px';
+        }
       }}
       onBlurCapture={(e) => {
-        e.currentTarget.style.borderColor = '#e5e7eb';
-        e.currentTarget.style.borderWidth = '1px';
+        if (!disabled) {
+          e.currentTarget.style.borderColor = '#e5e7eb';
+          e.currentTarget.style.borderWidth = '1px';
+        }
       }}
     >
       <span className="text-gray-400">{icon}</span>
       <input
         {...props}
         required
+        disabled={disabled}
         className="
           w-full bg-transparent outline-none
           text-xs text-gray-800 placeholder-gray-400
+          disabled:cursor-not-allowed
         "
       />
     </div>

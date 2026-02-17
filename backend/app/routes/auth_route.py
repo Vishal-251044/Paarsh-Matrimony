@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, status
 from app.models.User import UserCreate, UserLogin
 from app.controllers import auth_controller
 from app.controllers.auth_controller import GoogleToken
+from app.models.OTP import OTPRequest, OTPVerify
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
@@ -37,6 +38,15 @@ async def set_password_route(payload: dict):
         )
 
     return await auth_controller.set_password(email, new_password)
+
+
+@router.post("/send-otp")
+async def send_otp_route(payload: OTPRequest):
+    return await auth_controller.send_otp(payload.email)
+
+@router.post("/verify-otp")
+async def verify_otp_route(payload: OTPVerify):
+    return await auth_controller.verify_otp(payload.email, payload.otp)
 
 
 # ---------------- LOGOUT ----------------

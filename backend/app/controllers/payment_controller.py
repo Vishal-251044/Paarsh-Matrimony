@@ -163,5 +163,4 @@ async def check_membership(email: str):
         }
 
     except Exception as e:
-        print(f"Error checking membership: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))

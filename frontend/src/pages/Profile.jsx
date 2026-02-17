@@ -1537,15 +1537,38 @@ const Profile = () => {
         }
       }
     } catch (error) {
-      console.error("Error checking membership:", error);
+      // Only log error if it's not a 500 for new users
+      if (error.response?.status !== 500) {
+        console.error("Error checking membership:", error);
+      }
     }
   };
 
   useEffect(() => {
     if (user) {
-      checkMembershipStatus();
+      // Calculate overall profile completion percentage
+      const calculateOverallProgress = () => {
+        const selfProgress = calculateSectionCompletion('self');
+        const familyProgress = calculateSectionCompletion('family');
+        const partnerProgress = calculateSectionCompletion('partner');
+        return Math.round((selfProgress + familyProgress + partnerProgress) / 3);
+      };
+
+      const overallProgress = calculateOverallProgress();
+
+      // Only check membership status if profile is at least 80% complete
+      if (overallProgress >= 80) {
+        checkMembershipStatus();
+      } else {
+        // Set default values for incomplete profiles
+        setMembershipPlan("free");
+        setMembershipDates({
+          membershipStartDate: "",
+          membershipExpiryDate: ""
+        });
+      }
     }
-  }, [user]);
+  }, [user, personalInfo, locationInfo, religionInfo, educationInfo, careerInfo, familyInfo, partnerInfo, aboutYourself, aboutFamily]);
 
   useEffect(() => {
     const hash = window.location.hash;
