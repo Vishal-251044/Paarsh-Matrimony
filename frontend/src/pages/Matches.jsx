@@ -1798,7 +1798,10 @@ const Matches = () => {
                         )}
                         {match.whatsappNumber && (
                           <a
-                            href={`https://wa.me/${match.whatsappNumber.replace('+', '')}`}
+                            href={`https://wa.me/${match.whatsappNumber.replace(/\D/g, '').length === 10
+                                ? '91' + match.whatsappNumber.replace(/\D/g, '')
+                                : match.whatsappNumber.replace(/\D/g, '')
+                              }`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center gap-3 bg-white rounded-lg p-3 border border-rose-100 hover:shadow-sm transition"
@@ -2055,7 +2058,10 @@ const Matches = () => {
                         )}
                         {match.whatsappNumber && (
                           <a
-                            href={`https://wa.me/${match.whatsappNumber.replace('+', '')}`}
+                            href={`https://wa.me/${match.whatsappNumber.replace(/\D/g, '').length === 10
+                                ? '91' + match.whatsappNumber.replace(/\D/g, '')
+                                : match.whatsappNumber.replace(/\D/g, '')
+                              }`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center gap-3 md:gap-4 bg-white rounded-lg p-3 md:p-4 border border-rose-100 hover:shadow-sm transition"
