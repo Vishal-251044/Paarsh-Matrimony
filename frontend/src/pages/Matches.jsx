@@ -1548,19 +1548,60 @@ const Matches = () => {
   };
 
   const formatTimestamp = (timestamp) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
+    if (!timestamp) return '';
 
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays < 7) return `${diffDays}d ago`;
+    try {
+      const date = new Date(timestamp);
+      const now = new Date();
 
-    return format(date, 'MMM d, yyyy');
+      // Get UTC timestamps for accurate comparison (server always uses UTC)
+      const utcTime = Date.UTC(
+        date.getUTCFullYear(),
+        date.getUTCMonth(),
+        date.getUTCDate(),
+        date.getUTCHours(),
+        date.getUTCMinutes(),
+        date.getUTCSeconds()
+      );
+
+      const nowUTC = Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate(),
+        now.getUTCHours(),
+        now.getUTCMinutes(),
+        now.getUTCSeconds()
+      );
+
+      const diffMs = nowUTC - utcTime;
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffHours = Math.floor(diffMs / 3600000);
+      const diffDays = Math.floor(diffMs / 86400000);
+
+      // For very recent messages (less than 1 minute)
+      if (diffMins < 1) return 'Just now';
+
+      // For messages within last hour
+      if (diffMins < 60) return `${diffMins}m ago`;
+
+      // For messages within last 24 hours
+      if (diffHours < 24) return `${diffHours}h ago`;
+
+      // For messages within last 7 days
+      if (diffDays < 7) return `${diffDays}d ago`;
+
+      // For older messages, show actual date in user's local format
+      // This part can use local time since it's just displaying the date
+      return date.toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric"
+      });
+
+    } catch (error) {
+      console.error("Error formatting timestamp:", error);
+      return '';
+    }
   };
 
   // Updated Activity Profile Modal - No match score, no online status, no buttons
@@ -2894,6 +2935,9 @@ const Matches = () => {
                                       <h4 className="font-semibold text-gray-800 text-sm md:text-base truncate">{otherParticipant?.name || 'Unknown'}</h4>
                                       <p className="text-xs md:text-sm text-gray-500 truncate">{otherParticipant?.email}</p>
                                     </div>
+                                    <span className="text-[10px] md:text-xs text-gray-400 whitespace-nowrap">
+                                      {lastMessage && formatTimestamp(lastMessage.created_at)}
+                                    </span>
                                   </div>
                                   {lastMessage && (
                                     <p className={`text-xs md:text-sm mt-0.5 md:mt-1 truncate ${unreadCount > 0 ? 'font-semibold text-gray-800' : 'text-gray-600'}`}>
@@ -3302,6 +3346,11 @@ const Matches = () => {
                         ? 'bg-gradient-to-r from-rose-500 to-pink-600 text-white'
                         : 'bg-white text-gray-800'} rounded-2xl px-3 py-2 md:px-4 md:py-3 shadow-sm ${isTemp ? 'opacity-70' : ''}`}>
                         <p className="text-xs md:text-sm break-words">{message.content}</p>
+                        <div className={`text-[10px] md:text-xs mt-1 ${isOwn ? 'text-white/70' : 'text-gray-400'} flex items-center justify-end gap-1`}>
+                          {formatTimestamp(message.created_at)}
+                          {isOwn && message.read && <FaCheckDouble className="text-[10px] md:text-xs" />}
+                          {isOwn && !message.read && <FiCheck className="text-[10px] md:text-xs" />}
+                        </div>
                       </div>
                     </div>
                   );
