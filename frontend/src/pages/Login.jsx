@@ -126,6 +126,7 @@ export default function LoginPage() {
       localStorage.setItem("token", data.token);
       toast.success("Login successful!");
       navigate("/profile");
+      window.location.reload();
     } catch {
       toast.error("Login failed");
     } finally {
@@ -146,6 +147,7 @@ export default function LoginPage() {
 
       toast.success("Google login successful!");
       navigate("/profile");
+      window.location.reload();
     } catch (err) {
       toast.error("Google login failed");
     } finally {
