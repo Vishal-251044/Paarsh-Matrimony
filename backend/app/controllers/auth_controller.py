@@ -256,47 +256,47 @@ async def set_password(email: str, new_password: str):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-# ---------------- EMAIL EXISTENCE VERIFICATION ----------------
-async def verify_email_exists(email: str) -> bool:
-    """Verify if email actually exists using ZeroBounce API"""
-    if not ZEROBOUNCE_API_KEY:
-        print("Warning: ZEROBOUNCE_API_KEY not set, skipping email existence verification")
-        return True  # Skip verification if no API key
+# # ---------------- EMAIL EXISTENCE VERIFICATION ----------------
+# async def verify_email_exists(email: str) -> bool:
+#     """Verify if email actually exists using ZeroBounce API"""
+#     if not ZEROBOUNCE_API_KEY:
+#         print("Warning: ZEROBOUNCE_API_KEY not set, skipping email existence verification")
+#         return True  # Skip verification if no API key
     
-    try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            response = await client.get(
-                "https://api.zerobounce.net/v2/validate",
-                params={
-                    "api_key": ZEROBOUNCE_API_KEY,
-                    "email": email,
-                    "ip_address": "127.0.0.1"
-                }
-            )
+#     try:
+#         async with httpx.AsyncClient(timeout=10.0) as client:
+#             response = await client.get(
+#                 "https://api.zerobounce.net/v2/validate",
+#                 params={
+#                     "api_key": ZEROBOUNCE_API_KEY,
+#                     "email": email,
+#                     "ip_address": "127.0.0.1"
+#                 }
+#             )
             
-            if response.status_code == 200:
-                data = response.json()
+#             if response.status_code == 200:
+#                 data = response.json()
                 
-                status = data.get("status")
+#                 status = data.get("status")
 
-                if status in ["valid", "catch-all"]:
-                    return True
+#                 if status in ["valid", "catch-all"]:
+#                     return True
                 
-                # Only block clearly bad emails
-                if status in ["invalid", "spamtrap", "abuse", "do_not_mail", "unknown"]:
-                    return False
+#                 # Only block clearly bad emails
+#                 if status in ["invalid", "spamtrap", "abuse", "do_not_mail", "unknown"]:
+#                     return False
                 
-                # Fallback allow
-                return True
+#                 # Fallback allow
+#                 return True
 
-            else:
-                print(f"API error: {response.status_code}")
-                return True  # Allow on API error to prevent blocking legitimate users
-    except asyncio.TimeoutError:
-        return True  # Allow on timeout
-    except Exception as e:
-        print(f"Email verification error: {e}")
-        return True  # Allow on error
+#             else:
+#                 print(f"API error: {response.status_code}")
+#                 return True  # Allow on API error to prevent blocking legitimate users
+#     except asyncio.TimeoutError:
+#         return True  # Allow on timeout
+#     except Exception as e:
+#         print(f"Email verification error: {e}")
+#         return True  # Allow on error
 
 
 # ---------------- SEND OTP ----------------
@@ -372,9 +372,8 @@ async def send_otp(email: EmailStr):
                 raise HTTPException(status_code=400, detail="Invalid Gmail address format")
             
         
-        # VERIFY IF EMAIL ACTUALLY EXISTS USING API - FOR ALL DOMAINS
-        if not await verify_email_exists(email):
-            raise HTTPException(status_code=400, detail="Email address does not exist. Please check and try again.")
+        # if not await verify_email_exists(email):
+        #     raise HTTPException(status_code=400, detail="Email address does not exist. Please check and try again.")
         
         # Generate OTP
         otp = str(random.randint(100000, 999999))
