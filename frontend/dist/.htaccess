@@ -1,0 +1,13 @@
+# Enable Rewrite Engine
+RewriteEngine On
+RewriteBase /
+
+# Allow direct access to index.html
+RewriteRule ^index\.html$ - [L]
+
+# If file/folder exists, serve it
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Otherwise, redirect all requests to index.html
+RewriteRule . /index.html [L]
