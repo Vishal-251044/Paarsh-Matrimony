@@ -1566,9 +1566,6 @@ const Matches = () => {
         // On Render/Railway/etc - Add 5.5 hours for IST
         const IST_OFFSET = 5.5 * 60 * 60 * 1000; // 5.5 hours in milliseconds
         adjustedDate = new Date(messageDate.getTime() + IST_OFFSET);
-        console.log('Production mode: Added 5.5 hours to UTC');
-      } else {
-        console.log('Localhost mode: Using original time');
       }
 
       // Calculate difference
@@ -1576,13 +1573,6 @@ const Matches = () => {
       const diffMins = Math.floor(diffMs / (1000 * 60));
       const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
       const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-      // Debug
-      console.log('Hostname:', window.location.hostname);
-      console.log('Original:', messageDate.toISOString());
-      console.log('Adjusted:', adjustedDate.toLocaleString('en-IN'));
-      console.log('Now:', now.toLocaleString('en-IN'));
-      console.log('Diff mins:', diffMins);
 
       if (diffMins < 1) return 'Just now';
       if (diffMins < 60) return `${diffMins} min ago`;
@@ -2398,7 +2388,6 @@ const Matches = () => {
                         </div>
                         <div>
                           <h3 className="font-bold text-gray-800 text-sm md:text-base">Watchlist</h3>
-                          <p className="text-xs md:text-sm text-gray-400">{watchlistEmails.length} saved</p>
                         </div>
                       </div>
                       <button
@@ -3335,7 +3324,16 @@ const Matches = () => {
 
             {/* Chat Messages */}
             <div className="flex-1 overflow-y-auto p-3 md:p-6 bg-gray-50 space-y-3 md:space-y-4">
-              {chatData.messages.length > 0 ? (
+              {messageLoading && chatData.messages.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full py-6 md:py-10">
+                  <div className="relative mb-4">
+                    <div className="animate-spin rounded-full h-12 w-12 md:h-16 md:w-16 border-[3px] border-rose-200 border-t-rose-500"></div>
+                    <FiMessageCircle className="absolute inset-0 m-auto text-rose-400 text-lg md:text-xl animate-pulse" />
+                  </div>
+                  <p className="text-gray-500 text-sm md:text-base font-medium">Loading conversation...</p>
+                  <p className="text-gray-400 text-xs md:text-sm mt-1">Please wait</p>
+                </div>
+              ) : chatData.messages.length > 0 ? (
                 chatData.messages.map((message, index) => {
                   const isOwn = message.sender_email === finalData.userEmail;
                   const isTemp = message._id?.startsWith('temp_');

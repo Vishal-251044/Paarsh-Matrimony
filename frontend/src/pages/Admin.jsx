@@ -8,6 +8,9 @@ import AdminContact from '../components/AdminContact';
 import AdminFinance from '../components/AdminFinance';
 import AdminDashboard from '../components/AdminDashboard';
 import AdminNotification from '../components/AdminNotification';
+import AdminVerification from '../components/AdminVerification';
+import AdminReport from '../components/AdminReport';
+import { MdOutlineReportProblem } from "react-icons/md";
 import {
     Home as HomeIcon,
     LayoutDashboard,
@@ -39,7 +42,6 @@ import {
     Users,
 } from 'lucide-react';
 import { SearchCheck } from 'lucide-react';
-import AdminVerification from '../components/AdminVerification';
 
 const themeColor = "#f87171";
 
@@ -49,6 +51,7 @@ const navSections = [
     { id: 'dashboard', name: 'Dashboard', icon: <LayoutDashboard className="w-5 h-5" />, description: 'Overview of your system metrics and statistics.' },
     { id: 'notification', name: 'Notification', icon: <Bell className="w-5 h-5" />, description: 'Manage and view all system notifications and alerts.' },
     { id: 'verification', name: 'Verification', icon: <SearchCheck className="w-5 h-5" />, description: 'Verify the profiles.' },
+    { id: 'report', name: 'Report', icon: <MdOutlineReportProblem className="w-5 h-5" />, description: 'View and manage users reports.' },
     { id: 'finance', name: 'Finance', icon: <IndianRupee className="w-5 h-5" />, description: 'Track revenue, expenses, and financial reports.' },
     { id: 'services', name: 'Services', icon: <Settings className="w-5 h-5" />, description: 'Manage and configure all platform services.' },
     { id: 'feedback', name: 'Feedback', icon: <MessageSquare className="w-5 h-5" />, description: 'View and respond to user feedback.' },
@@ -1236,6 +1239,8 @@ const Admin = () => {
                         <AdminFinance />
                     ) : activeSection === 'verification' ? (
                         <AdminVerification />
+                    ) : activeSection === 'report' ? (
+                        <AdminReport />
                     ) : activeSection === 'notification' ? (
                         <AdminNotification />
                     ) : (

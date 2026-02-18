@@ -38,7 +38,8 @@ from app.routes import (
     activity_route,
     chat_route,
     chat_websocket,
-    activityuserdata_route
+    activityuserdata_route,
+    report_admin_route
 )
 
 load_dotenv()
@@ -82,6 +83,7 @@ app.include_router(activity_route.router)
 app.include_router(chat_route.router)
 app.include_router(chat_websocket.router)
 app.include_router(activityuserdata_route.router)
+app.include_router(report_admin_route.router)
 
 @app.get("/")
 async def root():
