@@ -1551,36 +1551,55 @@ const Matches = () => {
     if (!timestamp) return '';
 
     try {
-      // Parse the UTC timestamp from database
-      const utcDate = new Date(timestamp);
-
-      // Convert UTC to IST (add 5 hours 30 minutes)
-      // IST is UTC+5:30
-      const istDate = new Date(utcDate.getTime() + (5.5 * 60 * 60 * 1000));
-
-      // Get current time in IST for comparison
+      const messageDate = new Date(timestamp);
       const now = new Date();
-      const nowIST = new Date(now.getTime() + (5.5 * 60 * 60 * 1000));
 
-      // Calculate difference using IST times
-      const diffMs = nowIST - istDate;
+      // Calculate raw difference
+      const rawDiffHours = (now - messageDate) / (1000 * 60 * 60);
+
+      // Store the detected gap in localStorage for future use
+      let timezoneGap = 0;
+
+      // Check if we've already detected and stored the gap
+      const storedGap = localStorage.getItem('timezoneGap');
+
+      if (storedGap) {
+        timezoneGap = parseFloat(storedGap);
+      } else {
+        // Detect gap based on message age
+        // If message is recent but shows large difference, that's our gap
+        if (rawDiffHours > 4 && rawDiffHours < 10) {
+          // Round to nearest half hour (5.0, 5.5, etc.)
+          timezoneGap = Math.round(rawDiffHours * 2) / 2;
+          localStorage.setItem('timezoneGap', timezoneGap);
+          console.log(`Detected and stored timezone gap: ${timezoneGap} hours`);
+        }
+      }
+
+      // Apply the gap adjustment
+      const adjustedDate = new Date(messageDate.getTime() + (timezoneGap * 60 * 60 * 1000));
+
+      // Calculate final difference
+      const diffMs = now - adjustedDate;
       const diffMins = Math.floor(diffMs / (1000 * 60));
       const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
       const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-      console.log('Database UTC:', timestamp);
-      console.log('Converted IST:', istDate.toLocaleString('en-IN'));
-      console.log('Current IST:', nowIST.toLocaleString('en-IN'));
-      console.log('Difference mins:', diffMins);
+      // For debugging
+      console.log({
+        original: timestamp,
+        rawDiff: rawDiffHours.toFixed(2),
+        gap: timezoneGap,
+        adjusted: adjustedDate.toLocaleString('en-IN'),
+        finalDiff: diffMins
+      });
 
-      // For very recent messages
       if (diffMins < 1) return 'Just now';
       if (diffMins < 60) return `${diffMins} min ago`;
       if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
       if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
 
-      // For older messages, show full IST date
-      return istDate.toLocaleString('en-IN', {
+      return adjustedDate.toLocaleString('en-IN', {
         day: '2-digit',
         month: 'short',
         year: 'numeric',
