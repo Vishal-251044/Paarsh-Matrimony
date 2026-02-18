@@ -1240,6 +1240,17 @@ const Profile = () => {
     rating: 0,
     suggestions: ""
   });
+  const [showVerificationBox, setShowVerificationBox] = useState(false);
+  const [verificationData, setVerificationData] = useState({
+    documentType: "",
+    documentImage: null,
+    documentNumber: "",
+    status: null // null, 'pending', 'approved', 'rejected'
+  });
+  const [verificationStatus, setVerificationStatus] = useState(null);
+  const [rejectionReason, setRejectionReason] = useState("");
+  const [canResubmitVerification, setCanResubmitVerification] = useState(false);
+  const [resubmitAfterDate, setResubmitAfterDate] = useState(null);
 
   // ========== ACCORDION STATE ==========
   const [openSections, setOpenSections] = useState({
@@ -1270,7 +1281,8 @@ const Profile = () => {
     payment: false,
     logout: false,
     viewMatches: false,
-    watchlist: false
+    watchlist: false,
+    verification: false
   });
 
   const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
@@ -1751,6 +1763,50 @@ const Profile = () => {
       setLoadingState('feedbackSubmit', false);
     }
   };
+
+  const checkVerificationStatus = async () => {
+    if (!user?.email) return;
+
+    try {
+      const response = await axios.get(
+        `${BACKEND_URL}/verification/status/${user.email}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (response.data) {
+        setVerificationStatus(response.data.status);
+        setRejectionReason(response.data.rejectionReason || "");
+
+        // Handle resubmission eligibility
+        if (response.data.canResubmit !== undefined) {
+          setCanResubmitVerification(response.data.canResubmit);
+        }
+
+        if (response.data.canResubmitAfter) {
+          setResubmitAfterDate(response.data.canResubmitAfter);
+        }
+
+        setVerificationData(prev => ({
+          ...prev,
+          documentType: response.data.documentType || "",
+          documentNumber: response.data.documentNumber || "",
+          status: response.data.status
+        }));
+      }
+    } catch (error) {
+      // 404 means no verification found, which is fine
+      if (error.response?.status !== 404) {
+        console.error("Error checking verification status:", error);
+      }
+    }
+  };
+
+  // Add to useEffect where user is loaded
+  useEffect(() => {
+    if (user) {
+      checkVerificationStatus();
+    }
+  }, [user]);
 
   const handleLogout = async () => {
     setLoadingState('logout', true);
@@ -2683,6 +2739,25 @@ const Profile = () => {
                             <span className="font-medium text-gray-700">Hide Profile</span>
                           </button>
                         )}
+                        {isProfilePublished && (
+                          <button
+                            className="flex items-center gap-3 w-full text-left px-4 py-3 hover:bg-gradient-to-r hover:from-red-50/50 hover:to-transparent transition-all duration-200 disabled:opacity-50 group"
+                            onClick={() => {
+                              setShowVerificationBox(true);
+                              setShowPasswordBox(false);
+                              setShowFeedbackBox(false);
+                              setShowDeleteConfirm(false);
+                              setShowSettings(false);
+                              sidebarRef.current?.scrollTo({ top: 500, behavior: "smooth" });
+                            }}
+                            disabled={loadingStates.verification}
+                          >
+                            <div className="p-1.5 rounded-lg bg-red-50 group-hover:bg-red-100 transition-colors">
+                              <FiCheckCircle className="w-4 h-4 text-red-500" />
+                            </div>
+                            <span className="font-medium text-gray-700">Verify Profile</span>
+                          </button>
+                        )}
                         <button
                           className="flex items-center gap-3 w-full text-left px-4 py-3 hover:bg-gradient-to-r hover:from-red-50/50 hover:to-transparent transition-all duration-200 disabled:opacity-50 group"
                           onClick={() => {
@@ -2739,7 +2814,7 @@ const Profile = () => {
                 </div>
 
                 <h1 className="text-xl md:text-2xl font-semibold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                  {user.name}
+                  {user.name} {verificationStatus === 'approved' && ' ✓'}
                 </h1>
 
                 <p className="text-sm text-gray-500 flex items-center gap-2 justify-center mt-1">
@@ -3086,6 +3161,365 @@ const Profile = () => {
                       </SecondaryButton>
                     </div>
                   </div>
+                </div>
+              )}
+
+              {/* Verification Box - inside sidebar */}
+              {showVerificationBox && (
+                <div className="mt-6 p-5 bg-gradient-to-br from-blue-50/90 via-white to-blue-50/30 backdrop-blur-sm rounded-xl border border-blue-100 shadow-lg animate-slideDown">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent flex items-center gap-2">
+                      <FiCheckCircle className="text-blue-500" />
+                      Verify Your Profile
+                    </h3>
+                    <IconButton
+                      onClick={() => {
+                        setShowVerificationBox(false);
+                        setVerificationData({
+                          documentType: "",
+                          documentImage: null,
+                          documentNumber: "",
+                          status: null
+                        });
+                      }}
+                      disabled={loadingStates.verification}
+                    >
+                      <FiX size={18} />
+                    </IconButton>
+                  </div>
+
+                  {verificationStatus ? (
+                    // Show status if already submitted
+                    <div className="space-y-4">
+                      <div className={`p-4 rounded-lg border ${verificationStatus === 'approved' ? 'bg-green-50 border-green-200' :
+                        verificationStatus === 'rejected' ? 'bg-red-50 border-red-200' :
+                          'bg-yellow-50 border-yellow-200'
+                        }`}>
+                        <div className="flex items-center gap-3 mb-2">
+                          {verificationStatus === 'approved' && (
+                            <>
+                              <FiCheckCircle className="text-green-500 text-xl" />
+                              <span className="font-bold text-green-700">Approved</span>
+                            </>
+                          )}
+                          {verificationStatus === 'rejected' && (
+                            <>
+                              <MdWarning className="text-red-500 text-xl" />
+                              <span className="font-bold text-red-700">Rejected (Try after 10 days)</span>
+                            </>
+                          )}
+                          {verificationStatus === 'pending' && (
+                            <>
+                              <FiLoader className="text-yellow-500 text-xl animate-spin" />
+                              <span className="font-bold text-yellow-700">Pending Review</span>
+                            </>
+                          )}
+                        </div>
+
+                        {verificationStatus === 'rejected' && rejectionReason && (
+                          <div className="mt-2 p-3 bg-red-100 rounded-lg">
+                            <p className="text-sm text-red-800">
+                              <span className="font-semibold">Reason:</span> {rejectionReason}
+                            </p>
+                          </div>
+                        )}
+
+                        {verificationStatus === 'rejected' && resubmitAfterDate && (
+                          <div className="mt-3 p-3 bg-orange-100 rounded-lg">
+                            <div className="flex items-start gap-2">
+                              <FiInfo className="text-orange-600 mt-0.5 flex-shrink-0" size={16} />
+                              <div>
+                                <p className="text-sm font-semibold text-orange-800 mb-1">
+                                  {canResubmitVerification ? (
+                                    "You can now resubmit your verification"
+                                  ) : (
+                                    "Verification Resubmission Cooldown"
+                                  )}
+                                </p>
+                                <p className="text-xs text-orange-700">
+                                  {canResubmitVerification ? (
+                                    "Your 10-day waiting period has ended. You can submit new documents for verification."
+                                  ) : (
+                                    <>
+                                      You can resubmit your verification after: {' '}
+                                      <span className="font-bold">
+                                        {new Date(resubmitAfterDate).toLocaleDateString('en-IN', {
+                                          day: '2-digit',
+                                          month: 'short',
+                                          year: 'numeric',
+                                          hour: '2-digit',
+                                          minute: '2-digit'
+                                        })}
+                                      </span>
+                                    </>
+                                  )}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {verificationStatus === 'pending' && (
+                          <p className="text-sm text-yellow-700">
+                            Your document is under review. This usually takes 24-48 hours.
+                          </p>
+                        )}
+
+                        {verificationStatus === 'approved' && (
+                          <p className="text-sm text-green-700">
+                            Your profile is verified! You now have a verified badge.
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Show resubmit button if rejected and can resubmit */}
+                      {verificationStatus === 'rejected' && canResubmitVerification && (
+                        <div className="flex justify-center">
+                          <PrimaryButton
+                            onClick={() => {
+                              // Reset form for resubmission
+                              setVerificationData({
+                                documentType: "",
+                                documentImage: null,
+                                documentNumber: "",
+                                status: null
+                              });
+                              setVerificationStatus(null);
+                            }}
+                            className="px-6 py-2"
+                            icon={FiCheckCircle}
+                          >
+                            Resubmit Verification
+                          </PrimaryButton>
+                        </div>
+                      )}
+
+                      {verificationStatus !== 'rejected' && (
+                        <div className="flex justify-end">
+                          <SecondaryButton
+                            onClick={() => setShowVerificationBox(false)}
+                          >
+                            Close
+                          </SecondaryButton>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    // Show form if no verification submitted OR rejected and can resubmit
+                    <div className="space-y-4">
+                      {/* Show warning if previously rejected */}
+                      {verificationStatus === 'rejected' && (
+                        <div className="p-3 bg-orange-50 rounded-lg border border-orange-200 mb-2">
+                          <p className="text-xs text-orange-700 flex items-start gap-2">
+                            <FiInfo className="text-orange-500 w-4 h-4 flex-shrink-0 mt-0.5" />
+                            <span>
+                              You are resubmitting your verification. Please ensure all documents are clear and meet the requirements.
+                            </span>
+                          </p>
+                        </div>
+                      )}
+
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-1.5 flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+                          Document Type <span className="text-red-500">*</span>
+                        </label>
+                        <Select
+                          styles={customSelectStyles}
+                          options={[
+                            { value: "aadhar", label: "Aadhar Card" },
+                            { value: "pan", label: "PAN Card" },
+                            { value: "driving_license", label: "Driving License" }
+                          ]}
+                          value={verificationData.documentType ? {
+                            value: verificationData.documentType,
+                            label: verificationData.documentType === "aadhar" ? "Aadhar Card" :
+                              verificationData.documentType === "pan" ? "PAN Card" : "Driving License"
+                          } : null}
+                          onChange={(selected) => setVerificationData(prev => ({
+                            ...prev,
+                            documentType: selected?.value || ""
+                          }))}
+                          placeholder="Select document type"
+                          isDisabled={loadingStates.verification}
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-1.5 flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+                          Document Number <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          className="w-full px-4 py-2.5 bg-white/70 backdrop-blur-sm border border-gray-200 focus:border-blue-500 rounded-lg focus:ring-2 focus:ring-blue-100 transition-all duration-300"
+                          value={verificationData.documentNumber}
+                          onChange={(e) => {
+                            let value = e.target.value.toUpperCase();
+                            if (verificationData.documentType === "aadhar") {
+                              value = value.replace(/[^0-9]/g, '').slice(0, 12);
+                            } else if (verificationData.documentType === "pan") {
+                              value = value.replace(/[^A-Z0-9]/g, '').slice(0, 10);
+                            } else if (verificationData.documentType === "driving_license") {
+                              value = value.slice(0, 16);
+                            }
+                            setVerificationData(prev => ({ ...prev, documentNumber: value }));
+                          }}
+                          placeholder={
+                            verificationData.documentType === "aadhar" ? "Enter 12-digit Aadhar number" :
+                              verificationData.documentType === "pan" ? "Enter 10-character PAN number" :
+                                "Enter Driving License number"
+                          }
+                          disabled={loadingStates.verification || !verificationData.documentType}
+                        />
+                        {verificationData.documentType === "aadhar" && (
+                          <p className="text-xs text-gray-500 mt-1">12-digit Aadhar number</p>
+                        )}
+                        {verificationData.documentType === "pan" && (
+                          <p className="text-xs text-gray-500 mt-1">Format: ABCDE1234F (10 characters)</p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-1.5 flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+                          Upload Document Image <span className="text-red-500">*</span>
+                        </label>
+                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-blue-500 transition-colors">
+                          {verificationData.documentImage ? (
+                            <div className="space-y-2">
+                              <div className="relative w-full h-32 mx-auto">
+                                <img
+                                  src={URL.createObjectURL(verificationData.documentImage)}
+                                  alt="Document preview"
+                                  className="w-full h-full object-contain rounded-lg"
+                                />
+                              </div>
+                              <div className="flex items-center justify-center gap-2">
+                                <span className="text-sm text-gray-600">
+                                  {verificationData.documentImage.name}
+                                </span>
+                                <button
+                                  onClick={() => setVerificationData(prev => ({ ...prev, documentImage: null }))}
+                                  className="text-red-500 hover:text-red-700"
+                                >
+                                  <FiX size={16} />
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <label className="cursor-pointer block">
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => {
+                                  const file = e.target.files[0];
+                                  if (file) {
+                                    if (file.size > 5 * 1024 * 1024) {
+                                      toast.error("File size should be less than 5MB");
+                                      return;
+                                    }
+                                    setVerificationData(prev => ({ ...prev, documentImage: file }));
+                                  }
+                                }}
+                                disabled={loadingStates.verification || !verificationData.documentType}
+                              />
+                              <div className="flex flex-col items-center gap-2">
+                                <FiUpload className="text-gray-400 text-3xl" />
+                                <span className="text-sm text-gray-600">
+                                  Click to upload or drag and drop
+                                </span>
+                                <span className="text-xs text-gray-500">
+                                  PNG, JPG up to 5MB
+                                </span>
+                              </div>
+                            </label>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                        <p className="text-xs text-blue-700 flex items-start gap-2">
+                          <FiInfo className="text-blue-500 w-4 h-4 flex-shrink-0 mt-0.5" />
+                          <span>
+                            Your document will be verified by our team. This helps build trust in the community.
+                            Only the verification status will be visible on your profile, not the document itself.
+                          </span>
+                        </p>
+                      </div>
+
+                      <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                        <PrimaryButton
+                          onClick={async () => {
+                            if (!verificationData.documentType) {
+                              toast.error("Please select document type");
+                              return;
+                            }
+                            if (!verificationData.documentNumber) {
+                              toast.error("Please enter document number");
+                              return;
+                            }
+                            if (!verificationData.documentImage) {
+                              toast.error("Please upload document image");
+                              return;
+                            }
+
+                            setLoadingState('verification', true);
+                            const formData = new FormData();
+                            formData.append('email', user.email);
+                            formData.append('documentType', verificationData.documentType);
+                            formData.append('documentNumber', verificationData.documentNumber);
+                            formData.append('documentImage', verificationData.documentImage);
+
+                            try {
+                              const response = await axios.post(
+                                `${BACKEND_URL}/verification/submit`,
+                                formData,
+                                {
+                                  headers: {
+                                    'Authorization': `Bearer ${token}`,
+                                    'Content-Type': 'multipart/form-data'
+                                  }
+                                }
+                              );
+
+                              if (response.data) {
+                                setVerificationStatus('pending');
+                                toast.success("Verification request submitted successfully!");
+                                setShowVerificationBox(false);
+                              }
+                            } catch (error) {
+                              console.error("Verification submission error:", error);
+                              toast.error(error.response?.data?.detail || "Failed to submit verification request");
+                            } finally {
+                              setLoadingState('verification', false);
+                            }
+                          }}
+                          loading={loadingStates.verification}
+                          disabled={loadingStates.verification}
+                          className="flex-1"
+                        >
+                          {verificationStatus === 'rejected' ? 'Resubmit' : 'Submit'}
+                        </PrimaryButton>
+                        <SecondaryButton
+                          onClick={() => {
+                            setShowVerificationBox(false);
+                            setVerificationData({
+                              documentType: "",
+                              documentImage: null,
+                              documentNumber: "",
+                              status: null
+                            });
+                          }}
+                          disabled={loadingStates.verification}
+                          className="flex-1"
+                        >
+                          Cancel
+                        </SecondaryButton>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

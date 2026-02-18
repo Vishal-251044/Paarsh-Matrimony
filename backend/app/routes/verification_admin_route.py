@@ -1,4 +1,3 @@
-# verification_admin_route.py
 from fastapi import APIRouter, Body, HTTPException
 from app.controllers import verification_admin_controller as controller
 
@@ -8,9 +7,16 @@ router = APIRouter(prefix="/admin/verification", tags=["Admin Verification"])
 async def fetch_users():
     """
     Fetch all users for admin verification dashboard.
+    Users with pending verification docs appear first.
     """
     return await controller.get_all_users()
 
+@router.get("/pending")
+async def get_pending_verifications():
+    """
+    Get all users with pending verification documents
+    """
+    return await controller.get_pending_verifications()
 
 @router.post("/verify")
 async def verify_user(email: str = Body(..., embed=True)):
@@ -23,12 +29,29 @@ async def verify_user(email: str = Body(..., embed=True)):
     
     try:
         result = await controller.verify_user(email)
-        if not result:
-            raise HTTPException(status_code=404, detail=f"User with email '{email}' not found or already verified")
-        return {"success": True, "email": email, "message": "User verified successfully"}
+        return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.post("/reject")
+async def reject_verification(
+    email: str = Body(...),
+    rejection_reason: str = Body(...)
+):
+    """
+    Reject a user's verification document
+    """
+    if not email:
+        raise HTTPException(status_code=400, detail="Email is required")
+    
+    if not rejection_reason:
+        raise HTTPException(status_code=400, detail="Rejection reason is required")
+    
+    try:
+        result = await controller.reject_verification(email, rejection_reason)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.delete("/delete")
 async def delete_user(email: str = Body(..., embed=True)):
@@ -41,8 +64,6 @@ async def delete_user(email: str = Body(..., embed=True)):
     
     try:
         result = await controller.delete_user(email)
-        if not result:
-            raise HTTPException(status_code=404, detail=f"User with email '{email}' not found")
-        return {"success": True, "email": email, "message": "User deleted successfully"}
+        return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
