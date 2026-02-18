@@ -1551,37 +1551,45 @@ const Matches = () => {
     if (!timestamp) return '';
 
     try {
-      // Parse the UTC timestamp from database
-      const utcDate = new Date(timestamp);
-
-      // MANUALLY ADD 5.5 HOURS FOR IST (since your DB is UTC)
-      // IST is UTC+5:30
-      const IST_OFFSET_HOURS = 5.5;
-      const istDate = new Date(utcDate.getTime() + (IST_OFFSET_HOURS * 60 * 60 * 1000));
-
-      // Get current time
+      const messageDate = new Date(timestamp);
       const now = new Date();
 
+      // Check if we're on localhost or production
+      const isLocalhost = window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1';
+
+      // For Render (production), we need to add 5.5 hours
+      // For localhost, use as is
+      let adjustedDate = messageDate;
+
+      if (!isLocalhost) {
+        // On Render/Railway/etc - Add 5.5 hours for IST
+        const IST_OFFSET = 5.5 * 60 * 60 * 1000; // 5.5 hours in milliseconds
+        adjustedDate = new Date(messageDate.getTime() + IST_OFFSET);
+        console.log('Production mode: Added 5.5 hours to UTC');
+      } else {
+        console.log('Localhost mode: Using original time');
+      }
+
       // Calculate difference
-      const diffMs = now - istDate;
+      const diffMs = now - adjustedDate;
       const diffMins = Math.floor(diffMs / (1000 * 60));
       const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
       const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-      // Debug logging
-      console.log('Original UTC:', timestamp);
-      console.log('Converted IST:', istDate.toLocaleString('en-IN'));
-      console.log('Current time:', now.toLocaleString('en-IN'));
-      console.log('Difference mins:', diffMins);
+      // Debug
+      console.log('Hostname:', window.location.hostname);
+      console.log('Original:', messageDate.toISOString());
+      console.log('Adjusted:', adjustedDate.toLocaleString('en-IN'));
+      console.log('Now:', now.toLocaleString('en-IN'));
+      console.log('Diff mins:', diffMins);
 
-      // For very recent messages
       if (diffMins < 1) return 'Just now';
       if (diffMins < 60) return `${diffMins} min ago`;
       if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
       if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
 
-      // For older messages, show full IST date
-      return istDate.toLocaleString('en-IN', {
+      return adjustedDate.toLocaleString('en-IN', {
         day: '2-digit',
         month: 'short',
         year: 'numeric',
