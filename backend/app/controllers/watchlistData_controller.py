@@ -1,13 +1,14 @@
 from fastapi import HTTPException
 from bson import ObjectId
 from datetime import datetime
+import pytz
 from app.database import db
 
 watchlist_collection = db.watchlists
 profile_collection = db.profiles
 users_collection = db.users   # 🔴 IMPORTANT – for online status
 
-
+ist = pytz.timezone('Asia/Kolkata')
 class WatchlistDataController:
 
     async def get_watchlist_profiles(self, user_email: str):
@@ -123,7 +124,7 @@ class WatchlistDataController:
                 {
                     "$set": {
                         "partners": updated_partners,
-                        "updated_at": datetime.utcnow()
+                        "updated_at": datetime.now(ist)
                     }
                 }
             )

@@ -2,8 +2,11 @@ from fastapi import HTTPException
 from fastapi.encoders import jsonable_encoder
 from app.database import db
 from datetime import datetime
+import pytz
 from typing import List
 from bson import ObjectId
+
+ist = pytz.timezone('Asia/Kolkata')
 
 # Collections
 USERS_COLLECTION = db["users"]
@@ -91,7 +94,7 @@ async def verify_user(email: str):
         # Add to verified collection
         await VERIFIED_COLLECTION.insert_one({
             "email": email,
-            "verified_at": datetime.utcnow(),
+            "verified_at": datetime.now(ist),
             "verified_by": "admin"
         })
 

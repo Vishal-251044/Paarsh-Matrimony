@@ -3,9 +3,11 @@ from app.database import db
 from app.models.Watchlist import WatchlistCreate, WatchlistInDB, WatchlistPartner
 from bson import ObjectId
 from datetime import datetime
+import pytz
 from typing import List, Optional
 import logging
 
+ist = pytz.timezone('Asia/Kolkata')
 logger = logging.getLogger(__name__)
 
 class WatchlistController:
@@ -34,8 +36,8 @@ class WatchlistController:
                     {
                         "$set": {
                             "partners.$.match_score": watchlist_data.match_score,
-                            "partners.$.added_at": datetime.utcnow(),
-                            "updated_at": datetime.utcnow()
+                            "partners.$.added_at": datetime.now(ist),
+                            "updated_at": datetime.now(ist)
                         }
                     }
                 )
@@ -57,7 +59,7 @@ class WatchlistController:
                     {"user_email": watchlist_data.user_email},
                     {
                         "$push": {"partners": new_partner.dict()},
-                        "$set": {"updated_at": datetime.utcnow()},
+                        "$set": {"updated_at": datetime.now(ist)},
                         "$setOnInsert": {"user_email": watchlist_data.user_email}
                     },
                     upsert=True
@@ -102,7 +104,7 @@ class WatchlistController:
                 {"user_email": user_email},
                 {
                     "$pull": {"partners": {"partner_email": partner_email}},
-                    "$set": {"updated_at": datetime.utcnow()}
+                    "$set": {"updated_at": datetime.now(ist)}
                 }
             )
             

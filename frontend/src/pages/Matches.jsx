@@ -1551,52 +1551,42 @@ const Matches = () => {
     if (!timestamp) return '';
 
     try {
-      // Parse the timestamp and ensure it's treated as UTC
-      const date = new Date(timestamp);
+      // Parse the UTC timestamp from database
+      const utcDate = new Date(timestamp);
 
-      // Get current time in UTC
+      // Convert UTC to IST (add 5 hours 30 minutes)
+      // IST is UTC+5:30
+      const istDate = new Date(utcDate.getTime() + (5.5 * 60 * 60 * 1000));
+
+      // Get current time in IST for comparison
       const now = new Date();
+      const nowIST = new Date(now.getTime() + (5.5 * 60 * 60 * 1000));
 
-      // Create UTC timestamps for both dates
-      const utcDate = new Date(Date.UTC(
-        date.getUTCFullYear(),
-        date.getUTCMonth(),
-        date.getUTCDate(),
-        date.getUTCHours(),
-        date.getUTCMinutes(),
-        date.getUTCSeconds()
-      ));
-
-      const utcNow = new Date(Date.UTC(
-        now.getUTCFullYear(),
-        now.getUTCMonth(),
-        now.getUTCDate(),
-        now.getUTCHours(),
-        now.getUTCMinutes(),
-        now.getUTCSeconds()
-      ));
-
-      // Calculate difference in milliseconds
-      const diffMs = utcNow - utcDate;
+      // Calculate difference using IST times
+      const diffMs = nowIST - istDate;
       const diffMins = Math.floor(diffMs / (1000 * 60));
       const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
       const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-      // For debugging - log the timestamps
-      console.log('Message timestamp (UTC):', utcDate.toISOString());
-      console.log('Current time (UTC):', utcNow.toISOString());
-      console.log('Difference (minutes):', diffMins);
+      console.log('Database UTC:', timestamp);
+      console.log('Converted IST:', istDate.toLocaleString('en-IN'));
+      console.log('Current IST:', nowIST.toLocaleString('en-IN'));
+      console.log('Difference mins:', diffMins);
 
+      // For very recent messages
       if (diffMins < 1) return 'Just now';
-      if (diffMins < 60) return `${diffMins}m ago`;
-      if (diffHours < 24) return `${diffHours}h ago`;
-      if (diffDays < 7) return `${diffDays}d ago`;
+      if (diffMins < 60) return `${diffMins} min ago`;
+      if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+      if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
 
-      // For older messages, show the actual date
-      return utcDate.toLocaleDateString("en-IN", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric"
+      // For older messages, show full IST date
+      return istDate.toLocaleString('en-IN', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
       });
 
     } catch (error) {

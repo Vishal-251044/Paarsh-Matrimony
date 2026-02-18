@@ -1,7 +1,10 @@
 from datetime import datetime
+import pytz
 from pydantic import BaseModel, Field, validator, ConfigDict, field_serializer
 from typing import Optional
 from bson import ObjectId
+
+ist = pytz.timezone('Asia/Kolkata')
 
 class Feedback(BaseModel):
     model_config = ConfigDict(
@@ -22,7 +25,7 @@ class Feedback(BaseModel):
     experience: str = Field(..., description="User's experience feedback")
     rating: int = Field(..., ge=1, le=5, description="Rating from 1 to 5 stars")
     suggestions: Optional[str] = Field(None, description="Suggestions for improvement")
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(ist))
     
     @field_serializer('created_at')
     def serialize_datetime(self, dt: datetime, _info):

@@ -1,7 +1,9 @@
 from app.database import db
 from datetime import datetime
+import pytz
 from typing import Optional, Dict, Any
 
+ist = pytz.timezone('Asia/Kolkata')
 VERIFIED_COLLECTION = db["verified_users"]
 
 
@@ -19,8 +21,8 @@ async def add_verified_user(email: str) -> bool:
         # Insert new verified user
         result = await VERIFIED_COLLECTION.insert_one({
             "email": email,
-            "verified_at": datetime.utcnow(),
-            "created_at": datetime.utcnow(),
+            "verified_at": datetime.now(ist),
+            "created_at": datetime.now(ist),
             "verified_by": "admin"
         })
         

@@ -4,6 +4,9 @@ from app.database import db
 from datetime import datetime, timedelta
 from bson import ObjectId
 import logging
+import pytz
+
+ist = pytz.timezone('Asia/Kolkata')
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +22,7 @@ class FeedbackController:
         """
         try:
             # Check if user has submitted feedback in last 24 hours
-            twenty_four_hours_ago = datetime.utcnow() - timedelta(hours=24)
+            twenty_four_hours_ago = datetime.now(ist) - timedelta(hours=24)
             
             recent_feedback = await self.collection.find_one({
                 "email": feedback.email,
@@ -35,7 +38,7 @@ class FeedbackController:
             # Prepare feedback data
             feedback_dict = feedback.dict(by_alias=True)
             feedback_dict["_id"] = ObjectId()  # Generate new ObjectId
-            feedback_dict["created_at"] = datetime.utcnow()
+            feedback_dict["created_at"] = datetime.now(ist)
             
             # Insert into database
             result = await self.collection.insert_one(feedback_dict)

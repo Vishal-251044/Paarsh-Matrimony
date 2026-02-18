@@ -1,8 +1,9 @@
 from app.database import db
 from bson import ObjectId
 from datetime import datetime
-
+import pytz
 contact_collection = db["contacts"]
+ist = pytz.timezone('Asia/Kolkata')
 
 def safe_object_id(id: str):
     try:
@@ -16,7 +17,7 @@ async def get_all_contacts():
     async for c in contact_collection.find().sort("created_at", -1):
         c["_id"] = str(c["_id"])
         c["status"] = c.get("status", "new")
-        c["created_at"] = c.get("created_at", datetime.utcnow())
+        c["created_at"] = c.get("created_at", datetime.now(ist))
         contacts.append(c)
     return contacts
 
