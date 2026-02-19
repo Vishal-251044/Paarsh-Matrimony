@@ -6,6 +6,7 @@ import pytz
 from typing import List, Optional
 from bson import ObjectId
 from app.models.VerifyDoc import VerificationStatus
+from app.utils.clean_unused_data import clean_user_related_data
 
 ist = pytz.timezone('Asia/Kolkata')
 
@@ -382,6 +383,8 @@ async def delete_user(email: str):
 
         if user_deleted.deleted_count == 0 and profile_deleted.deleted_count == 0:
             raise HTTPException(status_code=404, detail=f"User with email '{email}' not found")
+        await clean_user_related_data(email)
+
 
         return jsonable_encoder({
             "success": True,

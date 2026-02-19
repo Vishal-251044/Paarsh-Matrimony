@@ -3,6 +3,7 @@ from fastapi import HTTPException
 from email.message import EmailMessage
 import aiosmtplib
 import os
+from app.utils.clean_unused_data import clean_user_related_data
 
 reports_collection = db["reports"]
 profiles_collection = db["profiles"]
@@ -50,6 +51,8 @@ async def delete_user_profile(email: str):
 
         if profile_res.deleted_count == 0 and user_res.deleted_count == 0:
             raise HTTPException(status_code=404, detail="User not found")
+        await clean_user_related_data(email)
+
 
         return {
             "success": True,

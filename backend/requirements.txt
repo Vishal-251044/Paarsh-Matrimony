@@ -25,3 +25,5 @@ pytz
 websockets
 aiosmtplib
 dnspython
+apscheduler
+

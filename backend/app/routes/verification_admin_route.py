@@ -64,6 +64,7 @@ async def delete_user(email: str = Body(..., embed=True)):
     
     try:
         result = await controller.delete_user(email)
+
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

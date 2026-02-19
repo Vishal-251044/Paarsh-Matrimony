@@ -13,6 +13,8 @@ logging.getLogger("uvicorn.access").setLevel(logging.ERROR)
 logging.getLogger("uvicorn.error").setLevel(logging.ERROR)
 logging.getLogger("fastapi").setLevel(logging.ERROR)
 
+from app.utils.background_cleaner import start_scheduler
+
 from app.routes import (
     auth_route,
     profile_route,
@@ -92,6 +94,10 @@ app.include_router(verify_tag_route.router, prefix="/api", tags=["verification"]
 @app.get("/")
 async def root():
     return {"message": "Matrimony API is running"}
+
+@app.on_event("startup")
+async def startup_event():
+    start_scheduler()
 
 if __name__ == "__main__":
     import uvicorn
