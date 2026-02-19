@@ -12,7 +12,7 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import axios from "axios";
 import PropTypes from 'prop-types';
-
+import { VscVerifiedFilled } from "react-icons/vsc";
 import {
   FiEdit2,
   FiAlertCircle,
@@ -84,6 +84,7 @@ const Watchlist = () => {
   const [openWedding, setOpenWedding] = useState(false);
   const [openKundali, setOpenKundali] = useState(false);
   const [removingId, setRemovingId] = useState(null);
+  const [verifiedEmails, setVerifiedEmails] = useState({});
   const [activeFilters, setActiveFilters] = useState({
     maritalStatus: [],
     education: [],
@@ -427,6 +428,7 @@ const Watchlist = () => {
           if (res.data.data) {
             setPartners(res.data.data || []);
             setFilteredPartners(res.data.data || []);
+            await fetchVerificationStatus(res.data.data || []);
           } else {
             setPartners([]);
             setFilteredPartners([]);
@@ -527,6 +529,41 @@ const Watchlist = () => {
       setRemovingId(null);
     }
   };
+
+  // Fetch verification status for all partners
+  const fetchVerificationStatus = useCallback(async (partnersList) => {
+    if (!partnersList || partnersList.length === 0) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      // Extract all emails from partners
+      const emails = partnersList.map(partner => {
+        const personalInfo = partner.personalInfo || {};
+        return personalInfo?.email || partner?.email || partner?.userEmail;
+      }).filter(Boolean);
+
+      if (emails.length === 0) return;
+
+      const response = await axios.post(
+        `${BACKEND_URL}/api/verification/bulk-check`,
+        emails,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data) {
+        setVerifiedEmails(response.data);
+      }
+    } catch (err) {
+      console.error("Error fetching verification status:", err);
+    }
+  }, [BACKEND_URL]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -684,7 +721,9 @@ const Watchlist = () => {
             >
               <FiX className="text-white text-xl" />
             </button>
-            <h2 className="text-2xl md:text-3xl font-bold pr-12 truncate">{showValue(personalInfo.fullName)}</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-2xl md:text-3xl font-bold pr-12 truncate">{showValue(personalInfo.fullName)}</h2>
+            </div>
             <div className="flex flex-wrap items-center gap-3 mt-3">
               <span className="inline-flex items-center gap-1.5 bg-white/20 px-3 py-1.5 rounded-full text-sm font-medium">
                 <FaBirthdayCake className="text-xs" /> {showValue(personalInfo.age)} yrs
@@ -1848,7 +1887,12 @@ const Watchlist = () => {
                                 </div>
                                 <div className="absolute bottom-0 inset-x-0 h-24 bg-gradient-to-t from-black/60 to-transparent"></div>
                                 <div className="absolute bottom-0 inset-x-0 p-4">
-                                  <h3 className="text-white font-bold text-lg truncate drop-shadow-lg">{showValue(personalInfo.fullName)}</h3>
+                                  <div className="flex items-center gap-1">
+                                    <h3 className="text-white font-bold text-lg truncate drop-shadow-lg">{showValue(personalInfo.fullName)}</h3>
+                                    {verifiedEmails[personalInfo?.email || partner?.email || partner?.userEmail]?.isVerified && (
+                                      <VscVerifiedFilled className="text-blue-400 text-2xl md:text-3xl" title="Verified Profile" />
+                                    )}
+                                  </div>
                                   <div className="flex items-center gap-3 mt-1">
                                     <span className="text-white/90 text-sm">{showValue(personalInfo.age)} yrs</span>
                                     {partner.isOnline && (

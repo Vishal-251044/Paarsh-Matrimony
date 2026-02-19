@@ -8,6 +8,7 @@ import PremiumUpgradeNotification from '../components/PremiumUpgradeNotification
 import 'react-toastify/dist/ReactToastify.css';
 import { MdCleaningServices } from "react-icons/md";
 import Swal from 'sweetalert2';
+import { VscVerifiedFilled } from "react-icons/vsc";
 import {
   FiEdit2,
   FiAlertCircle,
@@ -133,6 +134,7 @@ const Matches = () => {
   const intervalRef = useRef(null);
   const [wsConnected, setWsConnected] = useState(false);
   const [reconnectAttempts, setReconnectAttempts] = useState(0);
+  const [verifiedEmails, setVerifiedEmails] = useState({});
   const MAX_RECONNECT_ATTEMPTS = 5;
 
   const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
@@ -306,6 +308,7 @@ const Matches = () => {
         const matchesData = response.data.matches || [];
         setMatches(matchesData);
         setFilteredMatches(matchesData);
+        await fetchVerificationStatus(matchesData);
       } else {
         if (response.data.error && response.data.error.includes("No matches")) {
           setMatches([]);
@@ -344,6 +347,39 @@ const Matches = () => {
       setRefreshing(false);
     }
   }, [finalData.userEmail, finalData.isProfilePublished, logout, navigate, BACKEND_URL]);
+
+  // Fetch verification status for all matches
+  const fetchVerificationStatus = useCallback(async (matchesList) => {
+    if (!matchesList || matchesList.length === 0) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      // Extract all emails from matches
+      const emails = matchesList.map(match => match.email).filter(Boolean);
+
+      if (emails.length === 0) return;
+
+      const response = await axios.post(
+        `${BACKEND_URL}/api/verification/bulk-check`,
+        emails,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data) {
+        setVerifiedEmails(response.data);
+      }
+    } catch (err) {
+      // Silent error - don't show toast for verification status
+      console.error("Error fetching verification status:", err);
+    }
+  }, [BACKEND_URL]);
 
   // Fetch watchlist (Premium only)
   const fetchWatchlist = useCallback(async () => {
@@ -1608,7 +1644,9 @@ const Matches = () => {
           <div className="sticky top-0 z-10 bg-gradient-to-r from-rose-500 to-pink-600 text-white px-4 py-4 md:px-8 md:py-5">
             <div className="flex items-center justify-between">
               <div className="flex-1 min-w-0">
-                <h2 className="text-xl md:text-2xl font-bold truncate pr-8">{match.fullName}</h2>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-xl md:text-2xl font-bold truncate">{match.fullName}</h2>
+                </div>
                 <div className="flex flex-wrap items-center gap-2 mt-2">
                   <span className="inline-flex items-center gap-1 bg-white/20 px-2 py-1 md:px-3 md:py-1.5 rounded-full text-xs md:text-sm">
                     <FaBirthdayCake className="text-[10px] md:text-xs" /> {match.age} yrs
@@ -1901,7 +1939,9 @@ const Matches = () => {
             >
               <FiX className="text-white text-lg md:text-xl" />
             </button>
-            <h2 className="text-xl md:text-3xl font-bold pr-8 truncate">{match.fullName}</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-xl md:text-3xl font-bold pr-8 truncate">{match.fullName}</h2>
+            </div>
             <div className="flex flex-wrap items-center gap-2 mt-2 md:mt-3">
               <span className="inline-flex items-center gap-1 bg-white/20 px-2 py-1 md:px-3 md:py-1.5 rounded-full text-xs md:text-sm font-medium">
                 <FaBirthdayCake className="text-[10px] md:text-xs" /> {match.age} yrs
@@ -2505,8 +2545,12 @@ const Matches = () => {
                                       </div>
                                       <div className="absolute bottom-0 inset-x-0 h-16 md:h-24 bg-gradient-to-t from-black/50 to-transparent"></div>
                                       <div className="absolute bottom-0 inset-x-0 p-2 md:p-4">
-                                        <h3 className="text-white font-bold text-sm md:text-lg truncate drop-shadow-lg">{match.fullName || "Anonymous"}</h3>
-                                        <div className="flex items-center gap-1 md:gap-2 mt-0.5 md:mt-1">
+                                        <div className="flex items-center gap-1">
+                                          <h3 className="text-white font-bold text-sm md:text-lg truncate drop-shadow-lg">{match.fullName || "Anonymous"}</h3>
+                                          {verifiedEmails[match.email]?.isVerified && (
+                                            <VscVerifiedFilled className="text-blue-400 text-xl md:text-2xl" title="Verified Profile" />
+                                          )}
+                                        </div>                                        <div className="flex items-center gap-1 md:gap-2 mt-0.5 md:mt-1">
                                           <span className="text-white/90 text-xs md:text-sm">{match.age} yrs</span>
                                           <span className="flex items-center gap-1 text-emerald-300 text-[10px] md:text-xs">
                                             {match.isOnline ? (
@@ -2714,12 +2758,17 @@ const Matches = () => {
                               <div className="flex-1 min-w-0">
                                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-1 sm:gap-2">
                                   <div>
-                                    <h4
-                                      className="font-semibold text-gray-800 text-sm md:text-base cursor-pointer hover:text-rose-600"
-                                      onClick={() => fetchProfileData(interest.sender_email, true)}
-                                    >
-                                      {interest.sender_name}
-                                    </h4>
+                                    <div className="flex items-center gap-2">
+                                      <h4
+                                        className="font-semibold text-gray-800 text-sm md:text-base cursor-pointer hover:text-rose-600"
+                                        onClick={() => fetchProfileData(interest.sender_email, true)}
+                                      >
+                                        {interest.sender_name}
+                                      </h4>
+                                      {verifiedEmails[interest.sender_email]?.isVerified && (
+                                        <VscVerifiedFilled className="text-blue-500 text-xs md:text-sm" title="Verified Profile" />
+                                      )}
+                                    </div>
                                     <p className="text-xs md:text-sm text-gray-500 truncate">{interest.sender_email}</p>
                                     <p className="text-[10px] md:text-xs text-gray-400 mt-0.5">
                                       {interest.sender_isOnline ? (
@@ -2813,12 +2862,17 @@ const Matches = () => {
                               <div className="flex-1 min-w-0">
                                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-1 sm:gap-2">
                                   <div>
-                                    <h4
-                                      className="font-semibold text-gray-800 text-sm md:text-base cursor-pointer hover:text-rose-600"
-                                      onClick={() => fetchProfileData(interest.receiver_email, true)}
-                                    >
-                                      {interest.receiver_name}
-                                    </h4>
+                                    <div className="flex items-center gap-2">
+                                      <h4
+                                        className="font-semibold text-gray-800 text-sm md:text-base cursor-pointer hover:text-rose-600"
+                                        onClick={() => fetchProfileData(interest.receiver_email, true)}
+                                      >
+                                        {interest.receiver_name}
+                                      </h4>
+                                      {verifiedEmails[interest.receiver_email]?.isVerified && (
+                                        <VscVerifiedFilled className="text-blue-500 text-xs md:text-sm" title="Verified Profile" />
+                                      )}
+                                    </div>
                                     <p className="text-xs md:text-sm text-gray-500 truncate">{interest.receiver_email}</p>
                                     <p className="text-[10px] md:text-xs text-gray-400 mt-0.5">
                                       {interest.receiver_isOnline ? (

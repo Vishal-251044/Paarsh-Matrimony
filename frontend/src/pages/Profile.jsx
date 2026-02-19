@@ -11,7 +11,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import Select from "react-select";
 import Swal from 'sweetalert2';
 import { useUserContext } from '../context/UserContext';
-
+import { VscVerifiedFilled } from "react-icons/vsc";
 import {
   FiSettings,
   FiEdit2,
@@ -2813,9 +2813,14 @@ const Profile = () => {
                   )}
                 </div>
 
-                <h1 className="text-xl md:text-2xl font-semibold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                  {user.name} {verificationStatus === 'approved' && ' ✓'}
-                </h1>
+                <div className="flex items-center justify-center gap-2">
+                  <h1 className="text-xl md:text-2xl font-semibold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                    {user.name}
+                  </h1>
+                  {verificationStatus === 'approved' && (
+                    <VscVerifiedFilled className="text-blue-500 text-xl md:text-2xl" title="Verified Profile" />
+                  )}
+                </div>
 
                 <p className="text-sm text-gray-500 flex items-center gap-2 justify-center mt-1">
                   <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
