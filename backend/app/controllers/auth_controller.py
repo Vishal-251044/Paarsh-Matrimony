@@ -380,7 +380,7 @@ async def send_otp(email: EmailStr):
         
         # Generate OTP
         otp = str(random.randint(100000, 999999))
-        expires_at = datetime.now(IST) + timedelta(minutes=5)
+        expires_at = datetime.utcnow() + timedelta(minutes=5)
 
         # Clean up any existing OTPs
         await db.email_otps.delete_many({"email": email})
@@ -465,14 +465,17 @@ async def verify_otp(email: str, otp: str):
         if record["verified"]:
             raise HTTPException(status_code=400, detail="OTP already used")
 
-        if datetime.now(IST) > record["expires_at"]:
+        if datetime.utcnow() > record["expires_at"]:
             raise HTTPException(status_code=400, detail="OTP expired. Please request a new OTP.")
 
         if record["otp"] != otp:
             raise HTTPException(status_code=400, detail="Invalid OTP")
 
         # ✅ Delete OTP after successful verification
-        await db.email_otps.delete_one({"_id": record["_id"]})
+        await db.email_otps.update_one(
+            {"_id": record["_id"]},
+            {"$set": {"verified": True}}
+        )
 
         return {"message": "OTP verified successfully"}
     

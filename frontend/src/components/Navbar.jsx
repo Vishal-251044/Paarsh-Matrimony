@@ -166,7 +166,12 @@ const Navbar = memo(() => {
                             {(isLoggedIn ? loggedInNavItems : navItems).map((item, index) => (
                                 <button
                                     key={item.name}
-                                    onClick={() => navigate(item.path)}
+                                    onClick={() => {
+                                        navigate(item.path);
+                                        if (item.path === "/matches" || item.path === "/watchlist") {
+                                            window.location.reload();
+                                        }
+                                    }}
                                     className={`
                                         relative group px-3 py-2 mx-1
                                         flex items-center space-x-2
@@ -412,7 +417,12 @@ const Navbar = memo(() => {
                         {currentNavItems.map((item, index) => (
                             <button
                                 key={item.name}
-                                onClick={() => navigate(item.path)}
+                                onClick={() => {
+                                    navigate(item.path);
+                                    if (item.path === "/matches" || item.path === "/watchlist") {
+                                        window.location.reload();
+                                    }
+                                }}
                                 className={`
             relative group w-full
             flex items-center space-x-3 px-6 py-4
