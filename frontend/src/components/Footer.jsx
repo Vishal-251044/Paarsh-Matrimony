@@ -7,9 +7,21 @@ import {
     FaEnvelope,
     FaMapMarkerAlt
 } from "react-icons/fa";
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 const Footer = () => {
+
+    const navigate = useNavigate();
+
+    const handleNavigation = (path) => {
+        navigate(path);
+        window.scrollTo({
+            top: 0,
+            left: 0,
+            behavior: "smooth" 
+        });
+    };
+
     return (
         <footer className="w-full bg-white border-t">
             <div className="max-w-7xl mx-auto px-4 py-10">
@@ -67,44 +79,44 @@ const Footer = () => {
                         </h3>
                         <ul className="space-y-2 text-sm text-gray-600">
                             <li>
-                                <Link
-                                    to="/"
+                                <span
+                                    onClick={() => handleNavigation("/")}
                                     className="hover:text-[oklch(70.4%_0.191_22.216)] cursor-pointer"
                                 >
                                     Home
-                                </Link>
+                                </span>
                             </li>
                             <li>
-                                <Link
-                                    to="/about"
+                                <span
+                                    onClick={() => handleNavigation("/about")}
                                     className="hover:text-[oklch(70.4%_0.191_22.216)] cursor-pointer"
                                 >
                                     About Us
-                                </Link>
+                                </span>
                             </li>
                             <li>
-                                <Link
-                                    to="/terms"
+                                <span
+                                    onClick={() => handleNavigation("/terms")}
                                     className="hover:text-[oklch(70.4%_0.191_22.216)] cursor-pointer"
                                 >
                                     Terms of Use
-                                </Link>
+                                </span>
                             </li>
                             <li>
-                                <Link
-                                    to="/privacy"
+                                <span
+                                    onClick={() => handleNavigation("/privacy")}
                                     className="hover:text-[oklch(70.4%_0.191_22.216)] cursor-pointer"
                                 >
                                     Privacy Policy
-                                </Link>
+                                </span>
                             </li>
                             <li>
-                                <Link
-                                    to="/contact"
+                                <span
+                                    onClick={() => handleNavigation("/contact")}
                                     className="hover:text-[oklch(70.4%_0.191_22.216)] cursor-pointer"
                                 >
                                     Contact Us
-                                </Link>
+                                </span>
                             </li>
                         </ul>
                     </div>

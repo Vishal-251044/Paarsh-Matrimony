@@ -2,6 +2,7 @@ import React from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import Chatbot from '../components/Chatbot';
+import { useNavigate } from "react-router-dom";
 import {
   FiCheckCircle,
   FiUser,
@@ -21,6 +22,17 @@ import {
 import { CiPhone } from "react-icons/ci";
 
 const TermsOfUse = () => {
+  const navigate = useNavigate();
+
+  const handleContactClick = () => {
+    navigate("/contact");
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: "smooth",
+    });
+  };
+
   return (
     <>
       <Navbar />
@@ -221,12 +233,12 @@ const TermsOfUse = () => {
                   Our legal team is available to answer any questions about our terms.
                 </p>
               </div>
-              <a
-                href='/contact'
+              <button
+                onClick={handleContactClick}
                 className="bg-[oklch(70.4%_0.191_22.216)] text-white px-6 py-3 rounded-xl font-medium hover:opacity-90 transition-opacity whitespace-nowrap"
               >
                 Contact Legal Support
-              </a>
+              </button>
             </div>
           </div>
         </div>

@@ -28,6 +28,15 @@ export default function LoginPage() {
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
+  const handleNavigate = (path) => {
+    navigate(path);
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: "smooth",
+    });
+  };
+
   // EMAIL LOGIN / SIGNUP
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -345,12 +354,23 @@ export default function LoginPage() {
 
             {/* TERMS NOTE - COMPACT */}
             <p className="mt-4 text-[0.6rem] text-gray-400 text-center leading-relaxed">
-              By continuing, you agree to Paarsh's{' '}
-              <a href="/terms" className="hover:underline" style={{ color: primaryColor }}>Terms</a>
-              {' '}and{' '}
-              <a href="/privacy" className="hover:underline" style={{ color: primaryColor }}>Privacy Policy</a>
+              By continuing, you agree to Paarsh's{" "}
+              <span
+                onClick={() => handleNavigate("/terms")}
+                className="hover:underline cursor-pointer"
+                style={{ color: primaryColor }}
+              >
+                Terms
+              </span>
+              {" "}and{" "}
+              <span
+                onClick={() => handleNavigate("/privacy")}
+                className="hover:underline cursor-pointer"
+                style={{ color: primaryColor }}
+              >
+                Privacy Policy
+              </span>
             </p>
-
           </div>
 
           {/* RIGHT SIDE - MATRIMONY STYLE IMAGE (FULL HEIGHT, MAINTAINED) */}
