@@ -39,12 +39,11 @@ const Navbar = memo(() => {
 
         const checkScreenSize = () => {
             const width = window.innerWidth;
-            setIsTablet(width <= 1024);
+            setIsTablet(width < 1024);
         };
 
         const handleScroll = () => {
             setScrolled(window.scrollY > 20);
-            setIsMobileMenuOpen(false);
         };
 
         checkScreenSize();
@@ -59,23 +58,6 @@ const Navbar = memo(() => {
             window.removeEventListener("scroll", handleScroll);
         };
     }, []);
-
-    useEffect(() => {
-        const handleOutsideClick = (e) => {
-            const sidebar = document.getElementById("mobile-sidebar");
-            if (sidebar && !sidebar.contains(e.target) && isMobileMenuOpen) {
-                setIsMobileMenuOpen(false);
-            }
-        };
-
-        document.addEventListener("touchstart", handleOutsideClick);
-        document.addEventListener("mousedown", handleOutsideClick);
-
-        return () => {
-            document.removeEventListener("touchstart", handleOutsideClick);
-            document.removeEventListener("mousedown", handleOutsideClick);
-        };
-    }, [isMobileMenuOpen]);
 
     useEffect(() => {
         setIsMobileMenuOpen(false);
@@ -309,7 +291,7 @@ const Navbar = memo(() => {
                             )}
 
                             <button
-                                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                                onClick={() => setIsMobileMenuOpen(prev => !prev)}
                                 className="
                                     relative group p-2
                                     rounded-lg
