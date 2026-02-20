@@ -433,11 +433,10 @@ If you didn't request this OTP, please ignore this email.
         await aiosmtplib.send(
             message,
             hostname="smtp.gmail.com",
-            port=587,
-            start_tls=True,
+            port=465,
             username=EMAIL_USER,
             password=EMAIL_PASS,
-            timeout=30
+            use_tls=True,
         )
         
         return True
