@@ -326,36 +326,7 @@ async def send_otp(email: EmailStr):
         existing_user = await db.users.find_one({"email": email})
         if existing_user:
             raise HTTPException(status_code=400, detail="User already registered. Please login.")
-        
-        # Validate email domain exists with MX records
-        try:
-            # Check MX records (mail exchange records)
-            try:
-                mx_records = dns.resolver.resolve(domain, 'MX')
-                if not mx_records:
-                    raise HTTPException(status_code=400, detail="Email domain cannot receive emails")
-            except dns.resolver.NXDOMAIN:
-                raise HTTPException(status_code=400, detail="Email domain does not exist")
-            except dns.resolver.NoAnswer:
-                # Try A records as fallback
-                try:
-                    a_records = dns.resolver.resolve(domain, 'A')
-                    if not a_records:
-                        raise HTTPException(status_code=400, detail="Email domain does not exist")
-                except:
-                    raise HTTPException(status_code=400, detail="Email domain does not exist")
-            except Exception as e:
-                print(f"DNS error for {domain}: {str(e)}")
-                # Continue anyway - don't block on DNS errors
-        
-        except ImportError:
-            print("dnspython not installed, skipping MX validation")
-            # If dnspython is not installed, do basic domain check
-            try:
-                socket.gethostbyname(domain)
-            except socket.gaierror:
-                raise HTTPException(status_code=400, detail="Email domain does not exist")
-        
+               
         # Additional validation for Gmail addresses
         if domain.lower() == 'gmail.com':
             # Gmail addresses have minimum length requirements
