@@ -389,9 +389,6 @@ async def send_otp(email: EmailStr):
 # ---------------- SEND EMAIL OTP ----------------
 async def send_email_otp(to_email: str, otp: str):
     try:
-        print("EMAIL_USER:", EMAIL_USER)
-        print("EMAIL_PASS exists:", EMAIL_PASS is not None)
-
         message = EmailMessage()
         message["From"] = EMAIL_USER
         message["To"] = to_email
@@ -400,6 +397,8 @@ async def send_email_otp(to_email: str, otp: str):
         message.set_content(f"""
 Your Paarsh Matrimony OTP is: {otp}
 This OTP will expire in 5 minutes.
+
+If you didn't request this OTP, please ignore this email.
 """)
 
         await aiosmtplib.send(
@@ -409,15 +408,19 @@ This OTP will expire in 5 minutes.
             username=EMAIL_USER,
             password=EMAIL_PASS,
             use_tls=True,
-            timeout=20
         )
-
-        print("EMAIL SENT SUCCESS")
+        
         return True
 
+    except aiosmtplib.SMTPRecipientsRefused:
+        raise HTTPException(status_code=400, detail="Email address does not exist")
+    except aiosmtplib.SMTPServerDisconnected:
+        raise HTTPException(status_code=400, detail="Email service temporarily unavailable. Please try again.")
+    except aiosmtplib.SMTPException as e:
+        raise HTTPException(status_code=400, detail="Failed to send OTP")
     except Exception as e:
-        print("SMTP ERROR:", str(e))
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail="Failed to send OTP")
+
 
 # ---------------- VERIFY OTP ----------------
 async def verify_otp(email: str, otp: str):
