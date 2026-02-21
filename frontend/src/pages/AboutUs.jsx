@@ -182,7 +182,7 @@ const AboutUs = () => {
                     </div>
 
                     {/* Contact CTA Section */}
-                    <div className="bg-gradient-to-r from-[oklch(70.4%_0.191_22.216)] to-pink-500 rounded-3xl shadow-2xl overflow-hidden p-10">
+                    <div className="bg-[oklch(70.4%_0.191_22.216)] rounded-3xl shadow-2xl overflow-hidden p-10">
                         <div className="grid md:grid-cols-2 gap-10 items-center">
                             <div>
                                 <h2 className="text-3xl font-bold text-white mb-4">

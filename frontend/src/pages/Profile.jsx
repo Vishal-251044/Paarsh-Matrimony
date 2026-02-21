@@ -53,6 +53,7 @@ import {
   MdFamilyRestroom
 } from "react-icons/md";
 import axios from "axios";
+import { loadRazorpayScript, getTestAttributes, isSeleniumTest } from '../utils/scriptLoader';
 
 // Jeewansathi inspired color theme
 const PRIMARY_COLOR = "#dc2626";
@@ -133,14 +134,26 @@ const customSelectStyles = {
   })
 };
 
-// Enhanced Input component with trim functionality
-const Input = ({ label, type = "text", value, onChange, options = [], placeholder = "", isEditing = true, onBlur, isProtected = false, icon: Icon }) => {
+// Enhanced Input component with trim functionality and test attributes
+const Input = ({ 
+  label, 
+  type = "text", 
+  value, 
+  onChange, 
+  options = [], 
+  placeholder = "", 
+  isEditing = true, 
+  onBlur, 
+  isProtected = false, 
+  icon: Icon,
+  testId 
+}) => {
   if (type === "select") {
     const selectOptions = options.map(opt => ({ value: opt, label: opt }));
     const currentValue = selectOptions.find(opt => opt.value === value) || null;
 
     return (
-      <div>
+      <div {...getTestAttributes(testId)}>
         <label className="block text-sm font-medium text-gray-700 mb-1">
           {label}
         </label>
@@ -156,6 +169,7 @@ const Input = ({ label, type = "text", value, onChange, options = [], placeholde
             isSearchable={true}
             className={`react-select-container ${Icon ? 'pl-10' : ''}`}
             classNamePrefix="react-select"
+            {...getTestAttributes(`${testId}-select`)}
           />
         </div>
         {isProtected && (
@@ -172,7 +186,7 @@ const Input = ({ label, type = "text", value, onChange, options = [], placeholde
     const dateValue = value ? new Date(value) : null;
 
     return (
-      <div>
+      <div {...getTestAttributes(testId)}>
         <label className="block text-sm font-medium text-gray-700 mb-1">
           {label}
         </label>
@@ -190,6 +204,7 @@ const Input = ({ label, type = "text", value, onChange, options = [], placeholde
             dropdownMode="select"
             yearDropdownItemNumber={50}
             scrollableYearDropdown
+            {...getTestAttributes(`${testId}-datepicker`)}
           />
           {Icon ? <Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" /> : <FiCalendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />}
         </div>
@@ -231,7 +246,7 @@ const Input = ({ label, type = "text", value, onChange, options = [], placeholde
     };
 
     return (
-      <div>
+      <div {...getTestAttributes(testId)}>
         <label className="block text-sm font-medium text-gray-700 mb-1">
           {label}
         </label>
@@ -245,6 +260,7 @@ const Input = ({ label, type = "text", value, onChange, options = [], placeholde
             disabled={!isEditing}
             maxLength={12}
             onBlur={() => onBlur && onBlur(value)}
+            {...getTestAttributes(`${testId}-input`)}
           />
           {Icon && <Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />}
         </div>
@@ -254,7 +270,7 @@ const Input = ({ label, type = "text", value, onChange, options = [], placeholde
   }
 
   return (
-    <div>
+    <div {...getTestAttributes(testId)}>
       <label className="block text-sm font-medium text-gray-700 mb-1">
         {label}
       </label>
@@ -274,6 +290,7 @@ const Input = ({ label, type = "text", value, onChange, options = [], placeholde
           disabled={!isEditing || isProtected}
           placeholder={placeholder || `Enter ${label.toLowerCase()}`}
           step={type === "number" ? "any" : undefined}
+          {...getTestAttributes(`${testId}-input`)}
         />
         {Icon && <Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />}
       </div>
@@ -288,11 +305,11 @@ const Input = ({ label, type = "text", value, onChange, options = [], placeholde
 };
 
 // Password Input with show/hide toggle
-const PasswordInput = ({ label, value, onChange, placeholder = "", isEditing = true }) => {
+const PasswordInput = ({ label, value, onChange, placeholder = "", isEditing = true, testId }) => {
   const [showPassword, setShowPassword] = useState(false);
 
   return (
-    <div>
+    <div {...getTestAttributes(testId)}>
       <label className="block text-sm font-medium text-gray-700 mb-1">
         {label}
       </label>
@@ -304,12 +321,14 @@ const PasswordInput = ({ label, value, onChange, placeholder = "", isEditing = t
           onChange={(e) => onChange(e.target.value)}
           disabled={!isEditing}
           placeholder={placeholder || `Enter ${label.toLowerCase()}`}
+          {...getTestAttributes(`${testId}-input`)}
         />
         <button
           type="button"
           className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
           onClick={() => setShowPassword(!showPassword)}
           disabled={!isEditing}
+          {...getTestAttributes(`${testId}-toggle`)}
         >
           {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
         </button>
@@ -319,8 +338,8 @@ const PasswordInput = ({ label, value, onChange, placeholder = "", isEditing = t
 };
 
 // Textarea component with trim functionality
-const Textarea = ({ label, value, onChange, rows = 4, placeholder = "", isEditing = true, icon: Icon }) => (
-  <div className="col-span-2">
+const Textarea = ({ label, value, onChange, rows = 4, placeholder = "", isEditing = true, icon: Icon, testId }) => (
+  <div className="col-span-2" {...getTestAttributes(testId)}>
     <label className="block text-sm font-medium text-gray-700 mb-1">
       {label}
     </label>
@@ -338,6 +357,7 @@ const Textarea = ({ label, value, onChange, rows = 4, placeholder = "", isEditin
         }}
         disabled={!isEditing}
         placeholder={placeholder || `Enter ${label.toLowerCase()}...`}
+        {...getTestAttributes(`${testId}-textarea`)}
       />
       {Icon && <Icon className="absolute left-3 top-3 text-gray-400" />}
     </div>
@@ -345,8 +365,11 @@ const Textarea = ({ label, value, onChange, rows = 4, placeholder = "", isEditin
 );
 
 // Section component with Jeewansathi style
-const Section = ({ title, children, icon: Icon }) => (
-  <div className="mb-6 bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
+const Section = ({ title, children, icon: Icon, testId }) => (
+  <div 
+    className="mb-6 bg-white rounded-lg border border-gray-200 p-5 shadow-sm"
+    {...getTestAttributes(testId)}
+  >
     <div className="flex items-center gap-2 mb-4">
       {Icon && <Icon className="text-red-500" size={20} />}
       <h3 className="text-lg font-semibold text-gray-800">
@@ -357,13 +380,17 @@ const Section = ({ title, children, icon: Icon }) => (
   </div>
 );
 
-// ========== NEW ACCORDION FORM BOX ==========
-const AccordionFormBox = ({ title, children, isOpen, onToggle, icon: Icon, sectionProgress }) => {
+// Accordion Form Box
+const AccordionFormBox = ({ title, children, isOpen, onToggle, icon: Icon, sectionProgress, testId }) => {
   return (
-    <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-5 md:p-6 mb-4 transition-all duration-200">
+    <div 
+      className="bg-white rounded-xl shadow-lg border border-gray-200 p-5 md:p-6 mb-4 transition-all duration-200"
+      {...getTestAttributes(testId)}
+    >
       <div
         className="flex justify-between items-center cursor-pointer group"
         onClick={onToggle}
+        {...getTestAttributes(`${testId}-toggle`)}
       >
         <div className="flex items-center gap-3 flex-1">
           {Icon && <Icon className="text-red-500 text-xl" />}
@@ -404,8 +431,6 @@ const AccordionFormBox = ({ title, children, isOpen, onToggle, icon: Icon, secti
   );
 };
 
-// ========== ENHANCED PREVIEW COMPONENTS ==========
-
 // Helper function to check if value exists and is meaningful
 const hasValue = (value) => {
   if (value === null || value === undefined) return false;
@@ -424,8 +449,11 @@ const formatDisplayValue = (value) => {
 };
 
 // Empty State Component
-const EmptyStatePreview = ({ onEdit, title, icon: Icon }) => (
-  <div className="flex flex-col items-center justify-center py-10 px-4 bg-gradient-to-br from-gray-50 to-white rounded-2xl border-2 border-dashed border-red-200">
+const EmptyStatePreview = ({ onEdit, title, icon: Icon, testId }) => (
+  <div 
+    className="flex flex-col items-center justify-center py-10 px-4 bg-gradient-to-br from-gray-50 to-white rounded-2xl border-2 border-dashed border-red-200"
+    {...getTestAttributes(testId)}
+  >
     <div className="w-20 h-20 bg-gradient-to-br from-red-50 to-red-100 rounded-full flex items-center justify-center mb-4">
       {Icon && <Icon className="text-red-500 text-4xl" />}
     </div>
@@ -436,6 +464,7 @@ const EmptyStatePreview = ({ onEdit, title, icon: Icon }) => (
     <button
       onClick={onEdit}
       className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+      {...getTestAttributes(`${testId}-add-button`)}
     >
       <FiPlusCircle className="text-lg" />
       Add {title}
@@ -443,22 +472,28 @@ const EmptyStatePreview = ({ onEdit, title, icon: Icon }) => (
   </div>
 );
 
-// Info Card Component for consistent styling
-const InfoCard = ({ children, className = "" }) => (
-  <div className={`bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden ${className}`}>
+// Info Card Component
+const InfoCard = ({ children, className = "", testId }) => (
+  <div 
+    className={`bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden ${className}`}
+    {...getTestAttributes(testId)}
+  >
     <div className="px-2 sm:px-4 py-2 sm:py-3">
       {children}
     </div>
   </div>
 );
 
-// Info Row Component for consistent field display
-const InfoRow = ({ label, value, icon: Icon }) => {
+// Info Row Component
+const InfoRow = ({ label, value, icon: Icon, testId }) => {
   const displayValue = formatDisplayValue(value);
   if (!displayValue) return null;
 
   return (
-    <div className="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-3 py-2 px-2 sm:px-3 border-b border-gray-50 last:border-0">
+    <div 
+      className="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-3 py-2 px-2 sm:px-3 border-b border-gray-50 last:border-0"
+      {...getTestAttributes(testId)}
+    >
       <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
         <div className="flex-shrink-0 w-5 h-5">
           {Icon ? (
@@ -481,10 +516,13 @@ const InfoRow = ({ label, value, icon: Icon }) => {
 };
 
 // Section Header Component
-const SectionHeader = ({ title, icon: Icon, count }) => {
+const SectionHeader = ({ title, icon: Icon, count, testId }) => {
   if (!count) return null;
   return (
-    <div className="flex items-center gap-1 sm:gap-2 mb-2 sm:mb-3 pb-1 sm:pb-2 border-b border-gray-100">
+    <div 
+      className="flex items-center gap-1 sm:gap-2 mb-2 sm:mb-3 pb-1 sm:pb-2 border-b border-gray-100"
+      {...getTestAttributes(testId)}
+    >
       <div className="p-1 sm:p-1.5 bg-red-50 rounded-lg">
         {Icon && <Icon className="text-red-600 text-sm sm:text-lg" />}
       </div>
@@ -495,9 +533,8 @@ const SectionHeader = ({ title, icon: Icon, count }) => {
   );
 };
 
-// ========== SELF PREVIEW ==========
-const SelfPreview = ({ personalInfo, locationInfo, religionInfo, educationInfo, careerInfo, aboutYourself, onEdit }) => {
-  // Check if any data exists
+// Self Preview Component
+const SelfPreview = ({ personalInfo, locationInfo, religionInfo, educationInfo, careerInfo, aboutYourself, onEdit, testId }) => {
   const hasAnyData = () => {
     const allFields = [
       personalInfo.profileImg,
@@ -536,10 +573,9 @@ const SelfPreview = ({ personalInfo, locationInfo, religionInfo, educationInfo, 
   };
 
   if (!hasAnyData()) {
-    return <EmptyStatePreview onEdit={onEdit} title="Self Information" icon={FiUser} />;
+    return <EmptyStatePreview onEdit={onEdit} title="Self Information" icon={FiUser} testId={`${testId}-empty`} />;
   }
 
-  // Collect all non-empty sections with their fields count
   const sections = [];
 
   // Personal Details Section
@@ -636,14 +672,12 @@ const SelfPreview = ({ personalInfo, locationInfo, religionInfo, educationInfo, 
     });
   }
 
-  // About Yourself Section
   const hasAbout = hasValue(aboutYourself);
 
   return (
-    <div className="space-y-3 sm:space-y-5">
-      {/* Profile Image Header - Only show if image exists */}
+    <div className="space-y-3 sm:space-y-5" {...getTestAttributes(testId)}>
       {hasValue(personalInfo.profileImg) && (
-        <InfoCard>
+        <InfoCard testId={`${testId}-profile-image`}>
           <div className="flex items-center gap-4 p-4">
             <div className="relative">
               <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-white shadow">
@@ -652,6 +686,7 @@ const SelfPreview = ({ personalInfo, locationInfo, religionInfo, educationInfo, 
                   alt="Profile"
                   className="w-full h-full object-cover"
                   onError={(e) => { e.target.src = "/5.png"; }}
+                  {...getTestAttributes(`${testId}-profile-img`)}
                 />
               </div>
             </div>
@@ -681,25 +716,29 @@ const SelfPreview = ({ personalInfo, locationInfo, religionInfo, educationInfo, 
         </InfoCard>
       )}
 
-      {/* Dynamic Sections - Only render if they have fields */}
       {sections.map((section, idx) => (
-        <InfoCard key={idx}>
+        <InfoCard key={idx} testId={`${testId}-section-${idx}`}>
           <div className="p-4">
-            <SectionHeader title={section.title} icon={section.icon} count={section.count} />
+            <SectionHeader title={section.title} icon={section.icon} count={section.count} testId={`${testId}-section-header-${idx}`} />
             <div className="space-y-0.5">
               {section.fields.map((field, fieldIdx) => (
-                <InfoRow key={fieldIdx} label={field.label} value={field.value} icon={field.icon} />
+                <InfoRow 
+                  key={fieldIdx} 
+                  label={field.label} 
+                  value={field.value} 
+                  icon={field.icon} 
+                  testId={`${testId}-field-${idx}-${fieldIdx}`}
+                />
               ))}
             </div>
           </div>
         </InfoCard>
       ))}
 
-      {/* About Yourself - Only if has content */}
       {hasAbout && (
-        <InfoCard>
+        <InfoCard testId={`${testId}-about`}>
           <div className="p-4">
-            <SectionHeader title="About Yourself" icon={FiUser} count={1} />
+            <SectionHeader title="About Yourself" icon={FiUser} count={1} testId={`${testId}-about-header`} />
             <div className="mt-2">
               <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
                 {aboutYourself.trim()}
@@ -709,7 +748,6 @@ const SelfPreview = ({ personalInfo, locationInfo, religionInfo, educationInfo, 
         </InfoCard>
       )}
 
-      {/* Profile Image Missing Warning */}
       {!hasValue(personalInfo.profileImg) && hasAnyData() && (
         <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-2">
           <MdWarning className="text-amber-500 text-lg flex-shrink-0" />
@@ -719,6 +757,7 @@ const SelfPreview = ({ personalInfo, locationInfo, religionInfo, educationInfo, 
           <button
             onClick={onEdit}
             className="ml-auto text-xs bg-amber-500 text-white px-3 py-1 rounded-md"
+            {...getTestAttributes(`${testId}-upload-button`)}
           >
             Upload
           </button>
@@ -728,9 +767,8 @@ const SelfPreview = ({ personalInfo, locationInfo, religionInfo, educationInfo, 
   );
 };
 
-// ========== FAMILY PREVIEW ==========
-const FamilyPreview = ({ familyInfo, aboutFamily, onEdit }) => {
-  // Check if any data exists
+// Family Preview Component
+const FamilyPreview = ({ familyInfo, aboutFamily, onEdit, testId }) => {
   const hasAnyData = () => {
     const allFields = [
       familyInfo.fatherName,
@@ -749,10 +787,9 @@ const FamilyPreview = ({ familyInfo, aboutFamily, onEdit }) => {
   };
 
   if (!hasAnyData()) {
-    return <EmptyStatePreview onEdit={onEdit} title="Family Information" icon={MdFamilyRestroom} />;
+    return <EmptyStatePreview onEdit={onEdit} title="Family Information" icon={MdFamilyRestroom} testId={`${testId}-empty`} />;
   }
 
-  // Collect all non-empty sections
   const sections = [];
 
   // Parents Information
@@ -810,26 +847,30 @@ const FamilyPreview = ({ familyInfo, aboutFamily, onEdit }) => {
   const hasAbout = hasValue(aboutFamily);
 
   return (
-    <div className="space-y-5">
-      {/* Dynamic Sections */}
+    <div className="space-y-5" {...getTestAttributes(testId)}>
       {sections.map((section, idx) => (
-        <InfoCard key={idx}>
+        <InfoCard key={idx} testId={`${testId}-section-${idx}`}>
           <div className="p-4">
-            <SectionHeader title={section.title} icon={section.icon} count={section.count} />
+            <SectionHeader title={section.title} icon={section.icon} count={section.count} testId={`${testId}-section-header-${idx}`} />
             <div className="space-y-0.5">
               {section.fields.map((field, fieldIdx) => (
-                <InfoRow key={fieldIdx} label={field.label} value={field.value} icon={field.icon} />
+                <InfoRow 
+                  key={fieldIdx} 
+                  label={field.label} 
+                  value={field.value} 
+                  icon={field.icon} 
+                  testId={`${testId}-field-${idx}-${fieldIdx}`}
+                />
               ))}
             </div>
           </div>
         </InfoCard>
       ))}
 
-      {/* About Family */}
       {hasAbout && (
-        <InfoCard>
+        <InfoCard testId={`${testId}-about`}>
           <div className="p-4">
-            <SectionHeader title="About Family" icon={MdFamilyRestroom} count={1} />
+            <SectionHeader title="About Family" icon={MdFamilyRestroom} count={1} testId={`${testId}-about-header`} />
             <div className="mt-2">
               <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
                 {aboutFamily.trim()}
@@ -842,9 +883,8 @@ const FamilyPreview = ({ familyInfo, aboutFamily, onEdit }) => {
   );
 };
 
-// ========== PARTNER PREVIEW ==========
-const PartnerPreview = ({ partnerInfo, onEdit }) => {
-  // Check if any data exists
+// Partner Preview Component
+const PartnerPreview = ({ partnerInfo, onEdit, testId }) => {
   const hasAnyData = () => {
     const allFields = [
       partnerInfo.preferredAgeRange,
@@ -864,10 +904,9 @@ const PartnerPreview = ({ partnerInfo, onEdit }) => {
   };
 
   if (!hasAnyData()) {
-    return <EmptyStatePreview onEdit={onEdit} title="Partner Preferences" icon={FiUsers} />;
+    return <EmptyStatePreview onEdit={onEdit} title="Partner Preferences" icon={FiUsers} testId={`${testId}-empty`} />;
   }
 
-  // Collect all non-empty sections
   const sections = [];
 
   // Basic Preferences
@@ -933,30 +972,33 @@ const PartnerPreview = ({ partnerInfo, onEdit }) => {
     });
   }
 
-  // Looking For
   const hasLookingFor = hasValue(partnerInfo.lookingFor);
 
   return (
-    <div className="space-y-5">
-      {/* Dynamic Sections */}
+    <div className="space-y-5" {...getTestAttributes(testId)}>
       {sections.map((section, idx) => (
-        <InfoCard key={idx}>
+        <InfoCard key={idx} testId={`${testId}-section-${idx}`}>
           <div className="p-4">
-            <SectionHeader title={section.title} icon={section.icon} count={section.count} />
+            <SectionHeader title={section.title} icon={section.icon} count={section.count} testId={`${testId}-section-header-${idx}`} />
             <div className="space-y-0.5">
               {section.fields.map((field, fieldIdx) => (
-                <InfoRow key={fieldIdx} label={field.label} value={field.value} icon={field.icon} />
+                <InfoRow 
+                  key={fieldIdx} 
+                  label={field.label} 
+                  value={field.value} 
+                  icon={field.icon} 
+                  testId={`${testId}-field-${idx}-${fieldIdx}`}
+                />
               ))}
             </div>
           </div>
         </InfoCard>
       ))}
 
-      {/* Looking For */}
       {hasLookingFor && (
-        <InfoCard>
+        <InfoCard testId={`${testId}-looking-for`}>
           <div className="p-4">
-            <SectionHeader title="Looking For" icon={FiUsers} count={1} />
+            <SectionHeader title="Looking For" icon={FiUsers} count={1} testId={`${testId}-looking-for-header`} />
             <div className="mt-2">
               <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
                 {partnerInfo.lookingFor.trim()}
@@ -969,8 +1011,8 @@ const PartnerPreview = ({ partnerInfo, onEdit }) => {
   );
 };
 
-// Custom Button Components with consistent styles
-const PrimaryButton = ({ children, onClick, loading = false, disabled = false, className = "", icon: Icon }) => (
+// Primary Button Component
+const PrimaryButton = ({ children, onClick, loading = false, disabled = false, className = "", icon: Icon, testId }) => (
   <button
     onClick={onClick}
     disabled={disabled || loading}
@@ -985,6 +1027,7 @@ const PrimaryButton = ({ children, onClick, loading = false, disabled = false, c
       focus:outline-none
       ${className}
     `}
+    {...getTestAttributes(testId)}
   >
     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
     <div className="relative flex items-center justify-center gap-2">
@@ -1003,7 +1046,8 @@ const PrimaryButton = ({ children, onClick, loading = false, disabled = false, c
   </button>
 );
 
-const SecondaryButton = ({ children, onClick, loading = false, disabled = false, className = "", icon: Icon }) => (
+// Secondary Button Component
+const SecondaryButton = ({ children, onClick, loading = false, disabled = false, className = "", icon: Icon, testId }) => (
   <button
     onClick={onClick}
     disabled={disabled || loading}
@@ -1018,6 +1062,7 @@ const SecondaryButton = ({ children, onClick, loading = false, disabled = false,
       focus:outline-none
       ${className}
     `}
+    {...getTestAttributes(testId)}
   >
     <div className="absolute inset-0 bg-gradient-to-r from-red-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
     <div className="relative flex items-center justify-center gap-2">
@@ -1036,7 +1081,8 @@ const SecondaryButton = ({ children, onClick, loading = false, disabled = false,
   </button>
 );
 
-const OutlineButton = ({ children, onClick, loading = false, disabled = false, className = "", icon: Icon }) => (
+// Outline Button Component
+const OutlineButton = ({ children, onClick, loading = false, disabled = false, className = "", icon: Icon, testId }) => (
   <button
     onClick={onClick}
     disabled={disabled || loading}
@@ -1049,6 +1095,7 @@ const OutlineButton = ({ children, onClick, loading = false, disabled = false, c
       focus:outline-none
       ${className}
     `}
+    {...getTestAttributes(testId)}
   >
     <div className="flex items-center justify-center gap-2">
       {loading ? (
@@ -1063,7 +1110,8 @@ const OutlineButton = ({ children, onClick, loading = false, disabled = false, c
   </button>
 );
 
-const IconButton = ({ children, onClick, loading = false, disabled = false, className = "" }) => (
+// Icon Button Component
+const IconButton = ({ children, onClick, loading = false, disabled = false, className = "", testId }) => (
   <button
     onClick={onClick}
     disabled={disabled || loading}
@@ -1076,40 +1124,36 @@ const IconButton = ({ children, onClick, loading = false, disabled = false, clas
       focus:outline-none
       ${className}
     `}
+    {...getTestAttributes(testId)}
   >
     {loading ? <FiLoader className="animate-spin" size={18} /> : children}
   </button>
 );
 
-const SubmitButton = ({ text, onClick, loading = false, disabled = false, icon: Icon = FiSave }) => (
-  <PrimaryButton onClick={onClick} loading={loading} disabled={disabled} icon={Icon}>
-    {text}
-  </PrimaryButton>
-);
-
-const LoadingButton = ({ children, onClick, loading = false, disabled = false, className = "", variant = "primary" }) => {
+// Loading Button Component
+const LoadingButton = ({ children, onClick, loading = false, disabled = false, className = "", variant = "primary", icon: Icon, testId }) => {
   if (variant === "primary") {
     return (
-      <PrimaryButton onClick={onClick} loading={loading} disabled={disabled} className={className}>
+      <PrimaryButton onClick={onClick} loading={loading} disabled={disabled} className={className} icon={Icon} testId={testId}>
         {children}
       </PrimaryButton>
     );
   }
   if (variant === "secondary") {
     return (
-      <SecondaryButton onClick={onClick} loading={loading} disabled={disabled} className={className}>
+      <SecondaryButton onClick={onClick} loading={loading} disabled={disabled} className={className} icon={Icon} testId={testId}>
         {children}
       </SecondaryButton>
     );
   }
   return (
-    <OutlineButton onClick={onClick} loading={loading} disabled={disabled} className={className}>
+    <OutlineButton onClick={onClick} loading={loading} disabled={disabled} className={className} icon={Icon} testId={testId}>
       {children}
     </OutlineButton>
   );
 };
 
-// MembershipCard component - Jeewansathi style
+// Membership Card Component
 const MembershipCard = ({
   type,
   features,
@@ -1119,7 +1163,8 @@ const MembershipCard = ({
   handlePayment,
   loadingPayment,
   handleSubmit,
-  membershipDates = {}
+  membershipDates = {},
+  testId
 }) => {
   const isPremiumUser = currentPlan === "Premium Membership";
   const isCurrentPlan = currentPlan === type;
@@ -1135,7 +1180,10 @@ const MembershipCard = ({
   };
 
   return (
-    <div className={`relative border rounded-xl p-6 transition-all duration-300 ${popular ? 'border-red-500 shadow-lg ring-2 ring-red-500 ring-opacity-20' : 'border-gray-200 hover:border-red-300'}`}>
+    <div 
+      className={`relative border rounded-xl p-6 transition-all duration-300 ${popular ? 'border-red-500 shadow-lg ring-2 ring-red-500 ring-opacity-20' : 'border-gray-200 hover:border-red-300'}`}
+      {...getTestAttributes(testId)}
+    >
       {popular && (
         <div className="absolute -top-2 sm:-top-3 left-1/2 -translate-x-1/2">
           <span className="
@@ -1180,6 +1228,7 @@ const MembershipCard = ({
           className="w-full py-3"
           variant={isCurrentPlan ? "secondary" : "primary"}
           icon={isCurrentPlan ? FiCheckCircle : null}
+          testId={`${testId}-free-button`}
         >
           {isCurrentPlan ? (
             "Current Plan"
@@ -1197,6 +1246,7 @@ const MembershipCard = ({
           className="w-full py-3"
           variant={isCurrentPlan ? "secondary" : "primary"}
           icon={isCurrentPlan ? FiCheckCircle : MdOutlineWorkspacePremium}
+          testId={`${testId}-premium-button`}
         >
           {isCurrentPlan ? (
             "Current Plan"
@@ -1209,6 +1259,7 @@ const MembershipCard = ({
   );
 };
 
+// Main Profile Component
 const Profile = () => {
   const navigate = useNavigate();
   const { updateUserProfile } = useUserContext();
@@ -1223,7 +1274,7 @@ const Profile = () => {
   const [activeSection, setActiveSection] = useState("self");
   const [showKundali, setShowKundali] = useState(false);
 
-  // ========== NEW EDIT STATES ==========
+  // Edit States
   const [isEditingSelf, setIsEditingSelf] = useState(false);
   const [isEditingFamily, setIsEditingFamily] = useState(false);
   const [isEditingPartner, setIsEditingPartner] = useState(false);
@@ -1245,14 +1296,14 @@ const Profile = () => {
     documentType: "",
     documentImage: null,
     documentNumber: "",
-    status: null // null, 'pending', 'approved', 'rejected'
+    status: null
   });
   const [verificationStatus, setVerificationStatus] = useState(null);
   const [rejectionReason, setRejectionReason] = useState("");
   const [canResubmitVerification, setCanResubmitVerification] = useState(false);
   const [resubmitAfterDate, setResubmitAfterDate] = useState(null);
 
-  // ========== ACCORDION STATE ==========
+  // Accordion State
   const [openSections, setOpenSections] = useState({
     self: true,
     family: false,
@@ -1369,6 +1420,7 @@ const Profile = () => {
     membershipExpiryDate: ""
   });
 
+  // Calculate section completion
   const calculateSectionCompletion = (section) => {
     let filledFields = 0;
     let totalWeight = 0;
@@ -1524,6 +1576,7 @@ const Profile = () => {
     aboutFamily
   ]);
 
+  // Check membership status
   const checkMembershipStatus = async () => {
     try {
       const paymentResponse = await axios.get(
@@ -1549,7 +1602,6 @@ const Profile = () => {
         }
       }
     } catch (error) {
-      // Only log error if it's not a 500 for new users
       if (error.response?.status !== 500) {
         console.error("Error checking membership:", error);
       }
@@ -1558,7 +1610,6 @@ const Profile = () => {
 
   useEffect(() => {
     if (user) {
-      // Calculate overall profile completion percentage
       const calculateOverallProgress = () => {
         const selfProgress = calculateSectionCompletion('self');
         const familyProgress = calculateSectionCompletion('family');
@@ -1568,11 +1619,9 @@ const Profile = () => {
 
       const overallProgress = calculateOverallProgress();
 
-      // Only check membership status if profile is at least 80% complete
       if (overallProgress >= 80) {
         checkMembershipStatus();
       } else {
-        // Set default values for incomplete profiles
         setMembershipPlan("free");
         setMembershipDates({
           membershipStartDate: "",
@@ -1587,6 +1636,13 @@ const Profile = () => {
     if (hash === '#plan') {
       setActiveSection('plan');
       window.history.replaceState(null, '', '/profile');
+    }
+  }, []);
+
+  // Pre-load Razorpay script
+  useEffect(() => {
+    if (!window.Razorpay) {
+      loadRazorpayScript();
     }
   }, []);
 
@@ -1777,7 +1833,6 @@ const Profile = () => {
         setVerificationStatus(response.data.status);
         setRejectionReason(response.data.rejectionReason || "");
 
-        // Handle resubmission eligibility
         if (response.data.canResubmit !== undefined) {
           setCanResubmitVerification(response.data.canResubmit);
         }
@@ -1794,14 +1849,12 @@ const Profile = () => {
         }));
       }
     } catch (error) {
-      // 404 means no verification found, which is fine
       if (error.response?.status !== 404) {
         console.error("Error checking verification status:", error);
       }
     }
   };
 
-  // Add to useEffect where user is loaded
   useEffect(() => {
     if (user) {
       checkVerificationStatus();
@@ -1894,7 +1947,6 @@ const Profile = () => {
     }
   };
 
-  // ✅ FIXED: validateSelfInfo function with proper image validation
   const validateSelfInfo = () => {
     const trimmedPersonalInfo = {
       ...personalInfo,
@@ -1949,13 +2001,11 @@ const Profile = () => {
 
     const missingFields = requiredFields.filter(item => !item.field || item.field.toString().trim() === "");
 
-    // ✅ FIXED: Better profile image validation
     const hasValidProfileImage = () => {
       if (!personalInfo.profileImg || personalInfo.profileImg.trim() === "") {
         return false;
       }
 
-      // Check for placeholder or empty data URL
       if (personalInfo.profileImg === "data:," ||
         personalInfo.profileImg.includes("placeholder") ||
         (personalInfo.profileImg.includes("data:image/") && personalInfo.profileImg.length < 100)) {
@@ -2179,7 +2229,6 @@ const Profile = () => {
 
     setLoadingState('saveProfile', true);
 
-    // ✅ FIXED: Add retry mechanism for network errors
     const maxRetries = 2;
     let retryCount = 0;
     let lastError = null;
@@ -2215,14 +2264,13 @@ const Profile = () => {
               Authorization: `Bearer ${token}`,
               'Content-Type': 'application/json'
             },
-            timeout: 10000 // 10 second timeout
+            timeout: 10000
           }
         );
 
         console.log("Save response:", response.data);
         toast.success(`${section} information saved successfully!`);
 
-        // Turn off edit mode after save
         if (section === "Self") {
           setIsEditingSelf(false);
         } else if (section === "Family") {
@@ -2231,7 +2279,6 @@ const Profile = () => {
           setIsEditingPartner(false);
         }
 
-        // Update state with trimmed values
         setPersonalInfo(trimmedPersonalInfo);
         setLocationInfo(trimmedLocationInfo);
         setReligionInfo(trimmedReligionInfo);
@@ -2248,7 +2295,6 @@ const Profile = () => {
 
         calculateAllProgress();
 
-        // ✅ Success - break the retry loop
         setLoadingState('saveProfile', false);
         return;
 
@@ -2258,19 +2304,16 @@ const Profile = () => {
 
         console.error(`Attempt ${retryCount} failed:`, err);
 
-        // If it's not a network error, don't retry
         if (err.message !== "Network Error" && !err.code === 'ECONNABORTED') {
           break;
         }
 
-        // Wait before retrying (exponential backoff)
         if (retryCount < maxRetries) {
           await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
         }
       }
     }
 
-    // ✅ All retries failed
     console.error("Save profile error after retries:", lastError);
 
     if (lastError?.message === "Network Error") {
@@ -2289,7 +2332,6 @@ const Profile = () => {
     setLoadingState('saveProfile', false);
   };
 
-  // ✅ FIXED: handlePostProfile function with proper image validation
   const handlePostProfile = async () => {
     const { progress, allComplete } = calculateAllProgress();
 
@@ -2302,7 +2344,6 @@ const Profile = () => {
       return;
     }
 
-    // ✅ FIXED: Better profile image validation for publishing
     const hasValidProfileImage = () => {
       if (!personalInfo.profileImg || personalInfo.profileImg.trim() === "") {
         return false;
@@ -2499,7 +2540,18 @@ const Profile = () => {
 
   const handlePayment = async (planType, amount) => {
     setLoadingState('payment', true);
+    
     try {
+      // Check if Razorpay is loaded
+      if (!window.Razorpay) {
+        toast.info("Loading payment gateway...");
+        
+        const scriptLoaded = await loadRazorpayScript();
+        if (!scriptLoaded) {
+          throw new Error("Failed to load payment gateway");
+        }
+      }
+      
       const response = await axios.post(
         `${BACKEND_URL}/payment/create-order`,
         {
@@ -2513,14 +2565,19 @@ const Profile = () => {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json'
-          }
+          },
+          timeout: 10000
         }
       );
 
       const order = response.data;
 
+      if (!order.id) {
+        throw new Error("Invalid order response");
+      }
+
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_SAV5YlU6Yyoefc",
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
         amount: order.amount,
         currency: order.currency,
         name: "Paarsh Matrimony",
@@ -2529,6 +2586,10 @@ const Profile = () => {
         order_id: order.id,
         handler: async function (response) {
           try {
+            if (!response.razorpay_payment_id) {
+              throw new Error("Invalid payment response");
+            }
+            
             const paymentResponse = await axios.post(
               `${BACKEND_URL}/payment/verify`,
               {
@@ -2542,7 +2603,8 @@ const Profile = () => {
                 headers: {
                   Authorization: `Bearer ${token}`,
                   'Content-Type': 'application/json'
-                }
+                },
+                timeout: 10000
               }
             );
 
@@ -2599,7 +2661,7 @@ const Profile = () => {
             }
           } catch (error) {
             console.error("Payment verification error:", error);
-            toast.error("Payment verification failed. Please contact support.");
+            toast.error(error.response?.data?.detail || "Payment verification failed");
           } finally {
             setLoadingState('payment', false);
           }
@@ -2613,10 +2675,11 @@ const Profile = () => {
           color: "#dc2626"
         },
         modal: {
-          ondismiss: function () {
+          ondismiss: function() {
             setLoadingState('payment', false);
             toast.info("Payment cancelled");
-          }
+          },
+          confirm_close: true
         },
         notes: {
           plan: planType,
@@ -2624,31 +2687,42 @@ const Profile = () => {
         }
       };
 
-      const razorpay = new window.Razorpay(options);
+      let razorpay;
+      try {
+        razorpay = new window.Razorpay(options);
+      } catch (razorpayError) {
+        console.error("Razorpay initialization error:", razorpayError);
+        await loadRazorpayScript(true);
+        razorpay = new window.Razorpay(options);
+      }
+      
       razorpay.open();
 
-      razorpay.on('payment.failed', function (response) {
+      razorpay.on('payment.failed', function(response) {
         console.error('Payment failed:', response.error);
         toast.error(`Payment failed: ${response.error.description || 'Unknown error'}`);
         setLoadingState('payment', false);
       });
+      
     } catch (error) {
       console.error("Payment initiation error:", error);
-      toast.error(error.response?.data?.detail || "Failed to initiate payment");
+      
+      if (error.message === "Failed to load payment gateway") {
+        toast.error("Unable to load payment gateway. Please check your internet connection.");
+      } else if (error.response?.status === 401) {
+        toast.error("Session expired. Please login again.");
+        navigate("/login");
+      } else if (error.response?.status === 400) {
+        toast.error(error.response.data?.detail || "Invalid payment request");
+      } else if (error.code === 'ECONNABORTED') {
+        toast.error("Request timeout. Please try again.");
+      } else {
+        toast.error(error.response?.data?.detail || "Failed to initiate payment");
+      }
+      
       setLoadingState('payment', false);
     }
   };
-
-  useEffect(() => {
-    const script = document.createElement('script');
-    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-    script.async = true;
-    document.body.appendChild(script);
-
-    return () => {
-      document.body.removeChild(script);
-    };
-  }, []);
 
   if (loading) {
     return (
@@ -2677,480 +2751,393 @@ const Profile = () => {
 
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pt-20 md:pt-24 pb-12">
         <div className="container mx-auto px-3 md:px-4">
-          {/* ========== NEW 1.5:3 LAYOUT ========== */}
           <div className="flex flex-col lg:flex-row gap-8">
-            {/* LEFT SIDEBAR: PROFILE BOX (1.5 ratio on desktop) */}
-            <div className="lg:w-[30%] w-full lg:h-[calc(100vh-80px)] lg:sticky lg:top-20">              <div ref={sidebarRef} className="bg-gradient-to-br from-white via-white to-red-50/30 rounded-2xl shadow-xl p-4 md:p-6 relative border border-red-100/80 backdrop-blur-sm h-full overflow-y-auto scrollbar-hide">
-              <div className="absolute top-4 right-4 z-20">
-                <div className="relative">
-                  <IconButton
-                    onClick={() => setShowSettings(!showSettings)}
-                    loading={false}
-                  >
-                    <FiSettings className="w-5 h-5" />
-                  </IconButton>
-                  {showSettings && (
-                    <div className="absolute right-0 mt-2 w-64 bg-white/95 backdrop-blur-sm border border-red-100 shadow-xl rounded-xl text-left z-50 overflow-hidden animate-fadeIn">
-                      <div className="py-1">
-                        <button
-                          className="flex items-center gap-3 w-full text-left px-4 py-3 hover:bg-gradient-to-r hover:from-red-50/50 hover:to-transparent transition-all duration-200 disabled:opacity-50 group"
-                          onClick={() => {
-                            setShowPasswordBox(true);
-                            setShowFeedbackBox(false);
-                            setShowDeleteConfirm(false);
-                            setShowSettings(false);
-                            sidebarRef.current?.scrollTo({ top: 500, behavior: "smooth" });
-                          }}
-                          disabled={loadingStates.passwordUpdate}
-                        >
-                          <div className="p-1.5 rounded-lg bg-red-50 group-hover:bg-red-100 transition-colors">
-                            <FiEdit2 className="w-4 h-4 text-red-500" />
-                          </div>
-                          <span className="font-medium text-gray-700">Change Password</span>
-                        </button>
-                        <button
-                          className="flex items-center gap-3 w-full text-left px-4 py-3 hover:bg-gradient-to-r hover:from-red-50/50 hover:to-transparent transition-all duration-200 disabled:opacity-50 group"
-                          onClick={() => {
-                            setShowFeedbackBox(true);
-                            setShowPasswordBox(false);
-                            setShowDeleteConfirm(false);
-                            setShowSettings(false);
-                            sidebarRef.current?.scrollTo({ top: 500, behavior: "smooth" });
-                          }}
-                          disabled={loadingStates.feedbackSubmit}
-                        >
-                          <div className="p-1.5 rounded-lg bg-red-50 group-hover:bg-red-100 transition-colors">
-                            <FiMessageSquare className="w-4 h-4 text-red-500" />
-                          </div>
-                          <span className="font-medium text-gray-700">Give Feedback</span>
-                        </button>
-                        {isProfilePublished && (
+            {/* LEFT SIDEBAR */}
+            <div className="lg:w-[30%] w-full lg:h-[calc(100vh-80px)] lg:sticky lg:top-20">
+              <div ref={sidebarRef} className="bg-gradient-to-br from-white via-white to-red-50/30 rounded-2xl shadow-xl p-4 md:p-6 relative border border-red-100/80 backdrop-blur-sm h-full overflow-y-auto scrollbar-hide">
+                <div className="absolute top-4 right-4 z-20">
+                  <div className="relative">
+                    <IconButton
+                      onClick={() => setShowSettings(!showSettings)}
+                      loading={false}
+                      testId="settings-button"
+                    >
+                      <FiSettings className="w-5 h-5" />
+                    </IconButton>
+                    {showSettings && (
+                      <div className="absolute right-0 mt-2 w-64 bg-white/95 backdrop-blur-sm border border-red-100 shadow-xl rounded-xl text-left z-50 overflow-hidden animate-fadeIn">
+                        <div className="py-1">
                           <button
                             className="flex items-center gap-3 w-full text-left px-4 py-3 hover:bg-gradient-to-r hover:from-red-50/50 hover:to-transparent transition-all duration-200 disabled:opacity-50 group"
                             onClick={() => {
-                              handleRemoveProfile();
-                              setShowSettings(false);
-                            }}
-                            disabled={loadingStates.removeProfile}
-                          >
-                            <div className="p-1.5 rounded-lg bg-red-50 group-hover:bg-red-100 transition-colors">
-                              <MdOutlineRemoveCircle className="w-4 h-4 text-red-500" />
-                            </div>
-                            <span className="font-medium text-gray-700">Hide Profile</span>
-                          </button>
-                        )}
-                        {isProfilePublished && (
-                          <button
-                            className="flex items-center gap-3 w-full text-left px-4 py-3 hover:bg-gradient-to-r hover:from-red-50/50 hover:to-transparent transition-all duration-200 disabled:opacity-50 group"
-                            onClick={() => {
-                              setShowVerificationBox(true);
-                              setShowPasswordBox(false);
+                              setShowPasswordBox(true);
                               setShowFeedbackBox(false);
                               setShowDeleteConfirm(false);
                               setShowSettings(false);
                               sidebarRef.current?.scrollTo({ top: 500, behavior: "smooth" });
                             }}
-                            disabled={loadingStates.verification}
+                            disabled={loadingStates.passwordUpdate}
+                            {...getTestAttributes('change-password-button')}
                           >
                             <div className="p-1.5 rounded-lg bg-red-50 group-hover:bg-red-100 transition-colors">
-                              <FiCheckCircle className="w-4 h-4 text-red-500" />
+                              <FiEdit2 className="w-4 h-4 text-red-500" />
                             </div>
-                            <span className="font-medium text-gray-700">Verify Profile</span>
+                            <span className="font-medium text-gray-700">Change Password</span>
                           </button>
-                        )}
-                        <button
-                          className="flex items-center gap-3 w-full text-left px-4 py-3 hover:bg-gradient-to-r hover:from-red-50/50 hover:to-transparent transition-all duration-200 disabled:opacity-50 group"
-                          onClick={() => {
-                            setShowDeleteConfirm(true);
-                            setShowPasswordBox(false);
-                            setShowFeedbackBox(false);
-                            setShowSettings(false);
-                            sidebarRef.current?.scrollTo({ top: 600, behavior: "smooth" });
-                          }}
-                          disabled={loadingStates.deleteProfile}
-                        >
-                          <div className="p-1.5 rounded-lg bg-red-50 group-hover:bg-red-100 transition-colors">
-                            <FiTrash2 className="w-4 h-4 text-red-500" />
-                          </div>
-                          <span className="font-medium text-red-500">Delete Profile</span>
-                        </button>
+                          <button
+                            className="flex items-center gap-3 w-full text-left px-4 py-3 hover:bg-gradient-to-r hover:from-red-50/50 hover:to-transparent transition-all duration-200 disabled:opacity-50 group"
+                            onClick={() => {
+                              setShowFeedbackBox(true);
+                              setShowPasswordBox(false);
+                              setShowDeleteConfirm(false);
+                              setShowSettings(false);
+                              sidebarRef.current?.scrollTo({ top: 500, behavior: "smooth" });
+                            }}
+                            disabled={loadingStates.feedbackSubmit}
+                            {...getTestAttributes('feedback-button')}
+                          >
+                            <div className="p-1.5 rounded-lg bg-red-50 group-hover:bg-red-100 transition-colors">
+                              <FiMessageSquare className="w-4 h-4 text-red-500" />
+                            </div>
+                            <span className="font-medium text-gray-700">Give Feedback</span>
+                          </button>
+                          {isProfilePublished && (
+                            <button
+                              className="flex items-center gap-3 w-full text-left px-4 py-3 hover:bg-gradient-to-r hover:from-red-50/50 hover:to-transparent transition-all duration-200 disabled:opacity-50 group"
+                              onClick={() => {
+                                handleRemoveProfile();
+                                setShowSettings(false);
+                              }}
+                              disabled={loadingStates.removeProfile}
+                              {...getTestAttributes('hide-profile-button')}
+                            >
+                              <div className="p-1.5 rounded-lg bg-red-50 group-hover:bg-red-100 transition-colors">
+                                <MdOutlineRemoveCircle className="w-4 h-4 text-red-500" />
+                              </div>
+                              <span className="font-medium text-gray-700">Hide Profile</span>
+                            </button>
+                          )}
+                          {isProfilePublished && (
+                            <button
+                              className="flex items-center gap-3 w-full text-left px-4 py-3 hover:bg-gradient-to-r hover:from-red-50/50 hover:to-transparent transition-all duration-200 disabled:opacity-50 group"
+                              onClick={() => {
+                                setShowVerificationBox(true);
+                                setShowPasswordBox(false);
+                                setShowFeedbackBox(false);
+                                setShowDeleteConfirm(false);
+                                setShowSettings(false);
+                                sidebarRef.current?.scrollTo({ top: 500, behavior: "smooth" });
+                              }}
+                              disabled={loadingStates.verification}
+                              {...getTestAttributes('verify-profile-button')}
+                            >
+                              <div className="p-1.5 rounded-lg bg-red-50 group-hover:bg-red-100 transition-colors">
+                                <FiCheckCircle className="w-4 h-4 text-red-500" />
+                              </div>
+                              <span className="font-medium text-gray-700">Verify Profile</span>
+                            </button>
+                          )}
+                          <button
+                            className="flex items-center gap-3 w-full text-left px-4 py-3 hover:bg-gradient-to-r hover:from-red-50/50 hover:to-transparent transition-all duration-200 disabled:opacity-50 group"
+                            onClick={() => {
+                              setShowDeleteConfirm(true);
+                              setShowPasswordBox(false);
+                              setShowFeedbackBox(false);
+                              setShowSettings(false);
+                              sidebarRef.current?.scrollTo({ top: 600, behavior: "smooth" });
+                            }}
+                            disabled={loadingStates.deleteProfile}
+                            {...getTestAttributes('delete-profile-button')}
+                          >
+                            <div className="p-1.5 rounded-lg bg-red-50 group-hover:bg-red-100 transition-colors">
+                              <FiTrash2 className="w-4 h-4 text-red-500" />
+                            </div>
+                            <span className="font-medium text-red-500">Delete Profile</span>
+                          </button>
+                        </div>
+                        <div className="border-t border-gray-100 bg-gradient-to-r from-gray-50/50 to-transparent">
+                          <button
+                            className="flex items-center gap-3 w-full text-left px-4 py-3 hover:bg-gradient-to-r hover:from-red-50/50 hover:to-transparent transition-all duration-200 disabled:opacity-50 group"
+                            onClick={handleLogout}
+                            disabled={loadingStates.logout}
+                            {...getTestAttributes('logout-button')}
+                          >
+                            <div className="p-1.5 rounded-lg bg-gray-100 group-hover:bg-red-100 transition-colors">
+                              {loadingStates.logout ? (
+                                <FiLoader className="animate-spin w-4 h-4 text-gray-600" />
+                              ) : (
+                                <FiLogOut className="w-4 h-4 text-gray-600 group-hover:text-red-500" />
+                              )}
+                            </div>
+                            <span className="font-medium text-gray-700">Logout</span>
+                          </button>
+                        </div>
                       </div>
-                      <div className="border-t border-gray-100 bg-gradient-to-r from-gray-50/50 to-transparent">
-                        <button
-                          className="flex items-center gap-3 w-full text-left px-4 py-3 hover:bg-gradient-to-r hover:from-red-50/50 hover:to-transparent transition-all duration-200 disabled:opacity-50 group"
-                          onClick={handleLogout}
-                          disabled={loadingStates.logout}
-                        >
-                          <div className="p-1.5 rounded-lg bg-gray-100 group-hover:bg-red-100 transition-colors">
-                            {loadingStates.logout ? (
-                              <FiLoader className="animate-spin w-4 h-4 text-gray-600" />
-                            ) : (
-                              <FiLogOut className="w-4 h-4 text-gray-600 group-hover:text-red-500" />
-                            )}
-                          </div>
-                          <span className="font-medium text-gray-700">Logout</span>
-                        </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Profile Image & Basic Info */}
+                <div className="flex flex-col items-center text-center mt-4">
+                  <div className="relative w-36 h-36 md:w-40 md:h-40 mb-4">
+                    <div className="w-full h-full overflow-hidden rounded-xl border-4 border-white shadow-lg">
+                      <img
+                        src={personalInfo.profileImg ? personalInfo.profileImg : "/5.png"}
+                        alt="Profile"
+                        className="w-full h-full object-cover"
+                        {...getTestAttributes('profile-image')}
+                      />
+                    </div>
+                    {isProfilePublished && (
+                      <div className="absolute -bottom-1 -right-1 bg-green-500 border-2 border-white rounded-full p-1.5">
+                        <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
                       </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Profile Image & Basic Info */}
-              <div className="flex flex-col items-center text-center mt-4">
-                <div className="relative w-36 h-36 md:w-40 md:h-40 mb-4">
-                  <div className="w-full h-full overflow-hidden rounded-xl border-4 border-white shadow-lg">
-                    <img
-                      src={personalInfo.profileImg ? personalInfo.profileImg : "/5.png"}
-                      alt="Profile"
-                      className="w-full h-full object-cover"
-                    />
+                    )}
                   </div>
-                  {isProfilePublished && (
-                    <div className="absolute -bottom-1 -right-1 bg-green-500 border-2 border-white rounded-full p-1.5">
-                      <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-                    </div>
-                  )}
-                </div>
 
-                <div className="flex items-center justify-center gap-2">
-                  <h1 className="text-xl md:text-2xl font-semibold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                    {user.name}
-                  </h1>
-                  {verificationStatus === 'approved' && (
-                    <VscVerifiedFilled className="text-blue-500 text-xl md:text-2xl" title="Verified Profile" />
-                  )}
-                </div>
-
-                <p className="text-sm text-gray-500 flex items-center gap-2 justify-center mt-1">
-                  <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
-                  {user.email}
-                </p>
-
-                {/* Profile Strength */}
-                <div className="mt-6 w-full bg-white/50 backdrop-blur-sm rounded-xl p-4 border border-red-100/50">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
-                      <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-                      Profile Strength
-                    </span>
-                    <span className="text-lg font-bold text-red-500">
-                      {Math.round((Object.values(profileProgress).reduce((a, b) => a + b, 0) / 3))}%
-                    </span>
+                  <div className="flex items-center justify-center gap-2">
+                    <h1 className="text-xl md:text-2xl font-semibold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                      {user.name}
+                    </h1>
+                    {verificationStatus === 'approved' && (
+                      <VscVerifiedFilled className="text-blue-500 text-xl md:text-2xl" title="Verified Profile" />
+                    )}
                   </div>
-                  <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
-                    <div
-                      className="bg-gradient-to-r from-red-500 to-red-400 h-2 rounded-full transition-all duration-700 ease-out"
-                      style={{
-                        width: `${Math.round(
-                          Object.values(profileProgress).reduce((a, b) => a + b, 0) / 3
-                        )}%`,
-                      }}
-                    ></div>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-2">
-                    {profileCompleted ? '✓ Ready to publish!' : '⚠ Complete all sections to 80%'}
+
+                  <p className="text-sm text-gray-500 flex items-center gap-2 justify-center mt-1">
+                    <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+                    {user.email}
                   </p>
-                </div>
 
-                {user.google_id && (
-                  <div className="mt-4 animate-fadeIn">
-                    <span className="inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-green-50 to-emerald-50 text-green-700 rounded-lg text-sm font-medium border border-green-200/50 shadow-sm">
-                      <FiCheckCircle className="w-4 h-4" />
-                      Connected with Google
-                    </span>
+                  {/* Profile Strength */}
+                  <div className="mt-6 w-full bg-white/50 backdrop-blur-sm rounded-xl p-4 border border-red-100/50">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
+                        <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                        Profile Strength
+                      </span>
+                      <span className="text-lg font-bold text-red-500">
+                        {Math.round((Object.values(profileProgress).reduce((a, b) => a + b, 0) / 3))}%
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+                      <div
+                        className="bg-gradient-to-r from-red-500 to-red-400 h-2 rounded-full transition-all duration-700 ease-out"
+                        style={{
+                          width: `${Math.round(
+                            Object.values(profileProgress).reduce((a, b) => a + b, 0) / 3
+                          )}%`,
+                        }}
+                      ></div>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-2">
+                      {profileCompleted ? '✓ Ready to publish!' : '⚠ Complete all sections to 80%'}
+                    </p>
                   </div>
-                )}
 
-                {/* Action Buttons */}
-                <div className="flex flex-wrap gap-3 justify-center mt-6 w-full">
-                  <PrimaryButton
-                    onClick={() => {
-                      setLoadingState('viewMatches', true);
-                      const userData = {
-                        userEmail: user.email,
-                        isProfilePublished: isProfilePublished,
-                        membershipType: membershipPlan === "premium" ? "premium" : "free"
-                      };
-                      updateUserProfile(userData);
-                      navigate("/matches", { state: userData });
-                    }}
-                    loading={loadingStates.viewMatches}
-                    disabled={loadingStates.viewMatches}
-                    className="flex-1 min-w-[130px]"
-                    icon={FiEye}
-                  >
-                    Matches
-                  </PrimaryButton>
-                  <SecondaryButton
-                    onClick={() => {
-                      setLoadingState('watchlist', true);
-                      const userData = {
-                        userEmail: user.email,
-                        isProfilePublished: isProfilePublished,
-                        membershipType: membershipPlan === "premium" ? "premium" : "free"
-                      };
-                      updateUserProfile(userData);
-                      navigate("/watchlist", { state: userData });
-                    }}
-                    loading={loadingStates.watchlist}
-                    disabled={loadingStates.watchlist}
-                    className="flex-1 min-w-[130px]"
-                    icon={FiHeart}
-                  >
-                    Watchlist
-                  </SecondaryButton>
-                </div>
+                  {user.google_id && (
+                    <div className="mt-4 animate-fadeIn">
+                      <span className="inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-green-50 to-emerald-50 text-green-700 rounded-lg text-sm font-medium border border-green-200/50 shadow-sm">
+                        <FiCheckCircle className="w-4 h-4" />
+                        Connected with Google
+                      </span>
+                    </div>
+                  )}
 
-                {/* Profile Status Badge */}
-                <div className="mt-6 w-full">
-                  <div
-                    className={`px-4 py-3 rounded-xl text-sm font-medium shadow-md backdrop-blur-sm flex items-center justify-center gap-2
+                  {/* Action Buttons */}
+                  <div className="flex flex-wrap gap-3 justify-center mt-6 w-full">
+                    <PrimaryButton
+                      onClick={() => {
+                        setLoadingState('viewMatches', true);
+                        const userData = {
+                          userEmail: user.email,
+                          isProfilePublished: isProfilePublished,
+                          membershipType: membershipPlan === "premium" ? "premium" : "free"
+                        };
+                        updateUserProfile(userData);
+                        navigate("/matches", { state: userData });
+                      }}
+                      loading={loadingStates.viewMatches}
+                      disabled={loadingStates.viewMatches}
+                      className="flex-1 min-w-[130px]"
+                      icon={FiEye}
+                      testId="matches-button"
+                    >
+                      Matches
+                    </PrimaryButton>
+                    <SecondaryButton
+                      onClick={() => {
+                        setLoadingState('watchlist', true);
+                        const userData = {
+                          userEmail: user.email,
+                          isProfilePublished: isProfilePublished,
+                          membershipType: membershipPlan === "premium" ? "premium" : "free"
+                        };
+                        updateUserProfile(userData);
+                        navigate("/watchlist", { state: userData });
+                      }}
+                      loading={loadingStates.watchlist}
+                      disabled={loadingStates.watchlist}
+                      className="flex-1 min-w-[130px]"
+                      icon={FiHeart}
+                      testId="watchlist-button"
+                    >
+                      Watchlist
+                    </SecondaryButton>
+                  </div>
+
+                  {/* Profile Status Badge */}
+                  <div className="mt-6 w-full">
+                    <div
+                      className={`px-4 py-3 rounded-xl text-sm font-medium shadow-md backdrop-blur-sm flex items-center justify-center gap-2
                         ${isProfilePublished
                         ? "bg-gradient-to-r from-green-50 to-emerald-50 text-green-700 border border-green-200/50"
                         : "bg-gradient-to-r from-amber-50 to-orange-50 text-amber-700 border border-amber-200/50"
                       }`}
-                  >
-                    {isProfilePublished ? (
-                      <>
-                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                        <MdPublishedWithChanges className="w-5 h-5" />
-                        <span className="font-semibold">Published & Visible</span>
-                      </>
-                    ) : (
-                      <>
-                        <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
-                        <MdWarning className="w-5 h-5" />
-                        <span className="font-semibold">Not Published</span>
-                      </>
-                    )}
+                      {...getTestAttributes('profile-status')}
+                    >
+                      {isProfilePublished ? (
+                        <>
+                          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                          <MdPublishedWithChanges className="w-5 h-5" />
+                          <span className="font-semibold">Published & Visible</span>
+                        </>
+                      ) : (
+                        <>
+                          <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
+                          <MdWarning className="w-5 h-5" />
+                          <span className="font-semibold">Not Published</span>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Change Password Box - inside sidebar */}
-              {showPasswordBox && (
-                <div className="mt-6 p-5 bg-gradient-to-br from-white to-gray-50/80 backdrop-blur-sm rounded-xl border border-red-100 shadow-lg animate-slideDown">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent flex items-center gap-2">
-                      <FiEdit2 className="text-red-500" />
-                      Change Password
-                    </h3>
-                    <IconButton
-                      onClick={() => { setShowPasswordBox(false); setNewPassword(""); }}
-                      disabled={loadingStates.passwordUpdate}
-                    >
-                      <FiX size={18} />
-                    </IconButton>
-                  </div>
-                  <div className="space-y-4">
-                    <PasswordInput
-                      label="New Password"
-                      value={newPassword}
-                      onChange={setNewPassword}
-                      placeholder="Enter new password"
-                      isEditing={true}
-                    />
-                    <p className="text-xs text-gray-500 flex items-center gap-1">
-                      <span className="w-1 h-1 bg-red-500 rounded-full"></span>
-                      Minimum 8 characters required
-                    </p>
-                    <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                      <PrimaryButton
-                        onClick={handlePasswordUpdate}
-                        loading={loadingStates.passwordUpdate}
-                        disabled={loadingStates.passwordUpdate}
-                        className="flex-1"
-                      >
-                        Update
-                      </PrimaryButton>
-                      <SecondaryButton
+                {/* Change Password Box */}
+                {showPasswordBox && (
+                  <div className="mt-6 p-5 bg-gradient-to-br from-white to-gray-50/80 backdrop-blur-sm rounded-xl border border-red-100 shadow-lg animate-slideDown">
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-lg font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent flex items-center gap-2">
+                        <FiEdit2 className="text-red-500" />
+                        Change Password
+                      </h3>
+                      <IconButton
                         onClick={() => { setShowPasswordBox(false); setNewPassword(""); }}
                         disabled={loadingStates.passwordUpdate}
-                        className="flex-1"
+                        testId="close-password-box"
                       >
-                        Cancel
-                      </SecondaryButton>
+                        <FiX size={18} />
+                      </IconButton>
                     </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Delete Profile Confirmation - inside sidebar */}
-              {showDeleteConfirm && (
-                <div className="mt-6 p-5 bg-gradient-to-br from-red-50/90 to-red-50/70 backdrop-blur-sm rounded-xl border border-red-200 shadow-lg animate-slideDown">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-bold text-red-500 flex items-center gap-2">
-                      <FiTrash2 className="w-5 h-5" />
-                      Delete Profile
-                    </h3>
-                    <IconButton
-                      onClick={() => setShowDeleteConfirm(false)}
-                      disabled={loadingStates.deleteProfile}
-                    >
-                      <FiX size={18} />
-                    </IconButton>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div className="flex items-start gap-3 p-4 bg-white/80 backdrop-blur-sm rounded-lg border border-red-200 shadow-sm">
-                      <div className="p-2 bg-red-100 rounded-full flex-shrink-0">
-                        <MdWarning className="text-red-500 text-lg" />
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="font-bold text-red-600 text-sm mb-1">Warning: Permanent Action!</h4>
-                        <p className="text-gray-600 text-sm">
-                          All your data will be permanently deleted. This cannot be undone.
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="p-3 bg-white/50 backdrop-blur-sm rounded-lg border border-amber-200">
-                      <p className="text-gray-700 text-sm flex items-start gap-2">
-                        <FiInfo className="text-amber-500 w-4 h-4 flex-shrink-0 mt-0.5" />
-                        <span>
-                          {isProfilePublished ?
-                            "Use 'Hide Profile' to temporarily hide instead of permanent deletion." :
-                            "Profile is currently hidden. You can publish it anytime."}
-                        </span>
+                    <div className="space-y-4">
+                      <PasswordInput
+                        label="New Password"
+                        value={newPassword}
+                        onChange={setNewPassword}
+                        placeholder="Enter new password"
+                        isEditing={true}
+                        testId="new-password-input"
+                      />
+                      <p className="text-xs text-gray-500 flex items-center gap-1">
+                        <span className="w-1 h-1 bg-red-500 rounded-full"></span>
+                        Minimum 8 characters required
                       </p>
+                      <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                        <PrimaryButton
+                          onClick={handlePasswordUpdate}
+                          loading={loadingStates.passwordUpdate}
+                          disabled={loadingStates.passwordUpdate}
+                          className="flex-1"
+                          testId="update-password-button"
+                        >
+                          Update
+                        </PrimaryButton>
+                        <SecondaryButton
+                          onClick={() => { setShowPasswordBox(false); setNewPassword(""); }}
+                          disabled={loadingStates.passwordUpdate}
+                          className="flex-1"
+                          testId="cancel-password-button"
+                        >
+                          Cancel
+                        </SecondaryButton>
+                      </div>
                     </div>
+                  </div>
+                )}
 
-                    <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                      <PrimaryButton
-                        onClick={handleDeleteProfile}
-                        loading={loadingStates.deleteProfile}
-                        disabled={loadingStates.deleteProfile}
-                        className="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700"
-                      >
-                        Yes
-                      </PrimaryButton>
-                      <SecondaryButton
+                {/* Delete Profile Confirmation */}
+                {showDeleteConfirm && (
+                  <div className="mt-6 p-5 bg-gradient-to-br from-red-50/90 to-red-50/70 backdrop-blur-sm rounded-xl border border-red-200 shadow-lg animate-slideDown">
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-lg font-bold text-red-500 flex items-center gap-2">
+                        <FiTrash2 className="w-5 h-5" />
+                        Delete Profile
+                      </h3>
+                      <IconButton
                         onClick={() => setShowDeleteConfirm(false)}
                         disabled={loadingStates.deleteProfile}
-                        className="flex-1"
+                        testId="close-delete-box"
                       >
-                        Cancel
-                      </SecondaryButton>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Feedback Form Box - inside sidebar */}
-              {showFeedbackBox && (
-                <div className="mt-6 p-5 bg-gradient-to-br from-purple-50/90 via-white to-red-50/30 backdrop-blur-sm rounded-xl border border-purple-100 shadow-lg animate-slideDown">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent flex items-center gap-2">
-                      <FiMessageSquare className="text-red-500" />
-                      Share Feedback
-                    </h3>
-                    <IconButton
-                      onClick={() => {
-                        setShowFeedbackBox(false);
-                        setFeedback({
-                          experience: "",
-                          rating: 0,
-                          suggestions: ""
-                        });
-                      }}
-                      disabled={loadingStates.feedbackSubmit}
-                    >
-                      <FiX size={18} />
-                    </IconButton>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1.5 flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
-                        Your Experience <span className="text-red-500">*</span>
-                      </label>
-                      <textarea
-                        className="w-full px-4 py-2.5 bg-white/70 backdrop-blur-sm border border-gray-200 focus:border-red-500 rounded-lg focus:ring-2 focus:ring-red-100 transition-all duration-300 resize-none"
-                        rows={3}
-                        value={feedback.experience}
-                        onChange={(e) => {
-                          const safeValue = e.target.value
-                            .replace(/[^a-zA-Z0-9\s.,'-]/g, "")
-                            .replace(/\s{2,}/g, " ");
-                          setFeedback({ ...feedback, experience: safeValue });
-                        }}
-                        onBlur={(e) => {
-                          const trimmedValue = e.target.value.trim();
-                          if (trimmedValue !== e.target.value) {
-                            setFeedback({ ...feedback, experience: trimmedValue });
-                          }
-                        }}
-                        placeholder="Share your experience with Paarsh Matrimony..."
-                        disabled={loadingStates.feedbackSubmit}
-                      />
+                        <FiX size={18} />
+                      </IconButton>
                     </div>
 
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
-                        Rating <span className="text-red-500">*</span>
-                      </label>
-                      <div className="flex items-center gap-2 p-2 bg-white/50 backdrop-blur-sm rounded-lg inline-flex">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <button
-                            key={star}
-                            type="button"
-                            className="p-1.5 hover:scale-110 transition-all duration-200 focus:outline-none group"
-                            onClick={() => setFeedback({ ...feedback, rating: star })}
-                            disabled={loadingStates.feedbackSubmit}
-                          >
-                            {star <= feedback.rating ? (
-                              <FiStar className="w-6 h-6 fill-red-500 text-red-500 filter drop-shadow" />
-                            ) : (
-                              <FiStar className="w-6 h-6 text-gray-300 group-hover:text-red-300 transition-colors" />
-                            )}
-                          </button>
-                        ))}
-                        <span className="ml-2 text-sm font-medium text-gray-600 bg-white px-3 py-1.5">
-                          {feedback.rating > 0 ? `${feedback.rating}/5` : null}
-                        </span>
+                    <div className="space-y-4">
+                      <div className="flex items-start gap-3 p-4 bg-white/80 backdrop-blur-sm rounded-lg border border-red-200 shadow-sm">
+                        <div className="p-2 bg-red-100 rounded-full flex-shrink-0">
+                          <MdWarning className="text-red-500 text-lg" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-bold text-red-600 text-sm mb-1">Warning: Permanent Action!</h4>
+                          <p className="text-gray-600 text-sm">
+                            All your data will be permanently deleted. This cannot be undone.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="p-3 bg-white/50 backdrop-blur-sm rounded-lg border border-amber-200">
+                        <p className="text-gray-700 text-sm flex items-start gap-2">
+                          <FiInfo className="text-amber-500 w-4 h-4 flex-shrink-0 mt-0.5" />
+                          <span>
+                            {isProfilePublished ?
+                              "Use 'Hide Profile' to temporarily hide instead of permanent deletion." :
+                              "Profile is currently hidden. You can publish it anytime."}
+                          </span>
+                        </p>
+                      </div>
+
+                      <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                        <PrimaryButton
+                          onClick={handleDeleteProfile}
+                          loading={loadingStates.deleteProfile}
+                          disabled={loadingStates.deleteProfile}
+                          className="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700"
+                          testId="confirm-delete-button"
+                        >
+                          Yes
+                        </PrimaryButton>
+                        <SecondaryButton
+                          onClick={() => setShowDeleteConfirm(false)}
+                          disabled={loadingStates.deleteProfile}
+                          className="flex-1"
+                          testId="cancel-delete-button"
+                        >
+                          Cancel
+                        </SecondaryButton>
                       </div>
                     </div>
+                  </div>
+                )}
 
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1.5 flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
-                        Suggestions
-                      </label>
-                      <textarea
-                        className="w-full px-4 py-2.5 bg-white/70 backdrop-blur-sm border border-gray-200 focus:border-red-500 rounded-lg focus:ring-2 focus:ring-red-100 transition-all duration-300 resize-none"
-                        rows={2}
-                        value={feedback.suggestions}
-                        onChange={(e) => {
-                          const safeValue = e.target.value
-                            .replace(/[^a-zA-Z0-9\s.,'-]/g, "")
-                            .replace(/\s{2,}/g, " ");
-                          setFeedback({ ...feedback, suggestions: safeValue });
-                        }}
-                        onBlur={(e) => {
-                          const trimmedValue = e.target.value.trim();
-                          if (trimmedValue !== e.target.value) {
-                            setFeedback({ ...feedback, suggestions: trimmedValue });
-                          }
-                        }}
-                        placeholder="Suggestions to improve our service..."
-                        disabled={loadingStates.feedbackSubmit}
-                      />
-                    </div>
-
-                    <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                      <PrimaryButton
-                        onClick={handleFeedbackSubmit}
-                        loading={loadingStates.feedbackSubmit}
-                        disabled={loadingStates.feedbackSubmit}
-                        className="flex-1"
-                        icon={FiSend}
-                      >
-                        Submit
-                      </PrimaryButton>
-                      <SecondaryButton
+                {/* Feedback Form Box */}
+                {showFeedbackBox && (
+                  <div className="mt-6 p-5 bg-gradient-to-br from-purple-50/90 via-white to-red-50/30 backdrop-blur-sm rounded-xl border border-purple-100 shadow-lg animate-slideDown">
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-lg font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent flex items-center gap-2">
+                        <FiMessageSquare className="text-red-500" />
+                        Share Feedback
+                      </h3>
+                      <IconButton
                         onClick={() => {
                           setShowFeedbackBox(false);
                           setFeedback({
@@ -3160,393 +3147,508 @@ const Profile = () => {
                           });
                         }}
                         disabled={loadingStates.feedbackSubmit}
-                        className="flex-1"
+                        testId="close-feedback-box"
                       >
-                        Cancel
-                      </SecondaryButton>
+                        <FiX size={18} />
+                      </IconButton>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-1.5 flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+                          Your Experience <span className="text-red-500">*</span>
+                        </label>
+                        <textarea
+                          className="w-full px-4 py-2.5 bg-white/70 backdrop-blur-sm border border-gray-200 focus:border-red-500 rounded-lg focus:ring-2 focus:ring-red-100 transition-all duration-300 resize-none"
+                          rows={3}
+                          value={feedback.experience}
+                          onChange={(e) => {
+                            const safeValue = e.target.value
+                              .replace(/[^a-zA-Z0-9\s.,'-]/g, "")
+                              .replace(/\s{2,}/g, " ");
+                            setFeedback({ ...feedback, experience: safeValue });
+                          }}
+                          onBlur={(e) => {
+                            const trimmedValue = e.target.value.trim();
+                            if (trimmedValue !== e.target.value) {
+                              setFeedback({ ...feedback, experience: trimmedValue });
+                            }
+                          }}
+                          placeholder="Share your experience with Paarsh Matrimony..."
+                          disabled={loadingStates.feedbackSubmit}
+                          {...getTestAttributes('feedback-experience')}
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+                          Rating <span className="text-red-500">*</span>
+                        </label>
+                        <div className="flex items-center gap-2 p-2 bg-white/50 backdrop-blur-sm rounded-lg inline-flex">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <button
+                              key={star}
+                              type="button"
+                              className="p-1.5 hover:scale-110 transition-all duration-200 focus:outline-none group"
+                              onClick={() => setFeedback({ ...feedback, rating: star })}
+                              disabled={loadingStates.feedbackSubmit}
+                              {...getTestAttributes(`rating-star-${star}`)}
+                            >
+                              {star <= feedback.rating ? (
+                                <FiStar className="w-6 h-6 fill-red-500 text-red-500 filter drop-shadow" />
+                              ) : (
+                                <FiStar className="w-6 h-6 text-gray-300 group-hover:text-red-300 transition-colors" />
+                              )}
+                            </button>
+                          ))}
+                          <span className="ml-2 text-sm font-medium text-gray-600 bg-white px-3 py-1.5">
+                            {feedback.rating > 0 ? `${feedback.rating}/5` : null}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-1.5 flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+                          Suggestions
+                        </label>
+                        <textarea
+                          className="w-full px-4 py-2.5 bg-white/70 backdrop-blur-sm border border-gray-200 focus:border-red-500 rounded-lg focus:ring-2 focus:ring-red-100 transition-all duration-300 resize-none"
+                          rows={2}
+                          value={feedback.suggestions}
+                          onChange={(e) => {
+                            const safeValue = e.target.value
+                              .replace(/[^a-zA-Z0-9\s.,'-]/g, "")
+                              .replace(/\s{2,}/g, " ");
+                            setFeedback({ ...feedback, suggestions: safeValue });
+                          }}
+                          onBlur={(e) => {
+                            const trimmedValue = e.target.value.trim();
+                            if (trimmedValue !== e.target.value) {
+                              setFeedback({ ...feedback, suggestions: trimmedValue });
+                            }
+                          }}
+                          placeholder="Suggestions to improve our service..."
+                          disabled={loadingStates.feedbackSubmit}
+                          {...getTestAttributes('feedback-suggestions')}
+                        />
+                      </div>
+
+                      <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                        <PrimaryButton
+                          onClick={handleFeedbackSubmit}
+                          loading={loadingStates.feedbackSubmit}
+                          disabled={loadingStates.feedbackSubmit}
+                          className="flex-1"
+                          icon={FiSend}
+                          testId="submit-feedback-button"
+                        >
+                          Submit
+                        </PrimaryButton>
+                        <SecondaryButton
+                          onClick={() => {
+                            setShowFeedbackBox(false);
+                            setFeedback({
+                              experience: "",
+                              rating: 0,
+                              suggestions: ""
+                            });
+                          }}
+                          disabled={loadingStates.feedbackSubmit}
+                          className="flex-1"
+                          testId="cancel-feedback-button"
+                        >
+                          Cancel
+                        </SecondaryButton>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Verification Box - inside sidebar */}
-              {showVerificationBox && (
-                <div className="mt-6 p-5 bg-gradient-to-br from-blue-50/90 via-white to-blue-50/30 backdrop-blur-sm rounded-xl border border-blue-100 shadow-lg animate-slideDown">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent flex items-center gap-2">
-                      <FiCheckCircle className="text-blue-500" />
-                      Verify Your Profile
-                    </h3>
-                    <IconButton
-                      onClick={() => {
-                        setShowVerificationBox(false);
-                        setVerificationData({
-                          documentType: "",
-                          documentImage: null,
-                          documentNumber: "",
-                          status: null
-                        });
-                      }}
-                      disabled={loadingStates.verification}
-                    >
-                      <FiX size={18} />
-                    </IconButton>
-                  </div>
+                {/* Verification Box */}
+                {showVerificationBox && (
+                  <div className="mt-6 p-5 bg-gradient-to-br from-blue-50/90 via-white to-blue-50/30 backdrop-blur-sm rounded-xl border border-blue-100 shadow-lg animate-slideDown">
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-lg font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent flex items-center gap-2">
+                        <FiCheckCircle className="text-blue-500" />
+                        Verify Your Profile
+                      </h3>
+                      <IconButton
+                        onClick={() => {
+                          setShowVerificationBox(false);
+                          setVerificationData({
+                            documentType: "",
+                            documentImage: null,
+                            documentNumber: "",
+                            status: null
+                          });
+                        }}
+                        disabled={loadingStates.verification}
+                        testId="close-verification-box"
+                      >
+                        <FiX size={18} />
+                      </IconButton>
+                    </div>
 
-                  {verificationStatus ? (
-                    // Show status if already submitted
-                    <div className="space-y-4">
-                      <div className={`p-4 rounded-lg border ${verificationStatus === 'approved' ? 'bg-green-50 border-green-200' :
-                        verificationStatus === 'rejected' ? 'bg-red-50 border-red-200' :
-                          'bg-yellow-50 border-yellow-200'
-                        }`}>
-                        <div className="flex items-center gap-3 mb-2">
-                          {verificationStatus === 'approved' && (
-                            <>
-                              <FiCheckCircle className="text-green-500 text-xl" />
-                              <span className="font-bold text-green-700">Approved</span>
-                            </>
+                    {verificationStatus ? (
+                      <div className="space-y-4">
+                        <div className={`p-4 rounded-lg border ${verificationStatus === 'approved' ? 'bg-green-50 border-green-200' :
+                          verificationStatus === 'rejected' ? 'bg-red-50 border-red-200' :
+                            'bg-yellow-50 border-yellow-200'
+                          }`}>
+                          <div className="flex items-center gap-3 mb-2">
+                            {verificationStatus === 'approved' && (
+                              <>
+                                <FiCheckCircle className="text-green-500 text-xl" />
+                                <span className="font-bold text-green-700">Approved</span>
+                              </>
+                            )}
+                            {verificationStatus === 'rejected' && (
+                              <>
+                                <MdWarning className="text-red-500 text-xl" />
+                                <span className="font-bold text-red-700">Rejected (Try after 10 days)</span>
+                              </>
+                            )}
+                            {verificationStatus === 'pending' && (
+                              <>
+                                <FiLoader className="text-yellow-500 text-xl animate-spin" />
+                                <span className="font-bold text-yellow-700">Pending Review</span>
+                              </>
+                            )}
+                          </div>
+
+                          {verificationStatus === 'rejected' && rejectionReason && (
+                            <div className="mt-2 p-3 bg-red-100 rounded-lg">
+                              <p className="text-sm text-red-800">
+                                <span className="font-semibold">Reason:</span> {rejectionReason}
+                              </p>
+                            </div>
                           )}
-                          {verificationStatus === 'rejected' && (
-                            <>
-                              <MdWarning className="text-red-500 text-xl" />
-                              <span className="font-bold text-red-700">Rejected (Try after 10 days)</span>
-                            </>
+
+                          {verificationStatus === 'rejected' && resubmitAfterDate && (
+                            <div className="mt-3 p-3 bg-orange-100 rounded-lg">
+                              <div className="flex items-start gap-2">
+                                <FiInfo className="text-orange-600 mt-0.5 flex-shrink-0" size={16} />
+                                <div>
+                                  <p className="text-sm font-semibold text-orange-800 mb-1">
+                                    {canResubmitVerification ? (
+                                      "You can now resubmit your verification"
+                                    ) : (
+                                      "Verification Resubmission Cooldown"
+                                    )}
+                                  </p>
+                                  <p className="text-xs text-orange-700">
+                                    {canResubmitVerification ? (
+                                      "Your 10-day waiting period has ended. You can submit new documents for verification."
+                                    ) : (
+                                      <>
+                                        You can resubmit your verification after: {' '}
+                                        <span className="font-bold">
+                                          {new Date(resubmitAfterDate).toLocaleDateString('en-IN', {
+                                            day: '2-digit',
+                                            month: 'short',
+                                            year: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                          })}
+                                        </span>
+                                      </>
+                                    )}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
                           )}
+
                           {verificationStatus === 'pending' && (
-                            <>
-                              <FiLoader className="text-yellow-500 text-xl animate-spin" />
-                              <span className="font-bold text-yellow-700">Pending Review</span>
-                            </>
+                            <p className="text-sm text-yellow-700">
+                              Your document is under review. This usually takes 24-48 hours.
+                            </p>
+                          )}
+
+                          {verificationStatus === 'approved' && (
+                            <p className="text-sm text-green-700">
+                              Your profile is verified! You now have a verified badge.
+                            </p>
                           )}
                         </div>
 
-                        {verificationStatus === 'rejected' && rejectionReason && (
-                          <div className="mt-2 p-3 bg-red-100 rounded-lg">
-                            <p className="text-sm text-red-800">
-                              <span className="font-semibold">Reason:</span> {rejectionReason}
+                        {verificationStatus === 'rejected' && canResubmitVerification && (
+                          <div className="flex justify-center">
+                            <PrimaryButton
+                              onClick={() => {
+                                setVerificationData({
+                                  documentType: "",
+                                  documentImage: null,
+                                  documentNumber: "",
+                                  status: null
+                                });
+                                setVerificationStatus(null);
+                              }}
+                              className="px-6 py-2"
+                              icon={FiCheckCircle}
+                              testId="resubmit-verification-button"
+                            >
+                              Resubmit Verification
+                            </PrimaryButton>
+                          </div>
+                        )}
+
+                        {verificationStatus !== 'rejected' && (
+                          <div className="flex justify-end">
+                            <SecondaryButton
+                              onClick={() => setShowVerificationBox(false)}
+                              testId="close-verification-status"
+                            >
+                              Close
+                            </SecondaryButton>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {verificationStatus === 'rejected' && (
+                          <div className="p-3 bg-orange-50 rounded-lg border border-orange-200 mb-2">
+                            <p className="text-xs text-orange-700 flex items-start gap-2">
+                              <FiInfo className="text-orange-500 w-4 h-4 flex-shrink-0 mt-0.5" />
+                              <span>
+                                You are resubmitting your verification. Please ensure all documents are clear and meet the requirements.
+                              </span>
                             </p>
                           </div>
                         )}
 
-                        {verificationStatus === 'rejected' && resubmitAfterDate && (
-                          <div className="mt-3 p-3 bg-orange-100 rounded-lg">
-                            <div className="flex items-start gap-2">
-                              <FiInfo className="text-orange-600 mt-0.5 flex-shrink-0" size={16} />
-                              <div>
-                                <p className="text-sm font-semibold text-orange-800 mb-1">
-                                  {canResubmitVerification ? (
-                                    "You can now resubmit your verification"
-                                  ) : (
-                                    "Verification Resubmission Cooldown"
-                                  )}
-                                </p>
-                                <p className="text-xs text-orange-700">
-                                  {canResubmitVerification ? (
-                                    "Your 10-day waiting period has ended. You can submit new documents for verification."
-                                  ) : (
-                                    <>
-                                      You can resubmit your verification after: {' '}
-                                      <span className="font-bold">
-                                        {new Date(resubmitAfterDate).toLocaleDateString('en-IN', {
-                                          day: '2-digit',
-                                          month: 'short',
-                                          year: 'numeric',
-                                          hour: '2-digit',
-                                          minute: '2-digit'
-                                        })}
-                                      </span>
-                                    </>
-                                  )}
-                                </p>
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-1.5 flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+                            Document Type <span className="text-red-500">*</span>
+                          </label>
+                          <Select
+                            styles={customSelectStyles}
+                            options={[
+                              { value: "aadhar", label: "Aadhar Card" },
+                              { value: "pan", label: "PAN Card" },
+                              { value: "driving_license", label: "Driving License" }
+                            ]}
+                            value={verificationData.documentType ? {
+                              value: verificationData.documentType,
+                              label: verificationData.documentType === "aadhar" ? "Aadhar Card" :
+                                verificationData.documentType === "pan" ? "PAN Card" : "Driving License"
+                            } : null}
+                            onChange={(selected) => setVerificationData(prev => ({
+                              ...prev,
+                              documentType: selected?.value || ""
+                            }))}
+                            placeholder="Select document type"
+                            isDisabled={loadingStates.verification}
+                            {...getTestAttributes('document-type-select')}
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-1.5 flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+                            Document Number <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            className="w-full px-4 py-2.5 bg-white/70 backdrop-blur-sm border border-gray-200 focus:border-blue-500 rounded-lg focus:ring-2 focus:ring-blue-100 transition-all duration-300"
+                            value={verificationData.documentNumber}
+                            onChange={(e) => {
+                              let value = e.target.value.toUpperCase();
+                              if (verificationData.documentType === "aadhar") {
+                                value = value.replace(/[^0-9]/g, '').slice(0, 12);
+                              } else if (verificationData.documentType === "pan") {
+                                value = value.replace(/[^A-Z0-9]/g, '').slice(0, 10);
+                              } else if (verificationData.documentType === "driving_license") {
+                                value = value.slice(0, 16);
+                              }
+                              setVerificationData(prev => ({ ...prev, documentNumber: value }));
+                            }}
+                            placeholder={
+                              verificationData.documentType === "aadhar" ? "Enter 12-digit Aadhar number" :
+                                verificationData.documentType === "pan" ? "Enter 10-character PAN number" :
+                                  "Enter Driving License number"
+                            }
+                            disabled={loadingStates.verification || !verificationData.documentType}
+                            {...getTestAttributes('document-number-input')}
+                          />
+                          {verificationData.documentType === "aadhar" && (
+                            <p className="text-xs text-gray-500 mt-1">12-digit Aadhar number</p>
+                          )}
+                          {verificationData.documentType === "pan" && (
+                            <p className="text-xs text-gray-500 mt-1">Format: ABCDE1234F (10 characters)</p>
+                          )}
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-1.5 flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+                            Upload Document Image <span className="text-red-500">*</span>
+                          </label>
+                          <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-blue-500 transition-colors">
+                            {verificationData.documentImage ? (
+                              <div className="space-y-2">
+                                <div className="relative w-full h-32 mx-auto">
+                                  <img
+                                    src={URL.createObjectURL(verificationData.documentImage)}
+                                    alt="Document preview"
+                                    className="w-full h-full object-contain rounded-lg"
+                                  />
+                                </div>
+                                <div className="flex items-center justify-center gap-2">
+                                  <span className="text-sm text-gray-600">
+                                    {verificationData.documentImage.name}
+                                  </span>
+                                  <button
+                                    onClick={() => setVerificationData(prev => ({ ...prev, documentImage: null }))}
+                                    className="text-red-500 hover:text-red-700"
+                                    {...getTestAttributes('remove-document-button')}
+                                  >
+                                    <FiX size={16} />
+                                  </button>
+                                </div>
                               </div>
-                            </div>
+                            ) : (
+                              <label className="cursor-pointer block">
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  className="hidden"
+                                  onChange={(e) => {
+                                    const file = e.target.files[0];
+                                    if (file) {
+                                      if (file.size > 5 * 1024 * 1024) {
+                                        toast.error("File size should be less than 5MB");
+                                        return;
+                                      }
+                                      setVerificationData(prev => ({ ...prev, documentImage: file }));
+                                    }
+                                  }}
+                                  disabled={loadingStates.verification || !verificationData.documentType}
+                                  {...getTestAttributes('document-upload-input')}
+                                />
+                                <div className="flex flex-col items-center gap-2">
+                                  <FiUpload className="text-gray-400 text-3xl" />
+                                  <span className="text-sm text-gray-600">
+                                    Click to upload or drag and drop
+                                  </span>
+                                  <span className="text-xs text-gray-500">
+                                    PNG, JPG up to 5MB
+                                  </span>
+                                </div>
+                              </label>
+                            )}
                           </div>
-                        )}
+                        </div>
 
-                        {verificationStatus === 'pending' && (
-                          <p className="text-sm text-yellow-700">
-                            Your document is under review. This usually takes 24-48 hours.
+                        <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                          <p className="text-xs text-blue-700 flex items-start gap-2">
+                            <FiInfo className="text-blue-500 w-4 h-4 flex-shrink-0 mt-0.5" />
+                            <span>
+                              Your document will be verified by our team. This helps build trust in the community.
+                              Only the verification status will be visible on your profile, not the document itself.
+                            </span>
                           </p>
-                        )}
+                        </div>
 
-                        {verificationStatus === 'approved' && (
-                          <p className="text-sm text-green-700">
-                            Your profile is verified! You now have a verified badge.
-                          </p>
-                        )}
-                      </div>
-
-                      {/* Show resubmit button if rejected and can resubmit */}
-                      {verificationStatus === 'rejected' && canResubmitVerification && (
-                        <div className="flex justify-center">
+                        <div className="flex flex-col sm:flex-row gap-3 pt-2">
                           <PrimaryButton
+                            onClick={async () => {
+                              if (!verificationData.documentType) {
+                                toast.error("Please select document type");
+                                return;
+                              }
+                              if (!verificationData.documentNumber) {
+                                toast.error("Please enter document number");
+                                return;
+                              }
+                              if (!verificationData.documentImage) {
+                                toast.error("Please upload document image");
+                                return;
+                              }
+
+                              setLoadingState('verification', true);
+                              const formData = new FormData();
+                              formData.append('email', user.email);
+                              formData.append('documentType', verificationData.documentType);
+                              formData.append('documentNumber', verificationData.documentNumber);
+                              formData.append('documentImage', verificationData.documentImage);
+
+                              try {
+                                const response = await axios.post(
+                                  `${BACKEND_URL}/verification/submit`,
+                                  formData,
+                                  {
+                                    headers: {
+                                      'Authorization': `Bearer ${token}`,
+                                      'Content-Type': 'multipart/form-data'
+                                    }
+                                  }
+                                );
+
+                                if (response.data) {
+                                  setVerificationStatus('pending');
+                                  toast.success("Verification request submitted successfully!");
+                                  setShowVerificationBox(false);
+                                }
+                              } catch (error) {
+                                console.error("Verification submission error:", error);
+                                toast.error(error.response?.data?.detail || "Failed to submit verification request");
+                              } finally {
+                                setLoadingState('verification', false);
+                              }
+                            }}
+                            loading={loadingStates.verification}
+                            disabled={loadingStates.verification}
+                            className="flex-1"
+                            testId="submit-verification-button"
+                          >
+                            {verificationStatus === 'rejected' ? 'Resubmit' : 'Submit'}
+                          </PrimaryButton>
+                          <SecondaryButton
                             onClick={() => {
-                              // Reset form for resubmission
+                              setShowVerificationBox(false);
                               setVerificationData({
                                 documentType: "",
                                 documentImage: null,
                                 documentNumber: "",
                                 status: null
                               });
-                              setVerificationStatus(null);
                             }}
-                            className="px-6 py-2"
-                            icon={FiCheckCircle}
+                            disabled={loadingStates.verification}
+                            className="flex-1"
+                            testId="cancel-verification-button"
                           >
-                            Resubmit Verification
-                          </PrimaryButton>
-                        </div>
-                      )}
-
-                      {verificationStatus !== 'rejected' && (
-                        <div className="flex justify-end">
-                          <SecondaryButton
-                            onClick={() => setShowVerificationBox(false)}
-                          >
-                            Close
+                            Cancel
                           </SecondaryButton>
                         </div>
-                      )}
-                    </div>
-                  ) : (
-                    // Show form if no verification submitted OR rejected and can resubmit
-                    <div className="space-y-4">
-                      {/* Show warning if previously rejected */}
-                      {verificationStatus === 'rejected' && (
-                        <div className="p-3 bg-orange-50 rounded-lg border border-orange-200 mb-2">
-                          <p className="text-xs text-orange-700 flex items-start gap-2">
-                            <FiInfo className="text-orange-500 w-4 h-4 flex-shrink-0 mt-0.5" />
-                            <span>
-                              You are resubmitting your verification. Please ensure all documents are clear and meet the requirements.
-                            </span>
-                          </p>
-                        </div>
-                      )}
-
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-1.5 flex items-center gap-1.5">
-                          <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
-                          Document Type <span className="text-red-500">*</span>
-                        </label>
-                        <Select
-                          styles={customSelectStyles}
-                          options={[
-                            { value: "aadhar", label: "Aadhar Card" },
-                            { value: "pan", label: "PAN Card" },
-                            { value: "driving_license", label: "Driving License" }
-                          ]}
-                          value={verificationData.documentType ? {
-                            value: verificationData.documentType,
-                            label: verificationData.documentType === "aadhar" ? "Aadhar Card" :
-                              verificationData.documentType === "pan" ? "PAN Card" : "Driving License"
-                          } : null}
-                          onChange={(selected) => setVerificationData(prev => ({
-                            ...prev,
-                            documentType: selected?.value || ""
-                          }))}
-                          placeholder="Select document type"
-                          isDisabled={loadingStates.verification}
-                        />
                       </div>
-
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-1.5 flex items-center gap-1.5">
-                          <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
-                          Document Number <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          className="w-full px-4 py-2.5 bg-white/70 backdrop-blur-sm border border-gray-200 focus:border-blue-500 rounded-lg focus:ring-2 focus:ring-blue-100 transition-all duration-300"
-                          value={verificationData.documentNumber}
-                          onChange={(e) => {
-                            let value = e.target.value.toUpperCase();
-                            if (verificationData.documentType === "aadhar") {
-                              value = value.replace(/[^0-9]/g, '').slice(0, 12);
-                            } else if (verificationData.documentType === "pan") {
-                              value = value.replace(/[^A-Z0-9]/g, '').slice(0, 10);
-                            } else if (verificationData.documentType === "driving_license") {
-                              value = value.slice(0, 16);
-                            }
-                            setVerificationData(prev => ({ ...prev, documentNumber: value }));
-                          }}
-                          placeholder={
-                            verificationData.documentType === "aadhar" ? "Enter 12-digit Aadhar number" :
-                              verificationData.documentType === "pan" ? "Enter 10-character PAN number" :
-                                "Enter Driving License number"
-                          }
-                          disabled={loadingStates.verification || !verificationData.documentType}
-                        />
-                        {verificationData.documentType === "aadhar" && (
-                          <p className="text-xs text-gray-500 mt-1">12-digit Aadhar number</p>
-                        )}
-                        {verificationData.documentType === "pan" && (
-                          <p className="text-xs text-gray-500 mt-1">Format: ABCDE1234F (10 characters)</p>
-                        )}
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-1.5 flex items-center gap-1.5">
-                          <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
-                          Upload Document Image <span className="text-red-500">*</span>
-                        </label>
-                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-blue-500 transition-colors">
-                          {verificationData.documentImage ? (
-                            <div className="space-y-2">
-                              <div className="relative w-full h-32 mx-auto">
-                                <img
-                                  src={URL.createObjectURL(verificationData.documentImage)}
-                                  alt="Document preview"
-                                  className="w-full h-full object-contain rounded-lg"
-                                />
-                              </div>
-                              <div className="flex items-center justify-center gap-2">
-                                <span className="text-sm text-gray-600">
-                                  {verificationData.documentImage.name}
-                                </span>
-                                <button
-                                  onClick={() => setVerificationData(prev => ({ ...prev, documentImage: null }))}
-                                  className="text-red-500 hover:text-red-700"
-                                >
-                                  <FiX size={16} />
-                                </button>
-                              </div>
-                            </div>
-                          ) : (
-                            <label className="cursor-pointer block">
-                              <input
-                                type="file"
-                                accept="image/*"
-                                className="hidden"
-                                onChange={(e) => {
-                                  const file = e.target.files[0];
-                                  if (file) {
-                                    if (file.size > 5 * 1024 * 1024) {
-                                      toast.error("File size should be less than 5MB");
-                                      return;
-                                    }
-                                    setVerificationData(prev => ({ ...prev, documentImage: file }));
-                                  }
-                                }}
-                                disabled={loadingStates.verification || !verificationData.documentType}
-                              />
-                              <div className="flex flex-col items-center gap-2">
-                                <FiUpload className="text-gray-400 text-3xl" />
-                                <span className="text-sm text-gray-600">
-                                  Click to upload or drag and drop
-                                </span>
-                                <span className="text-xs text-gray-500">
-                                  PNG, JPG up to 5MB
-                                </span>
-                              </div>
-                            </label>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                        <p className="text-xs text-blue-700 flex items-start gap-2">
-                          <FiInfo className="text-blue-500 w-4 h-4 flex-shrink-0 mt-0.5" />
-                          <span>
-                            Your document will be verified by our team. This helps build trust in the community.
-                            Only the verification status will be visible on your profile, not the document itself.
-                          </span>
-                        </p>
-                      </div>
-
-                      <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                        <PrimaryButton
-                          onClick={async () => {
-                            if (!verificationData.documentType) {
-                              toast.error("Please select document type");
-                              return;
-                            }
-                            if (!verificationData.documentNumber) {
-                              toast.error("Please enter document number");
-                              return;
-                            }
-                            if (!verificationData.documentImage) {
-                              toast.error("Please upload document image");
-                              return;
-                            }
-
-                            setLoadingState('verification', true);
-                            const formData = new FormData();
-                            formData.append('email', user.email);
-                            formData.append('documentType', verificationData.documentType);
-                            formData.append('documentNumber', verificationData.documentNumber);
-                            formData.append('documentImage', verificationData.documentImage);
-
-                            try {
-                              const response = await axios.post(
-                                `${BACKEND_URL}/verification/submit`,
-                                formData,
-                                {
-                                  headers: {
-                                    'Authorization': `Bearer ${token}`,
-                                    'Content-Type': 'multipart/form-data'
-                                  }
-                                }
-                              );
-
-                              if (response.data) {
-                                setVerificationStatus('pending');
-                                toast.success("Verification request submitted successfully!");
-                                setShowVerificationBox(false);
-                              }
-                            } catch (error) {
-                              console.error("Verification submission error:", error);
-                              toast.error(error.response?.data?.detail || "Failed to submit verification request");
-                            } finally {
-                              setLoadingState('verification', false);
-                            }
-                          }}
-                          loading={loadingStates.verification}
-                          disabled={loadingStates.verification}
-                          className="flex-1"
-                        >
-                          {verificationStatus === 'rejected' ? 'Resubmit' : 'Submit'}
-                        </PrimaryButton>
-                        <SecondaryButton
-                          onClick={() => {
-                            setShowVerificationBox(false);
-                            setVerificationData({
-                              documentType: "",
-                              documentImage: null,
-                              documentNumber: "",
-                              status: null
-                            });
-                          }}
-                          disabled={loadingStates.verification}
-                          className="flex-1"
-                        >
-                          Cancel
-                        </SecondaryButton>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
 
-            {/* RIGHT CONTENT: FORM SECTIONS (70% width on desktop) */}
+            {/* RIGHT CONTENT */}
             <div className="lg:w-[70%] w-full">
-              {/* ========== SELF SECTION ========== */}
+              {/* SELF SECTION */}
               <AccordionFormBox
                 title="Self Information"
                 isOpen={openSections.self}
                 onToggle={() => toggleSection('self')}
                 icon={FiUser}
                 sectionProgress={profileProgress.self}
+                testId="self-section"
               >
                 {isEditingSelf ? (
-                  /* ========== EDIT MODE - SHOW FORM ========== */
                   <div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {/* Profile Image Upload */}
                       <div className="md:col-span-2">
-                        <Section title="Profile Picture *" icon={FiCamera}>
+                        <Section title="Profile Picture *" icon={FiCamera} testId="profile-image-section">
                           <div className="flex flex-col sm:flex-row items-center gap-6">
                             <div className="relative w-32 h-32 rounded-full bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center text-4xl font-bold text-red-500 border-4 border-white shadow-lg">
                               {personalInfo.profileImg ? (
@@ -3570,6 +3672,7 @@ const Profile = () => {
                                   className="hidden"
                                   onChange={handleImageUpload}
                                   disabled={!isEditingSelf || loadingStates.imageUpload}
+                                  {...getTestAttributes('profile-image-upload')}
                                 />
                               </label>
                             </div>
@@ -3594,6 +3697,7 @@ const Profile = () => {
                                     className="hidden"
                                     onChange={handleImageUpload}
                                     disabled={!isEditingSelf || loadingStates.imageUpload}
+                                    {...getTestAttributes('profile-image-upload-button')}
                                   />
                                 </label>
                                 {!personalInfo.profileImg && (
@@ -3608,7 +3712,7 @@ const Profile = () => {
                       </div>
 
                       {/* Personal Info */}
-                      <Section title="Personal Details" icon={FiUser}>
+                      <Section title="Personal Details" icon={FiUser} testId="personal-details-section">
                         <div className="space-y-4">
                           <Input
                             label="Full Name *"
@@ -3625,6 +3729,7 @@ const Profile = () => {
                             isEditing={isEditingSelf}
                             isProtected={coreFieldsSet && personalInfo.fullName}
                             icon={FiUser}
+                            testId="full-name-input"
                           />
                           <Input
                             label="Gender *"
@@ -3635,6 +3740,7 @@ const Profile = () => {
                             isEditing={isEditingSelf}
                             isProtected={coreFieldsSet && personalInfo.gender}
                             icon={FiUser}
+                            testId="gender-select"
                           />
                           <Input
                             label="Date of Birth *"
@@ -3644,6 +3750,7 @@ const Profile = () => {
                             isEditing={isEditingSelf}
                             isProtected={coreFieldsSet && personalInfo.dob}
                             icon={MdDateRange}
+                            testId="dob-input"
                           />
                           <Input
                             label="Age *"
@@ -3655,6 +3762,7 @@ const Profile = () => {
                             }}
                             placeholder="Enter your age"
                             isEditing={isEditingSelf}
+                            testId="age-input"
                           />
                           <Input
                             label="Marital Status *"
@@ -3663,6 +3771,7 @@ const Profile = () => {
                             value={personalInfo.maritalStatus}
                             onChange={(val) => setPersonalInfo(prev => ({ ...prev, maritalStatus: val }))}
                             isEditing={isEditingSelf}
+                            testId="marital-status-select"
                           />
                           <div className="grid grid-cols-2 gap-4">
                             <Input
@@ -3674,6 +3783,7 @@ const Profile = () => {
                               }}
                               placeholder="Height in cm"
                               isEditing={isEditingSelf}
+                              testId="height-input"
                             />
                             <Input
                               label="Weight (kg)"
@@ -3684,6 +3794,7 @@ const Profile = () => {
                               }}
                               placeholder="Weight in kg"
                               isEditing={isEditingSelf}
+                              testId="weight-input"
                             />
                           </div>
                           <Input
@@ -3693,6 +3804,7 @@ const Profile = () => {
                             value={personalInfo.bloodGroup}
                             onChange={(val) => setPersonalInfo(prev => ({ ...prev, bloodGroup: val }))}
                             isEditing={isEditingSelf}
+                            testId="blood-group-select"
                           />
                           <Input
                             label="Disability"
@@ -3701,6 +3813,7 @@ const Profile = () => {
                             value={personalInfo.disability}
                             onChange={(val) => setPersonalInfo(prev => ({ ...prev, disability: val }))}
                             isEditing={isEditingSelf}
+                            testId="disability-select"
                           />
                           <Input
                             label="Contact Number *"
@@ -3708,6 +3821,7 @@ const Profile = () => {
                             value={personalInfo.contactNumber}
                             onChange={(val) => setPersonalInfo(prev => ({ ...prev, contactNumber: val }))}
                             isEditing={isEditingSelf}
+                            testId="contact-number-input"
                           />
                           <Input
                             label="WhatsApp Number"
@@ -3715,13 +3829,14 @@ const Profile = () => {
                             value={personalInfo.whatsappNumber}
                             onChange={(val) => setPersonalInfo(prev => ({ ...prev, whatsappNumber: val }))}
                             isEditing={isEditingSelf}
+                            testId="whatsapp-number-input"
                           />
                         </div>
                       </Section>
 
                       <div className="space-y-6">
                         {/* Location */}
-                        <Section title="Location" icon={MdLocationOn}>
+                        <Section title="Location" icon={MdLocationOn} testId="location-section">
                           <div className="space-y-4">
                             <Input
                               label="Country *"
@@ -3731,6 +3846,7 @@ const Profile = () => {
                               onChange={(val) => setLocationInfo(prev => ({ ...prev, country: val }))}
                               isEditing={isEditingSelf}
                               icon={MdLocationOn}
+                              testId="country-select"
                             />
                             <Input
                               label="State *"
@@ -3744,6 +3860,7 @@ const Profile = () => {
                               placeholder="Enter your state"
                               isEditing={isEditingSelf}
                               icon={MdLocationOn}
+                              testId="state-input"
                             />
                             <Input
                               label="City *"
@@ -3757,6 +3874,7 @@ const Profile = () => {
                               placeholder="Enter your city"
                               isEditing={isEditingSelf}
                               icon={MdLocationOn}
+                              testId="city-input"
                             />
                             <Input
                               label="Pin Code"
@@ -3767,6 +3885,7 @@ const Profile = () => {
                               }}
                               placeholder="Enter pin code"
                               isEditing={isEditingSelf}
+                              testId="pin-code-input"
                             />
                             <Input
                               label="Current Town"
@@ -3779,6 +3898,7 @@ const Profile = () => {
                               }}
                               placeholder="Current location"
                               isEditing={isEditingSelf}
+                              testId="current-location-input"
                             />
                             <Textarea
                               label="Permanent Address"
@@ -3793,12 +3913,13 @@ const Profile = () => {
                               placeholder="Enter your permanent address..."
                               isEditing={isEditingSelf}
                               icon={FiHome}
+                              testId="permanent-address-input"
                             />
                           </div>
                         </Section>
 
                         {/* Religion & Caste */}
-                        <Section title="Religion & Caste" icon={MdFamilyRestroom}>
+                        <Section title="Religion & Caste" icon={MdFamilyRestroom} testId="religion-section">
                           <div className="space-y-4">
                             <Input
                               label="Religion *"
@@ -3807,6 +3928,7 @@ const Profile = () => {
                               value={religionInfo.religion}
                               onChange={(val) => setReligionInfo(prev => ({ ...prev, religion: val }))}
                               isEditing={isEditingSelf}
+                              testId="religion-select"
                             />
                             <Input
                               label="Caste *"
@@ -3819,6 +3941,7 @@ const Profile = () => {
                               }}
                               placeholder="Enter your caste"
                               isEditing={isEditingSelf}
+                              testId="caste-input"
                             />
                             <Input
                               label="Mother Tongue"
@@ -3827,13 +3950,14 @@ const Profile = () => {
                               value={religionInfo.motherTongue}
                               onChange={(val) => setReligionInfo(prev => ({ ...prev, motherTongue: val }))}
                               isEditing={isEditingSelf}
+                              testId="mother-tongue-select"
                             />
                           </div>
                         </Section>
                       </div>
 
                       {/* Education */}
-                      <Section title="Education" icon={MdSchool}>
+                      <Section title="Education" icon={MdSchool} testId="education-section">
                         <div className="space-y-4">
                           <Input
                             label="Highest Education *"
@@ -3850,6 +3974,7 @@ const Profile = () => {
                             onChange={(val) => setEducationInfo(prev => ({ ...prev, highestEducation: val }))}
                             isEditing={isEditingSelf}
                             icon={MdSchool}
+                            testId="highest-education-select"
                           />
                           <Input
                             label="Year of Passing"
@@ -3858,6 +3983,7 @@ const Profile = () => {
                             onChange={(val) => setEducationInfo(prev => ({ ...prev, yearOfPassing: val }))}
                             isEditing={isEditingSelf}
                             icon={MdDateRange}
+                            testId="year-of-passing-input"
                           />
                           <Input
                             label="University/College"
@@ -3871,12 +3997,13 @@ const Profile = () => {
                             placeholder="Enter university/college name"
                             isEditing={isEditingSelf}
                             icon={MdSchool}
+                            testId="university-input"
                           />
                         </div>
                       </Section>
 
                       {/* Career */}
-                      <Section title="Career" icon={MdWork}>
+                      <Section title="Career" icon={MdWork} testId="career-section">
                         <div className="space-y-4">
                           <Input
                             label="Profession *"
@@ -3895,6 +4022,7 @@ const Profile = () => {
                             onChange={(val) => setCareerInfo(prev => ({ ...prev, profession: val }))}
                             isEditing={isEditingSelf}
                             icon={MdWork}
+                            testId="profession-select"
                           />
                           <Input
                             label="Job Title"
@@ -3908,6 +4036,7 @@ const Profile = () => {
                             placeholder="Enter your job title"
                             isEditing={isEditingSelf}
                             icon={MdWork}
+                            testId="job-title-input"
                           />
                           <Input
                             label="Company Name"
@@ -3920,6 +4049,7 @@ const Profile = () => {
                             }}
                             placeholder="Enter company name"
                             isEditing={isEditingSelf}
+                            testId="company-name-input"
                           />
                           <Input
                             label="Employment Type *"
@@ -3928,6 +4058,7 @@ const Profile = () => {
                             value={careerInfo.employmentType}
                             onChange={(val) => setCareerInfo(prev => ({ ...prev, employmentType: val }))}
                             isEditing={isEditingSelf}
+                            testId="employment-type-select"
                           />
                           <Input
                             label="Annual Income (₹) *"
@@ -3937,6 +4068,7 @@ const Profile = () => {
                             onChange={(val) => setCareerInfo(prev => ({ ...prev, annualIncome: val }))}
                             isEditing={isEditingSelf}
                             icon={FiDollarSign}
+                            testId="annual-income-select"
                           />
                           <Input
                             label="Work Location"
@@ -3950,6 +4082,7 @@ const Profile = () => {
                             placeholder="Enter work location"
                             isEditing={isEditingSelf}
                             icon={MdLocationOn}
+                            testId="work-location-input"
                           />
                         </div>
                       </Section>
@@ -3969,6 +4102,7 @@ const Profile = () => {
                           placeholder="Tell us about yourself, your interests, hobbies, and personality..."
                           isEditing={isEditingSelf}
                           icon={FiUser}
+                          testId="about-yourself-input"
                         />
                       </div>
                     </div>
@@ -3977,6 +4111,7 @@ const Profile = () => {
                         onClick={() => setIsEditingSelf(false)}
                         disabled={loadingStates.saveProfile}
                         icon={FiX}
+                        testId="cancel-self-edit"
                       >
                         Cancel
                       </SecondaryButton>
@@ -3985,6 +4120,7 @@ const Profile = () => {
                         loading={loadingStates.saveProfile}
                         disabled={profileProgress.self < 80}
                         icon={FiSave}
+                        testId="save-self-button"
                       >
                         Save
                       </PrimaryButton>
@@ -3996,7 +4132,6 @@ const Profile = () => {
                     )}
                   </div>
                 ) : (
-                  /* ========== PREVIEW MODE - ENHANCED PREVIEW ========== */
                   <div>
                     <SelfPreview
                       personalInfo={personalInfo}
@@ -4006,11 +4141,13 @@ const Profile = () => {
                       careerInfo={careerInfo}
                       aboutYourself={aboutYourself}
                       onEdit={() => setIsEditingSelf(true)}
+                      testId="self-preview"
                     />
                     <div className="flex justify-end mt-6">
                       <PrimaryButton
                         onClick={() => setIsEditingSelf(true)}
                         icon={FiEdit2}
+                        testId="edit-self-button"
                       >
                         Edit Self Information
                       </PrimaryButton>
@@ -4019,20 +4156,20 @@ const Profile = () => {
                 )}
               </AccordionFormBox>
 
-              {/* ========== FAMILY SECTION ========== */}
+              {/* FAMILY SECTION */}
               <AccordionFormBox
                 title="Family Information"
                 isOpen={openSections.family}
                 onToggle={() => toggleSection('family')}
                 icon={MdFamilyRestroom}
                 sectionProgress={profileProgress.family}
+                testId="family-section"
               >
                 {isEditingFamily ? (
-                  /* ========== EDIT MODE - SHOW FORM ========== */
                   <div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-6">
-                        <Section title="Parents Information" icon={MdFamilyRestroom}>
+                        <Section title="Parents Information" icon={MdFamilyRestroom} testId="parents-section">
                           <div className="space-y-4">
                             <Input
                               label="Father's Name *"
@@ -4046,6 +4183,7 @@ const Profile = () => {
                               placeholder="Enter father's name"
                               isEditing={isEditingFamily}
                               icon={FiUser}
+                              testId="father-name-input"
                             />
                             <Input
                               label="Father's Occupation *"
@@ -4059,6 +4197,7 @@ const Profile = () => {
                               placeholder="Enter father's occupation"
                               isEditing={isEditingFamily}
                               icon={MdWork}
+                              testId="father-occupation-input"
                             />
                             <Input
                               label="Mother's Name *"
@@ -4072,6 +4211,7 @@ const Profile = () => {
                               placeholder="Enter mother's name"
                               isEditing={isEditingFamily}
                               icon={FiUser}
+                              testId="mother-name-input"
                             />
                             <Input
                               label="Mother's Occupation"
@@ -4085,11 +4225,12 @@ const Profile = () => {
                               placeholder="Enter mother's occupation"
                               isEditing={isEditingFamily}
                               icon={MdWork}
+                              testId="mother-occupation-input"
                             />
                           </div>
                         </Section>
 
-                        <Section title="Siblings" icon={FiUsers}>
+                        <Section title="Siblings" icon={FiUsers} testId="siblings-section">
                           <div className="space-y-4">
                             <div className="grid grid-cols-2 gap-4">
                               <Input
@@ -4102,6 +4243,7 @@ const Profile = () => {
                                 }}
                                 placeholder="0"
                                 isEditing={isEditingFamily}
+                                testId="brothers-input"
                               />
                               <Input
                                 label="Number of Sisters"
@@ -4113,6 +4255,7 @@ const Profile = () => {
                                 }}
                                 placeholder="0"
                                 isEditing={isEditingFamily}
+                                testId="sisters-input"
                               />
                             </div>
                           </div>
@@ -4120,7 +4263,7 @@ const Profile = () => {
                       </div>
 
                       <div className="space-y-6">
-                        <Section title="Family Background" icon={FiHome}>
+                        <Section title="Family Background" icon={FiHome} testId="family-background-section">
                           <div className="space-y-4">
                             <Input
                               label="Family Type *"
@@ -4129,6 +4272,7 @@ const Profile = () => {
                               value={familyInfo.familyType}
                               onChange={(val) => setFamilyInfo(prev => ({ ...prev, familyType: val }))}
                               isEditing={isEditingFamily}
+                              testId="family-type-select"
                             />
                             <Input
                               label="Family Status *"
@@ -4137,6 +4281,7 @@ const Profile = () => {
                               value={familyInfo.familyStatus}
                               onChange={(val) => setFamilyInfo(prev => ({ ...prev, familyStatus: val }))}
                               isEditing={isEditingFamily}
+                              testId="family-status-select"
                             />
                             <Input
                               label="Family Location"
@@ -4150,6 +4295,7 @@ const Profile = () => {
                               placeholder="Enter family location"
                               isEditing={isEditingFamily}
                               icon={MdLocationOn}
+                              testId="family-location-input"
                             />
                             <Input
                               label="Native Place"
@@ -4163,6 +4309,7 @@ const Profile = () => {
                               placeholder="Enter native place"
                               isEditing={isEditingFamily}
                               icon={MdLocationOn}
+                              testId="native-place-input"
                             />
                           </div>
                         </Section>
@@ -4182,6 +4329,7 @@ const Profile = () => {
                           placeholder="Tell us about your family background, values, and traditions..."
                           isEditing={isEditingFamily}
                           icon={MdFamilyRestroom}
+                          testId="about-family-input"
                         />
                       </div>
                     </div>
@@ -4190,6 +4338,7 @@ const Profile = () => {
                         onClick={() => setIsEditingFamily(false)}
                         disabled={loadingStates.saveProfile}
                         icon={FiX}
+                        testId="cancel-family-edit"
                       >
                         Cancel
                       </SecondaryButton>
@@ -4198,6 +4347,7 @@ const Profile = () => {
                         loading={loadingStates.saveProfile}
                         disabled={profileProgress.family < 80}
                         icon={FiSave}
+                        testId="save-family-button"
                       >
                         Save
                       </PrimaryButton>
@@ -4209,17 +4359,18 @@ const Profile = () => {
                     )}
                   </div>
                 ) : (
-                  /* ========== PREVIEW MODE - ENHANCED PREVIEW ========== */
                   <div>
                     <FamilyPreview
                       familyInfo={familyInfo}
                       aboutFamily={aboutFamily}
                       onEdit={() => setIsEditingFamily(true)}
+                      testId="family-preview"
                     />
                     <div className="flex justify-end mt-6">
                       <PrimaryButton
                         onClick={() => setIsEditingFamily(true)}
                         icon={FiEdit2}
+                        testId="edit-family-button"
                       >
                         Edit Family Information
                       </PrimaryButton>
@@ -4228,20 +4379,20 @@ const Profile = () => {
                 )}
               </AccordionFormBox>
 
-              {/* ========== PARTNER SECTION ========== */}
+              {/* PARTNER SECTION */}
               <AccordionFormBox
                 title="Partner Preferences"
                 isOpen={openSections.partner}
                 onToggle={() => toggleSection('partner')}
                 icon={FiUsers}
                 sectionProgress={profileProgress.partner}
+                testId="partner-section"
               >
                 {isEditingPartner ? (
-                  /* ========== EDIT MODE - SHOW FORM ========== */
                   <div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-6">
-                        <Section title="Basic Preferences" icon={FiUsers}>
+                        <Section title="Basic Preferences" icon={FiUsers} testId="basic-preferences-section">
                           <div className="space-y-4">
                             <Input
                               label="Preferred Age Range *"
@@ -4250,6 +4401,7 @@ const Profile = () => {
                               value={partnerInfo.preferredAgeRange}
                               onChange={(val) => setPartnerInfo(prev => ({ ...prev, preferredAgeRange: val }))}
                               isEditing={isEditingPartner}
+                              testId="preferred-age-range-select"
                             />
                             <Input
                               label="Preferred Height (cm)"
@@ -4260,6 +4412,7 @@ const Profile = () => {
                               }}
                               placeholder="Preferred height in cm"
                               isEditing={isEditingPartner}
+                              testId="preferred-height-input"
                             />
                             <Input
                               label="Preferred Marital Status *"
@@ -4268,11 +4421,12 @@ const Profile = () => {
                               value={partnerInfo.preferredMaritalStatus}
                               onChange={(val) => setPartnerInfo(prev => ({ ...prev, preferredMaritalStatus: val }))}
                               isEditing={isEditingPartner}
+                              testId="preferred-marital-status-select"
                             />
                           </div>
                         </Section>
 
-                        <Section title="Background Preferences" icon={MdFamilyRestroom}>
+                        <Section title="Background Preferences" icon={MdFamilyRestroom} testId="background-preferences-section">
                           <div className="space-y-4">
                             <Input
                               label="Preferred Religion *"
@@ -4281,6 +4435,7 @@ const Profile = () => {
                               value={partnerInfo.preferredReligion}
                               onChange={(val) => setPartnerInfo(prev => ({ ...prev, preferredReligion: val }))}
                               isEditing={isEditingPartner}
+                              testId="preferred-religion-select"
                             />
                             <Input
                               label="Preferred Caste *"
@@ -4293,6 +4448,7 @@ const Profile = () => {
                               }}
                               placeholder="Enter preferred caste"
                               isEditing={isEditingPartner}
+                              testId="preferred-caste-input"
                             />
                             <Input
                               label="Preferred Mother Tongue"
@@ -4301,13 +4457,14 @@ const Profile = () => {
                               value={partnerInfo.preferredMotherTongue}
                               onChange={(val) => setPartnerInfo(prev => ({ ...prev, preferredMotherTongue: val }))}
                               isEditing={isEditingPartner}
+                              testId="preferred-mother-tongue-select"
                             />
                           </div>
                         </Section>
                       </div>
 
                       <div className="space-y-6">
-                        <Section title="Career & Education" icon={MdSchool}>
+                        <Section title="Career & Education" icon={MdSchool} testId="career-education-preferences-section">
                           <div className="space-y-4">
                             <Input
                               label="Preferred Education *"
@@ -4323,6 +4480,7 @@ const Profile = () => {
                               value={partnerInfo.preferredEducation}
                               onChange={(val) => setPartnerInfo(prev => ({ ...prev, preferredEducation: val }))}
                               isEditing={isEditingPartner}
+                              testId="preferred-education-select"
                             />
                             <Input
                               label="Preferred Profession *"
@@ -4339,6 +4497,7 @@ const Profile = () => {
                               value={partnerInfo.preferredProfession}
                               onChange={(val) => setPartnerInfo(prev => ({ ...prev, preferredProfession: val }))}
                               isEditing={isEditingPartner}
+                              testId="preferred-profession-select"
                             />
                             <Input
                               label="Preferred Annual Income *"
@@ -4354,11 +4513,12 @@ const Profile = () => {
                               value={partnerInfo.preferredIncome}
                               onChange={(val) => setPartnerInfo(prev => ({ ...prev, preferredIncome: val }))}
                               isEditing={isEditingPartner}
+                              testId="preferred-income-select"
                             />
                           </div>
                         </Section>
 
-                        <Section title="Location Preferences" icon={MdLocationOn}>
+                        <Section title="Location Preferences" icon={MdLocationOn} testId="location-preferences-section">
                           <div className="space-y-4">
                             <Input
                               label="Preferred Location *"
@@ -4372,6 +4532,7 @@ const Profile = () => {
                               placeholder="Enter preferred location"
                               isEditing={isEditingPartner}
                               icon={MdLocationOn}
+                              testId="preferred-location-input"
                             />
                             <Input
                               label="Settled In"
@@ -4380,6 +4541,7 @@ const Profile = () => {
                               value={partnerInfo.settledIn}
                               onChange={(val) => setPartnerInfo(prev => ({ ...prev, settledIn: val }))}
                               isEditing={isEditingPartner}
+                              testId="settled-in-select"
                             />
                           </div>
                         </Section>
@@ -4399,6 +4561,7 @@ const Profile = () => {
                           placeholder="Describe the qualities and characteristics you are looking for in a partner..."
                           isEditing={isEditingPartner}
                           icon={FiUsers}
+                          testId="looking-for-input"
                         />
                       </div>
                     </div>
@@ -4407,6 +4570,7 @@ const Profile = () => {
                         onClick={() => setIsEditingPartner(false)}
                         disabled={loadingStates.saveProfile}
                         icon={FiX}
+                        testId="cancel-partner-edit"
                       >
                         Cancel
                       </SecondaryButton>
@@ -4415,6 +4579,7 @@ const Profile = () => {
                         loading={loadingStates.saveProfile}
                         disabled={profileProgress.partner < 80}
                         icon={FiSave}
+                        testId="save-partner-button"
                       >
                         Save
                       </PrimaryButton>
@@ -4426,16 +4591,17 @@ const Profile = () => {
                     )}
                   </div>
                 ) : (
-                  /* ========== PREVIEW MODE - ENHANCED PREVIEW ========== */
                   <div>
                     <PartnerPreview
                       partnerInfo={partnerInfo}
                       onEdit={() => setIsEditingPartner(true)}
+                      testId="partner-preview"
                     />
                     <div className="flex justify-end mt-6">
                       <PrimaryButton
                         onClick={() => setIsEditingPartner(true)}
                         icon={FiEdit2}
+                        testId="edit-partner-button"
                       >
                         Edit Partner Preferences
                       </PrimaryButton>
@@ -4451,8 +4617,8 @@ const Profile = () => {
                 onToggle={() => toggleSection('plan')}
                 icon={MdOutlineWorkspacePremium}
                 sectionProgress={undefined}
+                testId="plan-section"
               >
-                {/* Premium Member Info with Dates */}
                 {membershipPlan === "premium" && (
                   <div className="bg-gradient-to-r from-red-50 to-red-100 border border-red-200 rounded-xl p-5 mb-6">
                     <div className="flex items-start gap-3">
@@ -4506,7 +4672,6 @@ const Profile = () => {
                   </div>
                 )}
 
-                {/* Free Member Info */}
                 {membershipPlan === "free" && !membershipDates.membershipStartDate && (
                   <div className="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-5 mb-6">
                     <div className="flex items-start gap-3">
@@ -4545,6 +4710,7 @@ const Profile = () => {
                       updateMembershipPlanInProfile("free");
                     }}
                     membershipDates={membershipDates}
+                    testId="free-membership-card"
                   />
                   <MembershipCard
                     type="Premium Membership"
@@ -4562,8 +4728,9 @@ const Profile = () => {
                     currentPlan={membershipPlan === "premium" ? "Premium Membership" : null}
                     handlePayment={handlePayment}
                     loadingPayment={loadingStates.payment}
-                    handleSubmit={() => { }}
+                    handleSubmit={() => {}}
                     membershipDates={membershipDates}
+                    testId="premium-membership-card"
                   />
                 </div>
               </AccordionFormBox>
@@ -4575,6 +4742,7 @@ const Profile = () => {
                 onToggle={() => toggleSection('post')}
                 icon={MdPublishedWithChanges}
                 sectionProgress={undefined}
+                testId="post-section"
               >
                 {/* Completion Status */}
                 <div className="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-6 mb-6">
@@ -4718,6 +4886,7 @@ const Profile = () => {
                           disabled={loadingStates.removeProfile}
                           icon={MdOutlineRemoveCircle}
                           className="px-8 py-3"
+                          testId="hide-profile-button"
                         >
                           Hide Profile
                         </SecondaryButton>
@@ -4730,6 +4899,7 @@ const Profile = () => {
                       disabled={!profileCompleted || loadingStates.postProfile}
                       icon={MdPublishedWithChanges}
                       className="px-10 py-3 text-lg"
+                      testId="publish-profile-button"
                     >
                       Publish Profile
                     </PrimaryButton>
@@ -4749,7 +4919,8 @@ const Profile = () => {
       </div>
       <Chatbot />
       <Footer />
-      {/* Kundali Section - Auto display based on profile data */}
+      
+      {/* Kundali Section */}
       {showKundali && personalInfo.dob && personalInfo.fullName && (
         <Kundali
           name={personalInfo.fullName?.trim() || user?.name || ""}
@@ -4776,33 +4947,14 @@ const Profile = () => {
         .animate-slideDown {
           animation: slideDown 0.3s ease-out;
         }
-
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(-10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
         
-        @keyframes slideDown {
-          from { opacity: 0; transform: translateY(-20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .animate-fadeIn {
-          animation: fadeIn 0.3s ease-out;
-        }
-        
-        .animate-slideDown {
-          animation: slideDown 0.3s ease-out;
-        }
-        
-        /* Hide scrollbar but keep functionality */
         .scrollbar-hide::-webkit-scrollbar {
           display: none;
         }
         
         .scrollbar-hide {
-          -ms-overflow-style: none;  /* IE and Edge */
-          scrollbar-width: none;  /* Firefox */
+          -ms-overflow-style: none;
+          scrollbar-width: none;
         }
       `}</style>
     </>

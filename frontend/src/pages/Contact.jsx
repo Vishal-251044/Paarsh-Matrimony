@@ -4,6 +4,7 @@ import Footer from "../components/Footer";
 import Chatbot from '../components/Chatbot';
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { ChevronUp, ChevronDown } from "lucide-react";
 
 const theme = "text-[oklch(70.4%_0.191_22.216)]";
 const bgTheme = "bg-[oklch(70.4%_0.191_22.216)]";
@@ -18,7 +19,9 @@ const FAQItem = ({ question, answer }) => {
                 className="w-full text-left py-4 flex justify-between items-center font-medium"
             >
                 <span>{question}</span>
-                <span className={theme}>{open ? "−" : "+"}</span>
+                <span className={theme}>
+                    {open ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                </span>
             </button>
             {open && (
                 <p className="pb-4 text-gray-600 text-sm leading-relaxed">{answer}</p>
@@ -196,10 +199,11 @@ const Contact = () => {
                                 }}
                             />
                             <textarea
-                                rows="4"
+                                rows="5"
                                 value={formData.message}
                                 placeholder="How can we help you?"
-                                className="border rounded-lg p-3 text-sm mt-4 w-full"
+                                className="border rounded-lg p-3 text-sm mt-4 w-full h-48"
+
                                 onChange={(e) => {
                                     const safeValue = e.target.value
                                         .replace(/[^a-zA-Z0-9\s.,'-]/g, "")

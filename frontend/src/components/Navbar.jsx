@@ -147,6 +147,7 @@ const Navbar = memo(() => {
                         <div className="hidden lg:flex items-center space-x-1">
                             {(isLoggedIn ? loggedInNavItems : navItems).map((item, index) => (
                                 <button
+                                    data-testid={`nav-${item.name.toLowerCase()}`}
                                     key={item.name}
                                     onClick={() => {
                                         navigate(item.path);
@@ -191,6 +192,7 @@ const Navbar = memo(() => {
 
                             {!isLoggedIn ? (
                                 <button
+                                    data-testid="nav-login"
                                     onClick={handleLogin}
                                     disabled={loading}
                                     className="
@@ -214,6 +216,7 @@ const Navbar = memo(() => {
                                 </button>
                             ) : (
                                 <button
+                                    data-testid="nav-profile"
                                     onClick={handleProfile}
                                     disabled={loading}
                                     className={`
@@ -268,6 +271,7 @@ const Navbar = memo(() => {
                                 </button>
                             ) : (
                                 <button
+                                    data-testid="mobile-nav-login"
                                     onClick={handleLogin}
                                     disabled={loading}
                                     className="
@@ -398,6 +402,7 @@ const Navbar = memo(() => {
                     <div className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
                         {currentNavItems.map((item, index) => (
                             <button
+                                data-testid={`mobile-nav-${item.name.toLowerCase()}`}
                                 key={item.name}
                                 onClick={() => {
                                     navigate(item.path);

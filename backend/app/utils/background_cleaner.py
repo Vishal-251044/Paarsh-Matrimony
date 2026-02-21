@@ -61,7 +61,7 @@ def start_scheduler():
     if not scheduler.running:
         loop = asyncio.get_event_loop()  # Use current running loop
         scheduler.add_job(
-            lambda: loop.create_task(clean_orphan_data()),  # Run async in loop
+            lambda: loop.create_task(clean_orphan_data()),  
             trigger=IntervalTrigger(minutes=10),
             id="cleanup_job",
             replace_existing=True
