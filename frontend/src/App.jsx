@@ -19,6 +19,7 @@ import NotFound from "./pages/NotFound";
 import Contact from "./pages/Contact";
 import Admin from "./pages/Admin";
 import { FiSettings } from "react-icons/fi";
+import ScrollToTop from "./ScrollToTop";
 
 /* ---------------- AUTH HELPERS ---------------- */
 const isAuthenticated = () => {
@@ -190,6 +191,7 @@ const AppContent = () => {
 function App() {
   return (
     <HashRouter>
+      <ScrollToTop />
       <AppContent />
     </HashRouter>
   );
