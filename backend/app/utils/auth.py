@@ -3,14 +3,12 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from datetime import datetime, timedelta
 import logging
 from bson import ObjectId
-import pytz
 from app.database import db
 from app.utils.jwt_handler import decode_access_token, create_access_token
 
 logger = logging.getLogger(__name__)
 
 security = HTTPBearer()
-ist = pytz.timezone('Asia/Kolkata')
 
 async def verify_token(authorization: str = Header(None)):
     """
@@ -24,37 +22,22 @@ async def verify_token(authorization: str = Header(None)):
         # Extract token from "Bearer <token>"
         parts = authorization.split()
         if len(parts) != 2 or parts[0].lower() != "bearer":
-            # Try to handle if just token is sent without Bearer prefix
-            if len(parts) == 1:
-                token = parts[0]
-                logger.info("Token sent without Bearer prefix, attempting to use as is")
-            else:
-                raise HTTPException(
-                    status_code=401, 
-                    detail="Invalid authorization header format. Use 'Bearer <token>'"
-                )
-        else:
-            token = parts[1]
+            raise HTTPException(
+                status_code=401, 
+                detail="Invalid authorization header format. Use 'Bearer <token>'"
+            )
         
-        # Clean the token (remove any quotes, whitespace)
-        token = token.strip().strip('"\'')
+        token = parts[1]
         
         # Decode JWT token using your existing jwt_handler
         payload = decode_access_token(token)
         if not payload:
-            logger.error(f"Token validation failed for token: {token[:20]}...")
             raise HTTPException(status_code=401, detail="Invalid token or token expired")
         
-        # Check if token is expired - FIX: Handle timezone-aware datetime
+        # Check if token is expired
         exp = payload.get("exp")
-        if exp:
-            # Convert timestamp to datetime with timezone
-            exp_time = datetime.fromtimestamp(exp, tz=ist)
-            current_time = datetime.now(ist)
-            
-            if exp_time < current_time:
-                logger.error(f"Token expired at {exp_time}, current time {current_time}")
-                raise HTTPException(status_code=401, detail="Token expired")
+        if exp and datetime.fromtimestamp(exp) < datetime.now():
+            raise HTTPException(status_code=401, detail="Token expired")
         
         # Get user_id from payload
         user_id = payload.get("user_id")
@@ -84,8 +67,8 @@ async def verify_token(authorization: str = Header(None)):
         raise
     except Exception as e:
         logger.error(f"Token verification error: {str(e)}")
-        raise HTTPException(status_code=401, detail="Authentication failed")
-
+        raise HTTPException(status_code=401, detail=f"Authentication failed")
+    
 # Alternative: Using HTTPBearer dependency
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """
@@ -100,15 +83,9 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         if not payload:
             raise HTTPException(status_code=401, detail="Invalid token or token expired")
         
-        # FIX: Handle timezone-aware datetime
         exp = payload.get("exp")
-        if exp:
-            exp_time = datetime.fromtimestamp(exp, tz=ist)
-            current_time = datetime.now(ist)
-            
-            if exp_time < current_time:
-                logger.error(f"Token expired at {exp_time}")
-                raise HTTPException(status_code=401, detail="Token expired")
+        if exp and datetime.fromtimestamp(exp) < datetime.now():
+            raise HTTPException(status_code=401, detail="Token expired")
         
         user_id = payload.get("user_id")
         if not user_id:
@@ -140,15 +117,10 @@ async def verify_websocket_token(token: str):
             logger.error("Invalid token or token expired")
             return None
         
-        # FIX: Handle timezone-aware datetime
         exp = payload.get("exp")
-        if exp:
-            exp_time = datetime.fromtimestamp(exp, tz=ist)
-            current_time = datetime.now(ist)
-            
-            if exp_time < current_time:
-                logger.error("Token expired")
-                return None
+        if exp and datetime.fromtimestamp(exp) < datetime.now():
+            logger.error("Token expired")
+            return None
         
         user_id = payload.get("user_id")
         if not user_id:
@@ -176,20 +148,10 @@ async def verify_websocket_token(token: str):
 async def refresh_token(refresh_token: str):
     """Refresh access token using refresh token"""
     try:
-        # Verify refresh token
+        # Verify refresh token (you'll need to implement this based on your jwt_handler)
         payload = decode_access_token(refresh_token)
         if not payload:
             return None
-        
-        # FIX: Handle timezone-aware datetime
-        exp = payload.get("exp")
-        if exp:
-            exp_time = datetime.fromtimestamp(exp, tz=ist)
-            current_time = datetime.now(ist)
-            
-            if exp_time < current_time:
-                logger.error("Refresh token expired")
-                return None
         
         user_id = payload.get("user_id")
         if not user_id:
