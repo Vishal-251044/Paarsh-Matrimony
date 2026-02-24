@@ -2966,10 +2966,11 @@ const Matches = () => {
                                       </div>
                                     )}
                                   </div>
-                                  {/* RED DOT ON IMAGE FOR UNREAD MESSAGES - UPDATE THIS SECTION */}
-                                  {unreadCount > 0 && (
-                                    <span className="absolute top-0 right-0 w-2.5 h-2.5 md:w-3 md:h-3 bg-red-500 rounded-full ring-2 ring-white"></span>
-                                  )}
+                                  {/* {unreadCount > 0 && (
+                                    <span className="absolute -top-1 -right-1 w-4 h-4 md:w-5 md:h-5 bg-rose-500 text-white text-[10px] md:text-xs rounded-full flex items-center justify-center">
+                                      {unreadCount}
+                                    </span>
+                                  )} */}
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-1 sm:gap-2">
@@ -3377,7 +3378,16 @@ const Matches = () => {
 
             {/* Chat Messages */}
             <div className="flex-1 overflow-y-auto p-3 md:p-6 bg-gray-50 space-y-3 md:space-y-4">
-              {chatData.messages.length > 0 ? (
+              {messageLoading && chatData.messages.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full py-6 md:py-10">
+                  <div className="relative mb-4">
+                    <div className="animate-spin rounded-full h-12 w-12 md:h-16 md:w-16 border-[3px] border-rose-200 border-t-rose-500"></div>
+                    <FiMessageCircle className="absolute inset-0 m-auto text-rose-400 text-lg md:text-xl animate-pulse" />
+                  </div>
+                  <p className="text-gray-500 text-sm md:text-base font-medium">Loading conversation...</p>
+                  <p className="text-gray-400 text-xs md:text-sm mt-1">Please wait</p>
+                </div>
+              ) : chatData.messages.length > 0 ? (
                 chatData.messages.map((message, index) => {
                   const isOwn = message.sender_email === finalData.userEmail;
                   const isTemp = message._id?.startsWith('temp_');
