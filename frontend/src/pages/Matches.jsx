@@ -2966,11 +2966,11 @@ const Matches = () => {
                                       </div>
                                     )}
                                   </div>
-                                  {unreadCount > 0 && (
+                                  {/* {unreadCount > 0 && (
                                     <span className="absolute -top-1 -right-1 w-4 h-4 md:w-5 md:h-5 bg-rose-500 text-white text-[10px] md:text-xs rounded-full flex items-center justify-center">
                                       {unreadCount}
                                     </span>
-                                  )}
+                                  )} */}
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-1 sm:gap-2">
