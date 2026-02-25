@@ -416,6 +416,7 @@ class ActivityChatController:
             logger.error(f"Error getting user conversations: {str(e)}")
             return {"success": False, "error": str(e)}
 
+        
     async def send_message(self, message_data: dict) -> dict:
         """Send a new message (Available to all users with accepted interests)"""
         try:
@@ -426,6 +427,25 @@ class ActivityChatController:
             # Validate required fields
             if not sender_email or not conversation_id or not content:
                 return {"success": False, "error": "Missing required fields"}
+            
+            # Check for duplicate message (within last 2 seconds)
+            two_seconds_ago = datetime.now() - timedelta(seconds=2)
+            duplicate = await self.messages_collection.find_one({
+                "conversation_id": conversation_id,
+                "sender_email": sender_email,
+                "content": content,
+                "created_at": {"$gte": two_seconds_ago}
+            })
+            
+            if duplicate:
+                # Return the existing message instead of creating duplicate
+                duplicate = serialize_document(duplicate)
+                return {
+                    "success": True,
+                    "message_id": str(duplicate["_id"]),
+                    "message": duplicate,
+                    "duplicate": True
+                }
             
             # Verify conversation exists and user is participant
             conversation = await self.conversations_collection.find_one({
@@ -447,46 +467,40 @@ class ActivityChatController:
             
             result = await self.messages_collection.insert_one(message)
             
+            # Get the created message
+            created_message = await self.messages_collection.find_one({"_id": result.inserted_id})
+            created_message = serialize_document(created_message)
+            
             # Update conversation
-            if conversation:
-                # Increment unread count for other participants
-                unread_count = conversation.get("unread_count", {})
-                for participant in conversation["participants"]:
-                    if participant["email"] != sender_email:
-                        unread_count[participant["email"]] = unread_count.get(participant["email"], 0) + 1
-                
-                await self.conversations_collection.update_one(
-                    {"_id": ObjectId(conversation_id)},
-                    {
-                        "$set": {
-                            "updated_at": datetime.now(),
-                            "unread_count": unread_count,
-                            "last_message": {
-                                "content": content,
-                                "sender_email": sender_email,
-                                "created_at": datetime.now().isoformat()
-                            }
+            # Increment unread count for other participants
+            unread_count = conversation.get("unread_count", {})
+            for participant in conversation["participants"]:
+                if participant["email"] != sender_email:
+                    unread_count[participant["email"]] = unread_count.get(participant["email"], 0) + 1
+            
+            await self.conversations_collection.update_one(
+                {"_id": ObjectId(conversation_id)},
+                {
+                    "$set": {
+                        "updated_at": datetime.now(),
+                        "unread_count": unread_count,
+                        "last_message": {
+                            "content": content,
+                            "sender_email": sender_email,
+                            "created_at": created_message["created_at"]
                         }
                     }
-                )
-            
-            message_response = {
-                "_id": str(result.inserted_id),
-                "conversation_id": conversation_id,
-                "sender_email": sender_email,
-                "content": content,
-                "read": False,
-                "created_at": datetime.now().isoformat()
-            }
+                }
+            )
             
             return {
                 "success": True,
                 "message_id": str(result.inserted_id),
-                "message": message_response
+                "message": created_message
             }
         except Exception as e:
             logger.error(f"Error sending message: {str(e)}")
-            return {"success": False, "error": str(e)}
+            return {"success": False, "error": str(e)}    
 
     async def get_conversation_messages(self, conversation_id: str, user_email: str) -> dict:
         """Get all messages in a conversation and mark them as read"""

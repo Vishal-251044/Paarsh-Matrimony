@@ -441,20 +441,22 @@ const Matches = () => {
 
   // WebSocket connection for chat
   const connectWebSocket = useCallback(() => {
-    if (!finalData.userEmail || wsRef.current?.readyState === WebSocket.OPEN) return;
+    if (!finalData.userEmail) return;
+
+    // Close existing connection
+    if (wsRef.current && wsRef.current.readyState !== WebSocket.CLOSED) {
+      wsRef.current.close();
+    }
 
     const token = localStorage.getItem('token');
     if (!token) return;
 
-    // Close existing connection if any
-    if (wsRef.current) {
-      wsRef.current.close();
-    }
-
-    // Include token in WebSocket connection
-    const ws = new WebSocket(`${WS_URL}/ws/chat/${finalData.userEmail}?token=${token}`);
+    // Fix WebSocket URL construction
+    const wsUrl = WS_URL.replace('http://', 'ws://').replace('https://', 'wss://');
+    const ws = new WebSocket(`${wsUrl}/ws/chat/${finalData.userEmail}?token=${token}`);
 
     ws.onopen = () => {
+      console.log('WebSocket connected');
       setWsConnected(true);
       setReconnectAttempts(0);
     };
@@ -462,37 +464,34 @@ const Matches = () => {
     ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
+        console.log('WebSocket message:', data); // Add for debugging
 
         switch (data.type) {
-          case 'connection_established':
-            setWsConnected(true);
-            break;
-
           case 'new_message':
-            if (chatData.activeConversation?._id === data.conversation_id) {
-              setChatData(prev => {
-                const messageExists = prev.messages.some(m =>
-                  m._id === data.message._id ||
-                  (m.content === data.message.content &&
-                    Math.abs(new Date(m.created_at) - new Date(data.message.created_at)) < 1000)
-                );
+            // Immediately add message to UI
+            setChatData(prev => {
+              // Check if message already exists
+              const messageExists = prev.messages.some(m =>
+                m._id === data.message._id ||
+                (m.content === data.message.content &&
+                  Math.abs(new Date(m.created_at) - new Date(data.message.created_at)) < 2000)
+              );
 
-                if (!messageExists) {
-                  return {
-                    ...prev,
-                    messages: [...prev.messages, { ...data.message, received: true }]
-                  };
-                }
-                return prev;
-              });
-            }
+              if (!messageExists) {
+                return {
+                  ...prev,
+                  messages: [...prev.messages, { ...data.message, received: true }]
+                };
+              }
+              return prev;
+            });
+
+            // Update conversations list
             fetchChatConversations();
-            if (data.message?.sender_email !== finalData.userEmail) {
-              toast.info(`New message from ${data.sender_name || 'someone'}`);
-            }
             break;
 
           case 'message_sent':
+            // Update temp message with real one
             setChatData(prev => {
               if (prev.messageTimeouts?.[data.temp_id]) {
                 clearTimeout(prev.messageTimeouts[data.temp_id]);
@@ -502,78 +501,51 @@ const Matches = () => {
                 ...prev,
                 messages: prev.messages.map(msg =>
                   msg._id === data.temp_id
-                    ? {
-                      ...data.message,
-                      _id: data.message._id,
-                      sending: false,
-                      sent: true
-                    }
+                    ? { ...data.message, _id: data.message._id, sending: false, sent: true }
                     : msg
                 ),
                 messageTimeouts: { ...prev.messageTimeouts, [data.temp_id]: undefined }
               };
             });
-            fetchChatConversations();
             break;
 
           case 'messages_read':
             setChatData(prev => ({
               ...prev,
-              messages: prev.messages.map(msg =>
-                !msg.read ? { ...msg, read: true } : msg
-              )
+              messages: prev.messages.map(msg => ({ ...msg, read: true }))
             }));
             break;
 
-          case 'interest_accepted':
-            toast.success(`${data.sender_name} accepted your interest!`);
-            fetchActivityData();
-            fetchChatConversations();
-            break;
-
-          case 'interest_received':
-            toast.info(`You received a new interest from ${data.sender_name}`);
-            fetchActivityData();
-            break;
-
-          case 'interest_sent_ack':
-            break;
-
-          case 'report_submitted_ack':
+          case 'typing':
+            // Handle typing indicator if needed
             break;
 
           case 'pong':
-            break;
-
-          case 'error':
-            if (data.message && !data.message.includes('Unknown message type')) {
-              toast.error(data.message);
-            }
+            // Connection alive
             break;
 
           default:
-            break;
+            console.log('Unknown message type:', data.type);
         }
       } catch (error) {
-        // Silent error
+        console.error('Error parsing WebSocket message:', error);
       }
     };
 
-    ws.onerror = () => {
+    ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
       setWsConnected(false);
     };
 
     ws.onclose = (event) => {
+      console.log('WebSocket closed:', event.code, event.reason);
       setWsConnected(false);
 
+      // Attempt to reconnect
       if (event.code !== 1000 && reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
         const timeout = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000);
 
-        if (reconnectTimeoutRef.current) {
-          clearTimeout(reconnectTimeoutRef.current);
-        }
-
-        reconnectTimeoutRef.current = setTimeout(() => {
+        setTimeout(() => {
           setReconnectAttempts(prev => prev + 1);
           connectWebSocket();
         }, timeout);
@@ -582,6 +554,7 @@ const Matches = () => {
 
     wsRef.current = ws;
 
+    // Heartbeat to keep connection alive
     const heartbeatInterval = setInterval(() => {
       if (wsRef.current?.readyState === WebSocket.OPEN) {
         wsRef.current.send(JSON.stringify({ type: 'ping' }));
@@ -591,7 +564,7 @@ const Matches = () => {
     return () => {
       clearInterval(heartbeatInterval);
     };
-  }, [finalData.userEmail, WS_URL, chatData.activeConversation, fetchChatConversations, reconnectAttempts]);
+  }, [finalData.userEmail, WS_URL, reconnectAttempts]);
 
   // ============== EFFECTS ==============
 
@@ -1281,70 +1254,70 @@ const Matches = () => {
   };
 
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !chatData.activeConversation) return;
+    if (!newMessage.trim() || !chatData.activeConversation || messageLoading) return;
 
     const messageContent = newMessage.trim();
     if (!messageContent) return;
 
     setMessageLoading(true);
 
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setMessageLoading(false);
-        return;
-      }
+    const tempId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const timestamp = new Date().toISOString();
 
-      const tempId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    // Add message to UI immediately
+    const tempMessage = {
+      _id: tempId,
+      sender_email: finalData.userEmail,
+      content: messageContent,
+      created_at: timestamp,
+      read: false,
+      sending: true,
+      temp: true
+    };
 
-      const tempMessage = {
-        _id: tempId,
-        sender_email: finalData.userEmail,
-        content: messageContent,
-        created_at: new Date().toISOString(),
-        read: false,
-        sending: true
-      };
+    setChatData(prev => ({
+      ...prev,
+      messages: [...prev.messages, tempMessage]
+    }));
 
-      setChatData(prev => ({
-        ...prev,
-        messages: [...prev.messages, tempMessage]
-      }));
+    setNewMessage('');
 
-      setNewMessage('');
-
-      if (wsRef.current?.readyState === WebSocket.OPEN) {
+    // Try WebSocket first
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      try {
         wsRef.current.send(JSON.stringify({
           type: 'send_message',
           conversation_id: chatData.activeConversation._id,
           sender_email: finalData.userEmail,
           content: messageContent,
-          sender_name: finalData.fullName || finalData.userEmail.split('@')[0],
           temp_id: tempId
         }));
 
+        // Set timeout for HTTP fallback
         const timeoutId = setTimeout(async () => {
-          setChatData(prev => {
-            const messageStillExists = prev.messages.some(m => m._id === tempId && m.sending);
-            if (messageStillExists) {
-              sendViaHTTP(messageContent, tempId);
-            }
-            return prev;
-          });
-        }, 3000);
+          const currentMessages = chatData.messages;
+          const messageStillExists = currentMessages.some(m => m._id === tempId && m.sending);
+
+          if (messageStillExists) {
+            console.log('WebSocket timeout, falling back to HTTP');
+            await sendViaHTTP(messageContent, tempId);
+          }
+        }, 5000);
 
         setChatData(prev => ({
           ...prev,
           messageTimeouts: { ...prev.messageTimeouts, [tempId]: timeoutId }
         }));
-      } else {
+      } catch (error) {
+        console.error('WebSocket send error:', error);
         await sendViaHTTP(messageContent, tempId);
       }
-    } catch (error) {
-      toast.error("Failed to send message");
-    } finally {
-      setMessageLoading(false);
+    } else {
+      // WebSocket not connected, use HTTP
+      await sendViaHTTP(messageContent, tempId);
     }
+
+    setMessageLoading(false);
   };
 
   const sendViaHTTP = async (content, tempId) => {
@@ -1357,8 +1330,7 @@ const Matches = () => {
         {
           conversation_id: chatData.activeConversation._id,
           sender_email: finalData.userEmail,
-          content: content,
-          sender_name: finalData.fullName || finalData.userEmail.split('@')[0]
+          content: content
         },
         {
           headers: {
@@ -1369,6 +1341,7 @@ const Matches = () => {
       );
 
       if (response.data.success) {
+        // Clear timeout if exists
         setChatData(prev => {
           if (prev.messageTimeouts?.[tempId]) {
             clearTimeout(prev.messageTimeouts[tempId]);
@@ -1379,8 +1352,8 @@ const Matches = () => {
             messages: prev.messages.map(msg =>
               msg._id === tempId
                 ? {
-                  ...msg,
-                  _id: response.data.message?._id || response.data.message_id || tempId,
+                  ...response.data.message,
+                  _id: response.data.message._id,
                   sending: false,
                   sent: true
                 }
@@ -1390,14 +1363,16 @@ const Matches = () => {
           };
         });
 
+        // Refresh conversations
         fetchChatConversations();
       }
     } catch (error) {
+      console.error('HTTP send error:', error);
+      // Remove failed message
       setChatData(prev => ({
         ...prev,
         messages: prev.messages.filter(msg => msg._id !== tempId)
       }));
-
       toast.error("Failed to send message");
     }
   };
@@ -2947,13 +2922,16 @@ const Matches = () => {
                         {chatData.conversations.map((conversation) => {
                           const otherParticipant = conversation.participants?.find(p => p.email !== finalData.userEmail);
                           const lastMessage = conversation.last_message;
-                          const unreadCount = conversation.unread_count || 0;
+                          // Get unread count correctly
+                          const unreadCount = conversation.unread_count ||
+                            (conversation.unread_count && conversation.unread_count[finalData.userEmail]) ||
+                            0;
 
                           return (
                             <div
                               key={conversation._id}
                               onClick={() => handleOpenChat(conversation)}
-                              className={`bg-white rounded-xl shadow-sm border ${unreadCount > 0 ? 'border-rose-200 bg-rose-50/20' : 'border-gray-100'} p-3 md:p-4 hover:shadow-md transition cursor-pointer`}
+                              className={`bg-white rounded-xl shadow-sm border ${unreadCount > 0 ? 'border-rose-200 bg-rose-50/30' : 'border-gray-100'} p-3 md:p-4 hover:shadow-md transition cursor-pointer relative`}
                             >
                               <div className="flex items-center gap-2 md:gap-4">
                                 <div className="relative flex-shrink-0">
@@ -2966,16 +2944,18 @@ const Matches = () => {
                                       </div>
                                     )}
                                   </div>
-                                  {/* {unreadCount > 0 && (
-                                    <span className="absolute -top-1 -right-1 w-4 h-4 md:w-5 md:h-5 bg-rose-500 text-white text-[10px] md:text-xs rounded-full flex items-center justify-center">
-                                      {unreadCount}
+                                  {unreadCount > 0 && (
+                                    <span className="absolute -top-1 -right-1 min-w-[20px] h-5 bg-rose-500 text-white text-xs font-bold rounded-full flex items-center justify-center px-1 border-2 border-white">
+                                      {unreadCount > 9 ? '9+' : unreadCount}
                                     </span>
-                                  )} */}
+                                  )}
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-1 sm:gap-2">
                                     <div>
-                                      <h4 className="font-semibold text-gray-800 text-sm md:text-base truncate">{otherParticipant?.name || 'Unknown'}</h4>
+                                      <h4 className={`font-semibold text-gray-800 text-sm md:text-base truncate ${unreadCount > 0 ? 'font-bold' : ''}`}>
+                                        {otherParticipant?.name || 'Unknown'}
+                                      </h4>
                                       <p className="text-xs md:text-sm text-gray-500 truncate">{otherParticipant?.email}</p>
                                     </div>
                                     <span className="text-[10px] md:text-xs text-gray-400 whitespace-nowrap">
@@ -3007,7 +2987,7 @@ const Matches = () => {
                                       setChatToClear(conversation._id);
                                       setShowClearChatConfirm(true);
                                     }}
-                                    className="p-1 md:p-2 text-gray-400 hover:text-blue-500 transition"
+                                    className="p-1 md:p-2 text-gray-400 hover:text-rose-500 transition"
                                     title="Clear Chat History"
                                   >
                                     <MdCleaningServices className="text-sm md:text-lg" />
