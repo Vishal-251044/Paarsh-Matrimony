@@ -1605,6 +1605,59 @@ const Matches = () => {
     }
   };
 
+  const formatActivityDate = (timestamp) => {
+    if (!timestamp) return '';
+
+    try {
+      const date = new Date(timestamp);
+      const now = new Date();
+
+      // Check if we're on localhost or production
+      const isLocalhost = window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1';
+
+      // For Render (production), we need to add 5.5 hours
+      // For localhost, use as is
+      let adjustedDate = date;
+
+      if (!isLocalhost) {
+        // On Render/Railway/etc - Add 5.5 hours for IST
+        const IST_OFFSET = 5.5 * 60 * 60 * 1000; // 5.5 hours in milliseconds
+        adjustedDate = new Date(date.getTime() + IST_OFFSET);
+      }
+
+      // Get today's date at midnight for comparison
+      const today = new Date(now);
+      today.setHours(0, 0, 0, 0);
+
+      // Get yesterday's date at midnight
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      // Get the adjusted date at midnight for comparison
+      const adjustedMidnight = new Date(adjustedDate);
+      adjustedMidnight.setHours(0, 0, 0, 0);
+
+      // Compare dates
+      if (adjustedMidnight.getTime() === today.getTime()) {
+        return 'Today';
+      } else if (adjustedMidnight.getTime() === yesterday.getTime()) {
+        return 'Yesterday';
+      } else {
+        // For older dates, return the date
+        return adjustedDate.toLocaleDateString('en-IN', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric'
+        });
+      }
+
+    } catch (error) {
+      console.error("Error formatting activity date:", error);
+      return '';
+    }
+  };
+
   // Updated Activity Profile Modal - No match score, no online status, no buttons
   const ActivityProfileModal = ({ match, onClose, isPremiumUser }) => {
     if (!match) return null;
@@ -2756,7 +2809,7 @@ const Matches = () => {
                                     </p>
                                   </div>
                                   <span className="text-[10px] md:text-xs text-gray-400">
-                                    {formatTimestamp(interest.created_at)}
+                                    {formatActivityDate(interest.created_at)}
                                   </span>
                                 </div>
                                 {interest.message && (
@@ -2860,7 +2913,7 @@ const Matches = () => {
                                     </p>
                                   </div>
                                   <span className="text-[10px] md:text-xs text-gray-400">
-                                    {formatTimestamp(interest.created_at)}
+                                    {formatActivityDate(interest.created_at)}
                                   </span>
                                 </div>
                                 {interest.message && (
