@@ -6,7 +6,7 @@ import {
   useNavigate,
   useLocation,
 } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile";
@@ -18,7 +18,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import NotFound from "./pages/NotFound";
 import Contact from "./pages/Contact";
 import Admin from "./pages/Admin";
-import { FiSettings } from "react-icons/fi";
+import { FiSettings, FiArrowUp } from "react-icons/fi";
 import ScrollToTop from "./ScrollToTop";
 
 /* ---------------- AUTH HELPERS ---------------- */
@@ -79,6 +79,48 @@ const AdminFloatingButton = () => {
   );
 };
 
+/* ---------------- SCROLL TO TOP BUTTON ---------------- */
+const ScrollToTopButton = () => {
+  const [isVisible, setIsVisible] = useState(false);
+
+  // Show button when page is scrolled down
+  useEffect(() => {
+    const toggleVisibility = () => {
+      if (window.pageYOffset > 300) {
+        setIsVisible(true);
+      } else {
+        setIsVisible(false);
+      }
+    };
+
+    window.addEventListener("scroll", toggleVisibility);
+
+    return () => window.removeEventListener("scroll", toggleVisibility);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
+
+  return (
+    <>
+      {isVisible && (
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-24 right-6 z-50 text-white p-3.5 rounded-full shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl"
+          style={{ backgroundColor: "oklch(70.4% 0.191 22.216)" }}
+          title="Scroll to top"
+        >
+          <FiArrowUp size={26} />
+        </button>
+      )}
+    </>
+  );
+};
+
 /* ---------------- MAIN APP WRAPPER ---------------- */
 const AppContent = () => {
   /* ---------------- ZOOM CONTROL ---------------- */
@@ -125,6 +167,7 @@ const AppContent = () => {
   return (
     <>
       <AdminFloatingButton />
+      <ScrollToTopButton />
 
       <Routes>
         {/* Public */}

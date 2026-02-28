@@ -741,7 +741,7 @@ const Watchlist = () => {
                 </span>
               )}
               <div className="ml-auto px-4 py-1.5 rounded-full text-sm font-bold bg-gradient-to-r from-amber-400 to-orange-500 shadow-lg text-white">
-                Score: {compareResult.score}/20
+                Similarity: {compareResult.score}/20
               </div>
             </div>
           </div>

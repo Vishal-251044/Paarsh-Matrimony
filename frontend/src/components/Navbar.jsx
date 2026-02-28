@@ -131,6 +131,7 @@ const Navbar = memo(() => {
                         style={{ fontFamily: "'Great Vibes', cursive" }}
                         onClick={() => {
                             window.scrollTo({ top: 0, behavior: 'smooth' });
+                            navigate('/');
                         }}
                     >
                         <span className="relative inline-block">

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import Chatbot from '../components/Chatbot';
+import { useNavigate } from "react-router-dom";
 import axios from 'axios';
 import {
   Heart,
@@ -34,6 +35,17 @@ const Home = () => {
   const themeColor = "oklch(70.4%_0.191_22.216)";
   const [feedbacks, setFeedbacks] = useState([]);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const handleGetStarted = () => {
+    const user = localStorage.getItem("user");
+
+    if (user) {
+      navigate("/profile");
+    } else {
+      navigate("/login");
+    }
+  };
 
   const fetchTopFeedbacks = async () => {
     setLoading(true);
@@ -417,7 +429,17 @@ const Home = () => {
                       ))}
                     </ul>
                   </div>
-
+                  {/* Get Started Button - Premium Only */}
+                  {plan.popular && (
+                    <div className="text-center mt-6">
+                      <button
+                        onClick={handleGetStarted}
+                        className="bg-[oklch(70.4%_0.191_22.216)] hover:opacity-90 text-white px-6 py-2.5 rounded-lg font-semibold transition-all duration-300"
+                      >
+                        Get Started
+                      </button>
+                    </div>
+                  )}
                   {/* Bottom glow */}
                   <div className="absolute bottom-0 left-0 right-0 h-1.5 
                           bg-gradient-to-r from-transparent 

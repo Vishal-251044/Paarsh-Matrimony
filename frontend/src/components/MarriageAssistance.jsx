@@ -3,7 +3,6 @@ import axios from "axios";
 import { HiOutlineSparkles } from "react-icons/hi";
 import {
     FiMapPin,
-    FiDollarSign,
     FiShoppingBag,
     FiCalendar,
     FiCamera,
@@ -19,6 +18,7 @@ import {
     FiChevronDown,
     FiChevronUp,
 } from "react-icons/fi";
+import { FaRupeeSign } from "react-icons/fa";
 import {
     FaRing,
     FaUtensils,
@@ -150,7 +150,7 @@ const Marriage = () => {
             {/* BUDGET */}
             <div className="card">
                 <h3 className="title">
-                    <FiDollarSign /> Budget Range
+                    <FaRupeeSign /> Budget Range
                 </h3>
 
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-3">

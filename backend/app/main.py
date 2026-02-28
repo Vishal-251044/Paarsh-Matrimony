@@ -43,7 +43,8 @@ from app.routes import (
     activityuserdata_route,
     report_admin_route,
     verify_doc_route,
-    verify_tag_route
+    verify_tag_route,
+    forgot_route
 )
 
 load_dotenv()
@@ -90,6 +91,7 @@ app.include_router(activityuserdata_route.router)
 app.include_router(report_admin_route.router)
 app.include_router(verify_doc_route.router)
 app.include_router(verify_tag_route.router, prefix="/api", tags=["verification"])
+app.include_router(forgot_route.router, prefix="/auth", tags=["Forgot Password"])
 
 @app.get("/")
 async def root():

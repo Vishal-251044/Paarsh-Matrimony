@@ -135,18 +135,18 @@ const customSelectStyles = {
 };
 
 // Enhanced Input component with trim functionality and test attributes
-const Input = ({ 
-  label, 
-  type = "text", 
-  value, 
-  onChange, 
-  options = [], 
-  placeholder = "", 
-  isEditing = true, 
-  onBlur, 
-  isProtected = false, 
+const Input = ({
+  label,
+  type = "text",
+  value,
+  onChange,
+  options = [],
+  placeholder = "",
+  isEditing = true,
+  onBlur,
+  isProtected = false,
   icon: Icon,
-  testId 
+  testId
 }) => {
   if (type === "select") {
     const selectOptions = options.map(opt => ({ value: opt, label: opt }));
@@ -366,7 +366,7 @@ const Textarea = ({ label, value, onChange, rows = 4, placeholder = "", isEditin
 
 // Section component with Jeewansathi style
 const Section = ({ title, children, icon: Icon, testId }) => (
-  <div 
+  <div
     className="mb-6 bg-white rounded-lg border border-gray-200 p-5 shadow-sm"
     {...getTestAttributes(testId)}
   >
@@ -383,7 +383,7 @@ const Section = ({ title, children, icon: Icon, testId }) => (
 // Accordion Form Box
 const AccordionFormBox = ({ title, children, isOpen, onToggle, icon: Icon, sectionProgress, testId }) => {
   return (
-    <div 
+    <div
       className="bg-white rounded-xl shadow-lg border border-gray-200 p-5 md:p-6 mb-4 transition-all duration-200"
       {...getTestAttributes(testId)}
     >
@@ -450,7 +450,7 @@ const formatDisplayValue = (value) => {
 
 // Empty State Component
 const EmptyStatePreview = ({ onEdit, title, icon: Icon, testId }) => (
-  <div 
+  <div
     className="flex flex-col items-center justify-center py-10 px-4 bg-gradient-to-br from-gray-50 to-white rounded-2xl border-2 border-dashed border-red-200"
     {...getTestAttributes(testId)}
   >
@@ -474,7 +474,7 @@ const EmptyStatePreview = ({ onEdit, title, icon: Icon, testId }) => (
 
 // Info Card Component
 const InfoCard = ({ children, className = "", testId }) => (
-  <div 
+  <div
     className={`bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden ${className}`}
     {...getTestAttributes(testId)}
   >
@@ -490,7 +490,7 @@ const InfoRow = ({ label, value, icon: Icon, testId }) => {
   if (!displayValue) return null;
 
   return (
-    <div 
+    <div
       className="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-3 py-2 px-2 sm:px-3 border-b border-gray-50 last:border-0"
       {...getTestAttributes(testId)}
     >
@@ -519,7 +519,7 @@ const InfoRow = ({ label, value, icon: Icon, testId }) => {
 const SectionHeader = ({ title, icon: Icon, count, testId }) => {
   if (!count) return null;
   return (
-    <div 
+    <div
       className="flex items-center gap-1 sm:gap-2 mb-2 sm:mb-3 pb-1 sm:pb-2 border-b border-gray-100"
       {...getTestAttributes(testId)}
     >
@@ -722,11 +722,11 @@ const SelfPreview = ({ personalInfo, locationInfo, religionInfo, educationInfo, 
             <SectionHeader title={section.title} icon={section.icon} count={section.count} testId={`${testId}-section-header-${idx}`} />
             <div className="space-y-0.5">
               {section.fields.map((field, fieldIdx) => (
-                <InfoRow 
-                  key={fieldIdx} 
-                  label={field.label} 
-                  value={field.value} 
-                  icon={field.icon} 
+                <InfoRow
+                  key={fieldIdx}
+                  label={field.label}
+                  value={field.value}
+                  icon={field.icon}
                   testId={`${testId}-field-${idx}-${fieldIdx}`}
                 />
               ))}
@@ -854,11 +854,11 @@ const FamilyPreview = ({ familyInfo, aboutFamily, onEdit, testId }) => {
             <SectionHeader title={section.title} icon={section.icon} count={section.count} testId={`${testId}-section-header-${idx}`} />
             <div className="space-y-0.5">
               {section.fields.map((field, fieldIdx) => (
-                <InfoRow 
-                  key={fieldIdx} 
-                  label={field.label} 
-                  value={field.value} 
-                  icon={field.icon} 
+                <InfoRow
+                  key={fieldIdx}
+                  label={field.label}
+                  value={field.value}
+                  icon={field.icon}
                   testId={`${testId}-field-${idx}-${fieldIdx}`}
                 />
               ))}
@@ -982,11 +982,11 @@ const PartnerPreview = ({ partnerInfo, onEdit, testId }) => {
             <SectionHeader title={section.title} icon={section.icon} count={section.count} testId={`${testId}-section-header-${idx}`} />
             <div className="space-y-0.5">
               {section.fields.map((field, fieldIdx) => (
-                <InfoRow 
-                  key={fieldIdx} 
-                  label={field.label} 
-                  value={field.value} 
-                  icon={field.icon} 
+                <InfoRow
+                  key={fieldIdx}
+                  label={field.label}
+                  value={field.value}
+                  icon={field.icon}
                   testId={`${testId}-field-${idx}-${fieldIdx}`}
                 />
               ))}
@@ -1180,7 +1180,7 @@ const MembershipCard = ({
   };
 
   return (
-    <div 
+    <div
       className={`relative border rounded-xl p-6 transition-all duration-300 ${popular ? 'border-red-500 shadow-lg ring-2 ring-red-500 ring-opacity-20' : 'border-gray-200 hover:border-red-300'}`}
       {...getTestAttributes(testId)}
     >
@@ -1772,6 +1772,64 @@ const Profile = () => {
     loadProfile();
   }, [navigate]);
 
+  useEffect(() => {
+    // Set session timestamp when component mounts
+    const sessionStart = Date.now();
+    sessionStorage.setItem('sessionStart', sessionStart.toString());
+    sessionStorage.setItem('userEmail', user?.email || '');
+
+    // Store current session info in localStorage for cross-tab tracking
+    localStorage.setItem('lastSessionStart', sessionStart.toString());
+    localStorage.setItem('lastUserEmail', user?.email || '');
+    localStorage.setItem('lastActivity', sessionStart.toString()); // Initialize lastActivity
+
+    // Handle tab/browser close
+    const handleBeforeUnload = () => {
+      // Update the last activity timestamp
+      localStorage.setItem('lastActivity', Date.now().toString());
+    };
+
+    // Check session expiry every minute
+    const sessionCheckInterval = setInterval(() => {
+      const sessionStart = sessionStorage.getItem('sessionStart');
+      const userEmail = sessionStorage.getItem('userEmail');
+
+      if (sessionStart && userEmail) {
+        // Use lastActivity if available, otherwise use sessionStart
+        const lastActivity = localStorage.getItem('lastActivity');
+        const referenceTime = lastActivity ? parseInt(lastActivity) : parseInt(sessionStart);
+        const elapsedMinutes = (Date.now() - referenceTime) / (1000 * 60);
+
+        // Auto logout after 12 hours (720 minutes) of inactivity
+        if (elapsedMinutes >= 720) {
+          console.log('Session expired after 12 hours of inactivity');
+          handleLogout();
+          clearInterval(sessionCheckInterval);
+
+          // Clear session data
+          sessionStorage.removeItem('sessionStart');
+          sessionStorage.removeItem('userEmail');
+        }
+      }
+    }, 60000); // Check every minute
+
+    // Check for expired sessions from other tabs
+    const handleStorageChange = (e) => {
+      if (e.key === 'logout' && e.newValue === 'true') {
+        handleLogout();
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(sessionCheckInterval);
+    };
+  }, [user?.email]);
+
   const handleFeedbackSubmit = async () => {
     const trimmedExperience = feedback.experience.trim();
     const trimmedSuggestions = feedback.suggestions.trim();
@@ -1875,12 +1933,26 @@ const Profile = () => {
       console.error("Logout API error:", err);
     }
 
+    // Clear all storages
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    localStorage.removeItem("lastActivity");
+    localStorage.removeItem("lastSessionStart");
+    localStorage.removeItem("lastUserEmail");
+
+    sessionStorage.removeItem('sessionStart');
+    sessionStorage.removeItem('userEmail');
+
+    // Broadcast logout to other tabs
+    localStorage.setItem('logout', Date.now().toString());
     setTimeout(() => {
-      localStorage.removeItem("user");
-      localStorage.removeItem("token");
-      toast.success("Logged out successfully!");
-      navigate("/login");
-    }, 500);
+      localStorage.removeItem('logout');
+    }, 100);
+
+    toast.success("Logged out successfully!");
+    navigate("/login");
+
+    setLoadingState('logout', false);
   };
 
   const handlePasswordUpdate = async () => {
@@ -2540,18 +2612,18 @@ const Profile = () => {
 
   const handlePayment = async (planType, amount) => {
     setLoadingState('payment', true);
-    
+
     try {
       // Check if Razorpay is loaded
       if (!window.Razorpay) {
         toast.info("Loading payment gateway...");
-        
+
         const scriptLoaded = await loadRazorpayScript();
         if (!scriptLoaded) {
           throw new Error("Failed to load payment gateway");
         }
       }
-      
+
       const response = await axios.post(
         `${BACKEND_URL}/payment/create-order`,
         {
@@ -2589,7 +2661,7 @@ const Profile = () => {
             if (!response.razorpay_payment_id) {
               throw new Error("Invalid payment response");
             }
-            
+
             const paymentResponse = await axios.post(
               `${BACKEND_URL}/payment/verify`,
               {
@@ -2675,7 +2747,7 @@ const Profile = () => {
           color: "#dc2626"
         },
         modal: {
-          ondismiss: function() {
+          ondismiss: function () {
             setLoadingState('payment', false);
             toast.info("Payment cancelled");
           },
@@ -2695,18 +2767,18 @@ const Profile = () => {
         await loadRazorpayScript(true);
         razorpay = new window.Razorpay(options);
       }
-      
+
       razorpay.open();
 
-      razorpay.on('payment.failed', function(response) {
+      razorpay.on('payment.failed', function (response) {
         console.error('Payment failed:', response.error);
         toast.error(`Payment failed: ${response.error.description || 'Unknown error'}`);
         setLoadingState('payment', false);
       });
-      
+
     } catch (error) {
       console.error("Payment initiation error:", error);
-      
+
       if (error.message === "Failed to load payment gateway") {
         toast.error("Unable to load payment gateway. Please check your internet connection.");
       } else if (error.response?.status === 401) {
@@ -2719,7 +2791,7 @@ const Profile = () => {
       } else {
         toast.error(error.response?.data?.detail || "Failed to initiate payment");
       }
-      
+
       setLoadingState('payment', false);
     }
   };
@@ -2991,9 +3063,9 @@ const Profile = () => {
                     <div
                       className={`px-4 py-3 rounded-xl text-sm font-medium shadow-md backdrop-blur-sm flex items-center justify-center gap-2
                         ${isProfilePublished
-                        ? "bg-gradient-to-r from-green-50 to-emerald-50 text-green-700 border border-green-200/50"
-                        : "bg-gradient-to-r from-amber-50 to-orange-50 text-amber-700 border border-amber-200/50"
-                      }`}
+                          ? "bg-gradient-to-r from-green-50 to-emerald-50 text-green-700 border border-green-200/50"
+                          : "bg-gradient-to-r from-amber-50 to-orange-50 text-amber-700 border border-amber-200/50"
+                        }`}
                       {...getTestAttributes('profile-status')}
                     >
                       {isProfilePublished ? (
@@ -4728,7 +4800,7 @@ const Profile = () => {
                     currentPlan={membershipPlan === "premium" ? "Premium Membership" : null}
                     handlePayment={handlePayment}
                     loadingPayment={loadingStates.payment}
-                    handleSubmit={() => {}}
+                    handleSubmit={() => { }}
                     membershipDates={membershipDates}
                     testId="premium-membership-card"
                   />
@@ -4919,7 +4991,7 @@ const Profile = () => {
       </div>
       <Chatbot />
       <Footer />
-      
+
       {/* Kundali Section */}
       {showKundali && personalInfo.dob && personalInfo.fullName && (
         <Kundali

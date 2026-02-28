@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Mail, Lock, Eye, EyeOff, User, Home } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, User, Home, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
@@ -17,6 +17,11 @@ export default function LoginPage() {
   const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState("");
   const existingUser = localStorage.getItem("user");
+
+  // Forgot password modal state
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
 
   // Matrimony theme: elegant rose gold / blush
   const primaryColor = "oklch(70.4% 0.191 22.216)"; // warm peach/pink
@@ -179,6 +184,33 @@ export default function LoginPage() {
     setOtp("");
   };
 
+  // Forgot password handler
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+
+    if (!forgotEmail.endsWith("@gmail.com")) {
+      toast.error("Only Gmail addresses allowed");
+      return;
+    }
+
+    try {
+      setForgotLoading(true);
+      await axios.post(`${BACKEND_URL}/auth/forgot-password`, {
+        email: forgotEmail.trim(),
+      });
+
+      toast.success("If email exists, password details sent to your email.");
+      setTimeout(() => {
+        setShowForgotPassword(false);
+        setForgotEmail("");
+      }, 2000);
+    } catch (err) {
+      toast.error("Something went wrong");
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
   return (
     <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
       <ToastContainer position="top-right" />
@@ -288,7 +320,7 @@ export default function LoginPage() {
                     type="button"
                     className="text-[0.7rem] hover:underline"
                     style={{ color: primaryColor }}
-                    onClick={() => toast.info("Please use Google login")}
+                    onClick={() => setShowForgotPassword(true)}
                   >
                     Forgot password?
                   </button>
@@ -397,6 +429,84 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
+
+      {/* FORGOT PASSWORD MODAL */}
+      {showForgotPassword && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+            {/* Modal Header */}
+            <div className="relative p-6 pb-4">
+              <button
+                onClick={() => {
+                  setShowForgotPassword(false);
+                  setForgotEmail("");
+                }}
+                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+              
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-6 h-0.5 rounded-full" style={{ background: primaryColor }}></div>
+                <span className="text-[0.6rem] uppercase tracking-[0.2em] font-light text-gray-400">Reset Password</span>
+              </div>
+              
+              <h2 className="text-2xl font-bold text-gray-800 mb-1">Forgot Password?</h2>
+              <p className="text-sm text-gray-500">Enter your Gmail address to receive password reset instructions</p>
+            </div>
+
+            {/* Modal Body */}
+            <form onSubmit={handleForgotPassword} className="p-6 pt-2">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1.5">
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    placeholder="your.email@gmail.com"
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none transition-all"
+                    style={{ 
+                      focus: { borderColor: primaryColor, borderWidth: '2px' }
+                    }}
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    required
+                  />
+                  <p className="text-xs text-gray-400 mt-1.5">
+                    Only Gmail addresses are accepted
+                  </p>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={forgotLoading}
+                  className="w-full py-3 rounded-lg font-medium text-white text-sm transition duration-200 ease-in-out hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed mt-2"
+                  style={{
+                    background: primaryColor,
+                    boxShadow: '0 8px 20px -8px oklch(70.4% 0.191 22.216 / 0.4)'
+                  }}
+                >
+                  {forgotLoading ? "Sending..." : "Send Reset Instructions"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowForgotPassword(false);
+                    setForgotEmail("");
+                  }}
+                  className="w-full text-sm text-gray-500 hover:text-gray-700 transition mt-2"
+                >
+                  Back to Login
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       <Footer />
       <Chatbot />

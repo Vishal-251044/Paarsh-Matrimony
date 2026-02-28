@@ -201,7 +201,12 @@ const TermsOfUse = () => {
                       </div>
                       <div>
                         <p className="font-medium text-gray-700">Email</p>
-                        <p className="text-sm text-gray-600">info@paarshinfotech.com</p>
+                        <a
+                          href="mailto:info@paarshinfotech.com"
+                          className="text-sm text-gray-600 hover:text-blue-600 transition"
+                        >
+                          info@paarshinfotech.com
+                        </a>
                       </div>
                     </div>
                   </div>
@@ -213,7 +218,12 @@ const TermsOfUse = () => {
                       </div>
                       <div>
                         <p className="font-medium text-gray-700">Phone</p>
-                        <p className="text-sm text-gray-600">+91 90752 01035</p>
+                        <a
+                          href="tel:+919075201035"
+                          className="text-sm text-gray-600 hover:text-green-600 transition"
+                        >
+                          +91 90752 01035
+                        </a>
                       </div>
                     </div>
                   </div>

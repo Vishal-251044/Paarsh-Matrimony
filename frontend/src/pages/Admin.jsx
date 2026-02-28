@@ -67,6 +67,45 @@ const serviceCategories = [
     { value: "Wedding Planners", icon: <Users className="w-4 h-4" /> }
 ];
 
+const maharashtraCities = [
+    "Mumbai",
+    "Pune",
+    "Nagpur",
+    "Nashik",
+    "Thane",
+    "Aurangabad",
+    "Solapur",
+    "Kolhapur",
+    "Sangli",
+    "Satara",
+    "Ratnagiri",
+    "Amravati",
+    "Jalgaon",
+    "Akola",
+    "Latur",
+    "Ahmednagar",
+    "Chandrapur",
+    "Parbhani",
+    "Jalna",
+    "Bhiwandi",
+    "Malegaon",
+    "Dhule",
+    "Nanded",
+    "Wardha",
+    "Yavatmal",
+    "Osmanabad",
+    "Beed",
+    "Hingoli",
+    "Gondia",
+    "Bhandara",
+    "Gadchiroli",
+    "Washim",
+    "Buldhana",
+    "Sindhudurg",
+    "Raigad",
+    "Palghar"
+];
+
 // Memoized ServicesContent component defined outside Admin to prevent recreation
 const ServicesContent = React.memo(({
     showAddForm,
@@ -355,12 +394,12 @@ const ServicesContent = React.memo(({
                                 <input
                                     type="text"
                                     name="state"
-                                    value={formData.state}
-                                    onChange={handleStateChange}
-                                    onBlur={handleBlur}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-transparent"
+                                    value="Maharashtra"
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
                                     placeholder="Enter state"
                                     required
+                                    readOnly
+                                    disabled
                                 />
                             </div>
 
@@ -369,16 +408,20 @@ const ServicesContent = React.memo(({
                                     <MapPin className="w-4 h-4" />
                                     City *
                                 </label>
-                                <input
-                                    type="text"
+                                <select
                                     name="city"
                                     value={formData.city}
-                                    onChange={handleCityChange}
-                                    onBlur={handleBlur}
+                                    onChange={handleInputChange}
                                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-transparent"
-                                    placeholder="Enter city"
                                     required
-                                />
+                                >
+                                    <option value="">Select a city</option>
+                                    {maharashtraCities.map((city, index) => (
+                                        <option key={index} value={city}>
+                                            {city}
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
 
                             <div>
@@ -755,7 +798,7 @@ const Admin = () => {
 
     // Form state
     const [formData, setFormData] = useState({
-        state: '',
+        state: 'Maharashtra',
         city: '',
         category: '',
         providerName: '',
@@ -820,7 +863,7 @@ const Admin = () => {
 
     const resetForm = useCallback(() => {
         setFormData({
-            state: '',
+            state: 'Maharashtra',
             city: '',
             category: '',
             providerName: '',
@@ -958,7 +1001,7 @@ const Admin = () => {
 
     const handleEdit = useCallback((service) => {
         setFormData({
-            state: service.state || '',
+            state: service.state || 'Maharashtra',
             city: service.city || '',
             category: service.category || '',
             providerName: service.providerName || '',

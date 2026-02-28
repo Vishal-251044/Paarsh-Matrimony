@@ -37,7 +37,6 @@ import {
   FiMessageCircle,
   FiActivity,
   FiSend,
-  FiFlag,
   FiTrash2,
   FiMoreVertical,
   FiClock,
@@ -49,6 +48,7 @@ import {
   FiSmile,
   FiLoader
 } from "react-icons/fi";
+import { MdOutlineReport } from "react-icons/md";
 import { FaCircle, FaClock, FaCheckDouble, FaRegCheckCircle } from "react-icons/fa";
 import {
   FaVenusMars,
@@ -431,11 +431,16 @@ const Matches = () => {
           ...prev,
           messages: response.data.messages || []
         }));
+
+        // After fetching messages, update the conversations list to reset unread count
+        await fetchChatConversations();
       }
     } catch (err) {
-      // Silent error
+      console.error("Error fetching messages:", err);
+    } finally {
+      setMessageLoading(false);
     }
-  }, [BACKEND_URL, finalData.userEmail]);
+  }, [BACKEND_URL, finalData.userEmail, fetchChatConversations]);
 
   // ============== WEBSOCKET CONNECTION ==============
 
@@ -514,6 +519,9 @@ const Matches = () => {
               ...prev,
               messages: prev.messages.map(msg => ({ ...msg, read: true }))
             }));
+
+            // Immediately update conversations to clear unread count
+            fetchChatConversations();
             break;
 
           case 'typing':
@@ -564,7 +572,7 @@ const Matches = () => {
     return () => {
       clearInterval(heartbeatInterval);
     };
-  }, [finalData.userEmail, WS_URL, reconnectAttempts]);
+  }, [finalData.userEmail, WS_URL, reconnectAttempts, fetchChatConversations]);
 
   // ============== EFFECTS ==============
 
@@ -646,6 +654,21 @@ const Matches = () => {
       }
     };
   }, [finalData.isProfilePublished, fetchMatches, loading]);
+
+  // Clear unread count when chat modal opens
+  useEffect(() => {
+    if (showChatModal && chatData.activeConversation) {
+      // Update the conversation in the list to have 0 unread
+      setChatData(prev => ({
+        ...prev,
+        conversations: prev.conversations.map(c =>
+          c._id === chatData.activeConversation._id
+            ? { ...c, unread_count: 0 }
+            : c
+        )
+      }));
+    }
+  }, [showChatModal, chatData.activeConversation]);
 
   // ============== HELPER FUNCTIONS ==============
 
@@ -1382,7 +1405,14 @@ const Matches = () => {
       ...prev,
       activeConversation: conversation
     }));
-    fetchChatMessages(conversation._id);
+
+    // Set loading to true before fetching messages
+    setMessageLoading(true);
+
+    fetchChatMessages(conversation._id).finally(() => {
+      setMessageLoading(false);
+    });
+
     setShowChatModal(true);
 
     if (wsRef.current?.readyState === WebSocket.OPEN) {
@@ -2062,7 +2092,7 @@ const Matches = () => {
                       }}
                       className="w-full py-2.5 md:py-3 bg-gray-50 text-gray-600 rounded-xl hover:bg-gray-100 transition font-medium text-sm md:text-base flex items-center justify-center gap-1 md:gap-2 border border-gray-200"
                     >
-                      <FiFlag className="text-base md:text-lg" /> Report
+                      <MdOutlineReport className="text-base md:text-lg" /> Report
                     </button>
                   </div>
 
@@ -2688,7 +2718,7 @@ const Matches = () => {
                                           className="w-10 h-10 rounded-lg bg-gray-50 text-gray-500 hover:bg-gray-100 border border-gray-200 flex items-center justify-center transition"
                                           title="Report"
                                         >
-                                          <FiFlag className="text-base" />
+                                          <MdOutlineReport className="text-base" />
                                         </button>
                                       </div>
                                     </div>
@@ -2998,9 +3028,7 @@ const Matches = () => {
                                     )}
                                   </div>
                                   {unreadCount > 0 && (
-                                    <span className="absolute -top-1 -right-1 min-w-[20px] h-5 bg-rose-500 text-white text-xs font-bold rounded-full flex items-center justify-center px-1 border-2 border-white">
-                                      {unreadCount > 9 ? '9+' : unreadCount}
-                                    </span>
+                                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white"></span>
                                   )}
                                 </div>
                                 <div className="flex-1 min-w-0">
@@ -3361,7 +3389,7 @@ const Matches = () => {
                 {reportLoading ? (
                   <FiLoader className="animate-spin text-base md:text-lg" />
                 ) : (
-                  <FiFlag className="text-base md:text-lg" />
+                  <MdOutlineReport className="text-base md:text-lg" />
                 )} Report
               </button>
             </div>
