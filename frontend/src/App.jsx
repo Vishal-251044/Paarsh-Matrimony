@@ -110,11 +110,12 @@ const ScrollToTopButton = () => {
       {isVisible && (
         <button
           onClick={scrollToTop}
-          className="fixed bottom-24 right-6 z-50 text-white p-3.5 rounded-full shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl"
+          className="fixed bottom-20 right-4 sm:bottom-24 sm:right-6 z-50 text-white p-3 sm:p-3.5 rounded-full shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl"
           style={{ backgroundColor: "oklch(70.4% 0.191 22.216)" }}
           title="Scroll to top"
         >
-          <FiArrowUp size={26} />
+          <FiArrowUp size={22} className="sm:hidden" />
+          <FiArrowUp size={26} className="hidden sm:block" />
         </button>
       )}
     </>
