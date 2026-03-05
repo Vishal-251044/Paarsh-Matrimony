@@ -461,7 +461,6 @@ const Matches = () => {
     const ws = new WebSocket(`${wsUrl}/ws/chat/${finalData.userEmail}?token=${token}`);
 
     ws.onopen = () => {
-      console.log('WebSocket connected');
       setWsConnected(true);
       setReconnectAttempts(0);
     };
@@ -469,7 +468,6 @@ const Matches = () => {
     ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        console.log('WebSocket message:', data); // Add for debugging
 
         switch (data.type) {
           case 'new_message':

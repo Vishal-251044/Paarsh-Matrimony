@@ -79,74 +79,8 @@ const AdminFloatingButton = () => {
   );
 };
 
-/* ---------------- SCROLL TO TOP BUTTON ---------------- */
-const ScrollToTopButton = () => {
-  const [isVisible, setIsVisible] = useState(false);
-
-  // Show button when page is scrolled down
-  useEffect(() => {
-    const toggleVisibility = () => {
-      if (window.pageYOffset > 300) {
-        setIsVisible(true);
-      } else {
-        setIsVisible(false);
-      }
-    };
-
-    window.addEventListener("scroll", toggleVisibility);
-
-    return () => window.removeEventListener("scroll", toggleVisibility);
-  }, []);
-
-  const scrollToTop = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
-  };
-
-  return (
-    <>
-      {isVisible && (
-        <button
-          onClick={scrollToTop}
-          className="fixed bottom-20 right-4 sm:bottom-24 sm:right-6 z-50 text-white p-3 sm:p-3.5 rounded-full shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl"
-          style={{ backgroundColor: "oklch(70.4% 0.191 22.216)" }}
-          title="Scroll to top"
-        >
-          <FiArrowUp size={22} className="sm:hidden" />
-          <FiArrowUp size={26} className="hidden sm:block" />
-        </button>
-      )}
-    </>
-  );
-};
-
 /* ---------------- MAIN APP WRAPPER ---------------- */
 const AppContent = () => {
-  /* ---------------- ZOOM CONTROL ---------------- */
-  useEffect(() => {
-    const disableZoomKeys = (event) => {
-      if (
-        (event.ctrlKey || event.metaKey) &&
-        ["+", "-", "0"].includes(event.key)
-      ) {
-        event.preventDefault();
-      }
-    };
-
-    const disableWheelZoom = (event) => {
-      if (event.ctrlKey) event.preventDefault();
-    };
-
-    document.addEventListener("keydown", disableZoomKeys);
-    document.addEventListener("wheel", disableWheelZoom, { passive: false });
-
-    return () => {
-      document.removeEventListener("keydown", disableZoomKeys);
-      document.removeEventListener("wheel", disableWheelZoom);
-    };
-  }, []);
 
   /* ---------------- SAVE & RESTORE ROUTE ---------------- */
   useEffect(() => {
@@ -168,8 +102,6 @@ const AppContent = () => {
   return (
     <>
       <AdminFloatingButton />
-      <ScrollToTopButton />
-
       <Routes>
         {/* Public */}
         <Route path="/" element={<Home />} />
