@@ -304,34 +304,221 @@ const Input = ({
   );
 };
 
-// Password Input with show/hide toggle
-const PasswordInput = ({ label, value, onChange, placeholder = "", isEditing = true, testId }) => {
-  const [showPassword, setShowPassword] = useState(false);
+const PasswordChangeBox = ({
+  onClose,
+  onUpdate,
+  loading
+}) => {
+  const [formData, setFormData] = useState({
+    oldPassword: "",
+    newPassword: "",
+    confirmPassword: ""
+  });
+  const [showPasswords, setShowPasswords] = useState({
+    old: false,
+    new: false,
+    confirm: false
+  });
+  const [errors, setErrors] = useState({});
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!formData.oldPassword.trim()) {
+      newErrors.oldPassword = "Current password is required";
+    }
+
+    if (!formData.newPassword) {
+      newErrors.newPassword = "New password is required";
+    } else {
+      // Check minimum length
+      if (formData.newPassword.length < 8) {
+        newErrors.newPassword = "Password must be at least 8 characters";
+      }
+
+      // Check for uppercase, lowercase, number, and special character
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&^#()[\]{}\-_=+<>/|.,]).{8,}$/;
+
+      if (!passwordRegex.test(formData.newPassword)) {
+        newErrors.newPassword = "Password must contain at least 1 uppercase, 1 lowercase, 1 number, and 1 special character";
+      }
+    }
+
+    if (formData.newPassword !== formData.confirmPassword) {
+      newErrors.confirmPassword = "Passwords do not match";
+    }
+
+    if (formData.oldPassword && formData.newPassword &&
+      formData.oldPassword === formData.newPassword) {
+      newErrors.newPassword = "New password must be different from current password";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = () => {
+    if (validateForm()) {
+      onUpdate(formData.oldPassword, formData.newPassword);
+    }
+  };
+
+  const togglePasswordVisibility = (field) => {
+    setShowPasswords(prev => ({
+      ...prev,
+      [field]: !prev[field]
+    }));
+  };
 
   return (
-    <div {...getTestAttributes(testId)}>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
-        {label}
-      </label>
-      <div className="relative">
-        <input
-          type={showPassword ? "text" : "password"}
-          className="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[${PRIMARY_COLOR}] focus:border-transparent transition text-gray-700 placeholder-gray-400"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          disabled={!isEditing}
-          placeholder={placeholder || `Enter ${label.toLowerCase()}`}
-          {...getTestAttributes(`${testId}-input`)}
-        />
-        <button
-          type="button"
-          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-          onClick={() => setShowPassword(!showPassword)}
-          disabled={!isEditing}
-          {...getTestAttributes(`${testId}-toggle`)}
+    <div className="mt-6 p-5 bg-gradient-to-br from-white to-gray-50/80 backdrop-blur-sm rounded-xl border border-red-100 shadow-lg animate-slideDown">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent flex items-center gap-2">
+          <FiEdit2 className="text-red-500" />
+          Change Password
+        </h3>
+        <IconButton
+          onClick={onClose}
+          disabled={loading}
+          testId="close-password-box"
         >
-          {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
-        </button>
+          <FiX size={18} />
+        </IconButton>
+      </div>
+
+      <div className="space-y-4">
+        {/* Current Password */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Current Password <span className="text-red-500">*</span>
+          </label>
+          <div className="relative">
+            <input
+              type={showPasswords.old ? "text" : "password"}
+              className={`w-full px-4 py-2.5 pr-10 border ${errors.oldPassword ? 'border-red-500' : 'border-gray-300'
+                } rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition text-gray-700 placeholder-gray-400`}
+              value={formData.oldPassword}
+              onChange={(e) => {
+                setFormData(prev => ({ ...prev, oldPassword: e.target.value }));
+                if (errors.oldPassword) {
+                  setErrors(prev => ({ ...prev, oldPassword: null }));
+                }
+              }}
+              placeholder="Enter current password"
+              disabled={loading}
+              {...getTestAttributes('old-password-input')}
+            />
+            <button
+              type="button"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+              onClick={() => togglePasswordVisibility('old')}
+              disabled={loading}
+              {...getTestAttributes('toggle-old-password')}
+            >
+              {showPasswords.old ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+            </button>
+          </div>
+          {errors.oldPassword && (
+            <p className="text-xs text-red-500 mt-1">{errors.oldPassword}</p>
+          )}
+        </div>
+
+        {/* New Password */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            New Password <span className="text-red-500">*</span>
+          </label>
+          <div className="relative">
+            <input
+              type={showPasswords.new ? "text" : "password"}
+              className={`w-full px-4 py-2.5 pr-10 border ${errors.newPassword ? 'border-red-500' : 'border-gray-300'
+                } rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition text-gray-700 placeholder-gray-400`}
+              value={formData.newPassword}
+              onChange={(e) => {
+                setFormData(prev => ({ ...prev, newPassword: e.target.value }));
+                if (errors.newPassword) {
+                  setErrors(prev => ({ ...prev, newPassword: null }));
+                }
+              }}
+              placeholder="Enter new password"
+              disabled={loading}
+              {...getTestAttributes('new-password-input')}
+            />
+            <button
+              type="button"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+              onClick={() => togglePasswordVisibility('new')}
+              disabled={loading}
+              {...getTestAttributes('toggle-new-password')}
+            >
+              {showPasswords.new ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+            </button>
+          </div>
+          {errors.newPassword && (
+            <p className="text-xs text-red-500 mt-1">{errors.newPassword}</p>
+          )}
+        </div>
+
+        {/* Confirm New Password */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Confirm New Password <span className="text-red-500">*</span>
+          </label>
+          <div className="relative">
+            <input
+              type={showPasswords.confirm ? "text" : "password"}
+              className={`w-full px-4 py-2.5 pr-10 border ${errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
+                } rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition text-gray-700 placeholder-gray-400`}
+              value={formData.confirmPassword}
+              onChange={(e) => {
+                setFormData(prev => ({ ...prev, confirmPassword: e.target.value }));
+                if (errors.confirmPassword) {
+                  setErrors(prev => ({ ...prev, confirmPassword: null }));
+                }
+              }}
+              placeholder="Confirm new password"
+              disabled={loading}
+              {...getTestAttributes('confirm-password-input')}
+            />
+            <button
+              type="button"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+              onClick={() => togglePasswordVisibility('confirm')}
+              disabled={loading}
+              {...getTestAttributes('toggle-confirm-password')}
+            >
+              {showPasswords.confirm ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+            </button>
+          </div>
+          {errors.confirmPassword && (
+            <p className="text-xs text-red-500 mt-1">{errors.confirmPassword}</p>
+          )}
+        </div>
+
+        <p className="text-xs text-gray-500 flex items-center gap-1">
+          <span className="w-1 h-1 bg-red-500 rounded-full"></span>
+          Password must be at least 8 characters
+        </p>
+
+        <div className="flex flex-col sm:flex-row gap-3 pt-2">
+          <PrimaryButton
+            onClick={handleSubmit}
+            loading={loading}
+            disabled={loading}
+            className="flex-1"
+            testId="update-password-button"
+          >
+            Update
+          </PrimaryButton>
+          <SecondaryButton
+            onClick={onClose}
+            disabled={loading}
+            className="flex-1"
+            testId="cancel-password-button"
+          >
+            Cancel
+          </SecondaryButton>
+        </div>
       </div>
     </div>
   );
@@ -1955,27 +2142,41 @@ const Profile = () => {
     setLoadingState('logout', false);
   };
 
-  const handlePasswordUpdate = async () => {
-    const trimmedPassword = newPassword.trim();
-
-    if (trimmedPassword.length < 8) {
-      toast.error("Password must be at least 8 characters");
-      return;
-    }
-
+  // Replace the existing handlePasswordUpdate function
+  const handlePasswordUpdate = async (oldPassword, newPassword) => {
     setLoadingState('passwordUpdate', true);
+
     try {
-      await axios.put(
-        `${BACKEND_URL}/auth/set-password`,
-        { email: user.email, new_password: trimmedPassword },
-        { headers: { Authorization: `Bearer ${token}` } }
+      const response = await axios.put(
+        `${BACKEND_URL}/auth/update-password`,
+        {
+          email: user.email,
+          old_password: oldPassword,
+          new_password: newPassword
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
       );
-      toast.success("Password updated successfully!");
+
+      toast.success(response.data.message || "Password updated successfully!");
       setShowPasswordBox(false);
-      setNewPassword("");
+
     } catch (err) {
-      console.error(err);
-      toast.error(err.response?.data?.detail || "Failed to update password");
+      console.error("Password update error:", err);
+
+      if (err.response?.status === 401) {
+        toast.error("Current password is incorrect");
+      } else if (err.response?.status === 400) {
+        toast.error(err.response.data.detail || "Invalid request");
+      } else if (err.response?.status === 404) {
+        toast.error("User not found");
+      } else {
+        toast.error(err.response?.data?.detail || "Failed to update password");
+      }
     } finally {
       setLoadingState('passwordUpdate', false);
     }
@@ -3087,54 +3288,11 @@ const Profile = () => {
 
                 {/* Change Password Box */}
                 {showPasswordBox && (
-                  <div className="mt-6 p-5 bg-gradient-to-br from-white to-gray-50/80 backdrop-blur-sm rounded-xl border border-red-100 shadow-lg animate-slideDown">
-                    <div className="flex justify-between items-center mb-4">
-                      <h3 className="text-lg font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent flex items-center gap-2">
-                        <FiEdit2 className="text-red-500" />
-                        Change Password
-                      </h3>
-                      <IconButton
-                        onClick={() => { setShowPasswordBox(false); setNewPassword(""); }}
-                        disabled={loadingStates.passwordUpdate}
-                        testId="close-password-box"
-                      >
-                        <FiX size={18} />
-                      </IconButton>
-                    </div>
-                    <div className="space-y-4">
-                      <PasswordInput
-                        label="New Password"
-                        value={newPassword}
-                        onChange={setNewPassword}
-                        placeholder="Enter new password"
-                        isEditing={true}
-                        testId="new-password-input"
-                      />
-                      <p className="text-xs text-gray-500 flex items-center gap-1">
-                        <span className="w-1 h-1 bg-red-500 rounded-full"></span>
-                        Minimum 8 characters required
-                      </p>
-                      <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                        <PrimaryButton
-                          onClick={handlePasswordUpdate}
-                          loading={loadingStates.passwordUpdate}
-                          disabled={loadingStates.passwordUpdate}
-                          className="flex-1"
-                          testId="update-password-button"
-                        >
-                          Update
-                        </PrimaryButton>
-                        <SecondaryButton
-                          onClick={() => { setShowPasswordBox(false); setNewPassword(""); }}
-                          disabled={loadingStates.passwordUpdate}
-                          className="flex-1"
-                          testId="cancel-password-button"
-                        >
-                          Cancel
-                        </SecondaryButton>
-                      </div>
-                    </div>
-                  </div>
+                  <PasswordChangeBox
+                    onClose={() => setShowPasswordBox(false)}
+                    onUpdate={handlePasswordUpdate}
+                    loading={loadingStates.passwordUpdate}
+                  />
                 )}
 
                 {/* Delete Profile Confirmation */}
