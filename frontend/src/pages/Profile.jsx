@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback  } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -1987,9 +1987,9 @@ const Profile = () => {
         const referenceTime = lastActivity ? parseInt(lastActivity) : parseInt(sessionStart);
         const elapsedMinutes = (Date.now() - referenceTime) / (1000 * 60);
 
-        // Auto logout after 12 hours (720 minutes) of inactivity
-        if (elapsedMinutes >= 720) {
-          console.log('Session expired after 12 hours of inactivity');
+        // Auto logout after 1 hour (60 minutes) of inactivity
+        if (elapsedMinutes >= 60) {  // Changed from 720 to 60
+          console.log('Session expired after 1 hour of inactivity');  // Updated message
           handleLogout();
           clearInterval(sessionCheckInterval);
 
@@ -2016,6 +2016,26 @@ const Profile = () => {
       clearInterval(sessionCheckInterval);
     };
   }, [user?.email]);
+
+  // Add this at the beginning of your component
+  const updateLastActivity = useCallback(() => {
+    localStorage.setItem('lastActivity', Date.now().toString());
+  }, []);
+
+  // Add event listeners for user activity
+  useEffect(() => {
+    const events = ['mousedown', 'keydown', 'scroll', 'touchstart'];
+
+    events.forEach(event => {
+      window.addEventListener(event, updateLastActivity);
+    });
+
+    return () => {
+      events.forEach(event => {
+        window.removeEventListener(event, updateLastActivity);
+      });
+    };
+  }, [updateLastActivity]);
 
   const handleFeedbackSubmit = async () => {
     const trimmedExperience = feedback.experience.trim();
