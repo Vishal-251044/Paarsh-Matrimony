@@ -71,11 +71,56 @@ const AdminFloatingButton = () => {
   return (
     <button
       onClick={() => navigate("/admin")}
-      className="fixed bottom-4 left-4 z-50 bg-red-400 hover:bg-red-500 text-white p-4 rounded-full shadow-lg transition-all duration-300 hover:scale-110"
+      className="fixed bottom-4 left-4 z-50 bg-[oklch(70.4%_0.191_22.216)] text-white p-4 rounded-full shadow-lg transition-all duration-300 hover:scale-110"
       title="Admin Panel"
     >
       <FiSettings size={22} />
     </button>
+  );
+};
+
+/* ---------------- SCROLL TO TOP BUTTON ---------------- */
+const ScrollToTopButton = () => {
+  const [isVisible, setIsVisible] = useState(false);
+
+  // Show button when page is scrolled down
+  const toggleVisibility = () => {
+    if (window.scrollY > 300) {
+      setIsVisible(true);
+    } else {
+      setIsVisible(false);
+    }
+  };
+
+  // Scroll to top smoothly
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
+
+  useEffect(() => {
+    window.addEventListener("scroll", toggleVisibility);
+    return () => window.removeEventListener("scroll", toggleVisibility);
+  }, []);
+
+  return (
+    <>
+      {isVisible && (
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-20 right-4 sm:bottom-24 sm:right-6 z-50 
+  bg-[oklch(70.4%_0.191_22.216)] text-white 
+  p-3.5 sm:p-4 
+  rounded-full shadow-lg 
+  transition-all duration-300 hover:scale-110"
+          title="Scroll to top"
+        >
+          <FiArrowUp className="text-[18px] sm:text-[22px]" />
+        </button>
+      )}
+    </>
   );
 };
 
@@ -102,6 +147,7 @@ const AppContent = () => {
   return (
     <>
       <AdminFloatingButton />
+      <ScrollToTopButton />
       <Routes>
         {/* Public */}
         <Route path="/" element={<Home />} />
