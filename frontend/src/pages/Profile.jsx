@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback  } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -1959,51 +1959,110 @@ const Profile = () => {
     loadProfile();
   }, [navigate]);
 
+  const updateLastActivity = useCallback(() => {
+    localStorage.setItem('lastActivity', Date.now().toString());
+  }, []);
+
+  // Session monitoring useEffect - place this FIRST
   useEffect(() => {
+    if (!user?.email) return;
+
     // Set session timestamp when component mounts
     const sessionStart = Date.now();
     sessionStorage.setItem('sessionStart', sessionStart.toString());
-    sessionStorage.setItem('userEmail', user?.email || '');
+    sessionStorage.setItem('userEmail', user.email);
 
     // Store current session info in localStorage for cross-tab tracking
     localStorage.setItem('lastSessionStart', sessionStart.toString());
-    localStorage.setItem('lastUserEmail', user?.email || '');
+    localStorage.setItem('lastUserEmail', user.email);
     localStorage.setItem('lastActivity', sessionStart.toString()); // Initialize lastActivity
+
+    // Update activity on mount
+    updateLastActivity();
 
     // Handle tab/browser close
     const handleBeforeUnload = () => {
-      // Update the last activity timestamp
       localStorage.setItem('lastActivity', Date.now().toString());
+    };
+
+    // Create a reference to handleLogout to ensure it's available
+    const performLogout = async () => {
+      try {
+        // Clear all storages first
+        localStorage.removeItem("user");
+        localStorage.removeItem("token");
+        localStorage.removeItem("lastActivity");
+        localStorage.removeItem("lastSessionStart");
+        localStorage.removeItem("lastUserEmail");
+
+        sessionStorage.removeItem('sessionStart');
+        sessionStorage.removeItem('userEmail');
+
+        // Broadcast logout to other tabs
+        localStorage.setItem('logout', Date.now().toString());
+        setTimeout(() => {
+          localStorage.removeItem('logout');
+        }, 100);
+
+        // Navigate to login
+        navigate("/login");
+
+        // Show toast only if not already logged out
+        toast.success("Session expired due to inactivity. Please login again.");
+      } catch (error) {
+        console.error("Auto-logout error:", error);
+      }
     };
 
     // Check session expiry every minute
     const sessionCheckInterval = setInterval(() => {
       const sessionStart = sessionStorage.getItem('sessionStart');
       const userEmail = sessionStorage.getItem('userEmail');
+      const currentUser = localStorage.getItem("user");
 
-      if (sessionStart && userEmail) {
-        // Use lastActivity if available, otherwise use sessionStart
+      // Only proceed if user is still logged in
+      if (sessionStart && userEmail && currentUser) {
+        // Get the last activity timestamp
         const lastActivity = localStorage.getItem('lastActivity');
+
+        // If no lastActivity recorded, use sessionStart
         const referenceTime = lastActivity ? parseInt(lastActivity) : parseInt(sessionStart);
+
+        // Calculate elapsed minutes
         const elapsedMinutes = (Date.now() - referenceTime) / (1000 * 60);
 
         // Auto logout after 1 hour (60 minutes) of inactivity
-        if (elapsedMinutes >= 60) {  // Changed from 720 to 60
-          console.log('Session expired after 1 hour of inactivity');  // Updated message
-          handleLogout();
+        if (elapsedMinutes >= 60) {
+          // Clear interval first to prevent multiple triggers
           clearInterval(sessionCheckInterval);
 
-          // Clear session data
-          sessionStorage.removeItem('sessionStart');
-          sessionStorage.removeItem('userEmail');
+          // Perform logout
+          performLogout();
         }
+      } else {
+        // If no session data, clear interval
+        clearInterval(sessionCheckInterval);
       }
     }, 60000); // Check every minute
 
     // Check for expired sessions from other tabs
     const handleStorageChange = (e) => {
       if (e.key === 'logout' && e.newValue === 'true') {
-        handleLogout();
+        // Clear interval before logout
+        clearInterval(sessionCheckInterval);
+
+        // Clear all storages
+        localStorage.removeItem("user");
+        localStorage.removeItem("token");
+        localStorage.removeItem("lastActivity");
+        localStorage.removeItem("lastSessionStart");
+        localStorage.removeItem("lastUserEmail");
+
+        sessionStorage.removeItem('sessionStart');
+        sessionStorage.removeItem('userEmail');
+
+        // Navigate to login
+        navigate("/login");
       }
     };
 
@@ -2015,27 +2074,52 @@ const Profile = () => {
       window.removeEventListener('storage', handleStorageChange);
       clearInterval(sessionCheckInterval);
     };
-  }, [user?.email]);
+  }, [user?.email, navigate]); // Add navigate to dependencies
 
-  // Add this at the beginning of your component
-  const updateLastActivity = useCallback(() => {
-    localStorage.setItem('lastActivity', Date.now().toString());
-  }, []);
-
-  // Add event listeners for user activity
+  // Activity tracking useEffect
   useEffect(() => {
-    const events = ['mousedown', 'keydown', 'scroll', 'touchstart'];
+    if (!user?.email) return;
+
+    // Update activity on any user interaction
+    const events = ['mousedown', 'keydown', 'scroll', 'touchstart', 'mousemove'];
+
+    const handleUserActivity = () => {
+      updateLastActivity();
+    };
+
+    // Add event listeners with throttle to prevent too many updates
+    let timeout;
+    const throttledActivity = () => {
+      if (!timeout) {
+        timeout = setTimeout(() => {
+          handleUserActivity();
+          timeout = null;
+        }, 1000); // Update at most once per second
+      }
+    };
 
     events.forEach(event => {
-      window.addEventListener(event, updateLastActivity);
+      window.addEventListener(event, throttledActivity);
+    });
+
+    // Also update on focus (when user returns to tab)
+    window.addEventListener('focus', handleUserActivity);
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        handleUserActivity();
+      }
     });
 
     return () => {
       events.forEach(event => {
-        window.removeEventListener(event, updateLastActivity);
+        window.removeEventListener(event, throttledActivity);
       });
+      window.removeEventListener('focus', handleUserActivity);
+      document.removeEventListener('visibilitychange', handleUserActivity);
+      if (timeout) clearTimeout(timeout);
     };
-  }, [updateLastActivity]);
+  }, [user?.email, updateLastActivity]);
 
   const handleFeedbackSubmit = async () => {
     const trimmedExperience = feedback.experience.trim();
@@ -2130,14 +2214,15 @@ const Profile = () => {
     setLoadingState('logout', true);
 
     try {
-      const user = JSON.parse(localStorage.getItem("user"));
-      if (user?.id) {
-        await axios.post(`${BACKEND_URL}/auth/logout`, {
-          user_id: user.id,
-        });
+      const userData = JSON.parse(localStorage.getItem("user"));
+      if (userData?.id) {
+        // Try to call logout API, but don't wait for it
+        axios.post(`${BACKEND_URL}/auth/logout`, {
+          user_id: userData.id,
+        }).catch(err => console.error("Logout API error:", err));
       }
     } catch (err) {
-      console.error("Logout API error:", err);
+      console.error("Logout error:", err);
     }
 
     // Clear all storages
@@ -2155,6 +2240,10 @@ const Profile = () => {
     setTimeout(() => {
       localStorage.removeItem('logout');
     }, 100);
+
+    // Clear any intervals that might be running
+    const intervals = window._intervals || [];
+    intervals.forEach(clearInterval);
 
     toast.success("Logged out successfully!");
     navigate("/login");
