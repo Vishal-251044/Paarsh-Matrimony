@@ -1607,6 +1607,53 @@ const Profile = () => {
     membershipExpiryDate: ""
   });
 
+  // Check for expired session on component mount
+  useEffect(() => {
+    const checkInitialSession = () => {
+      const lastActivity = localStorage.getItem('lastActivity');
+      const sessionEmail = localStorage.getItem('sessionEmail');
+      const userData = localStorage.getItem("user");
+
+      if (lastActivity && sessionEmail && userData) {
+        const parsedUser = JSON.parse(userData);
+        const SESSION_TIMEOUT = 60 * 60 * 1000; // 1 hour
+        const elapsedTime = Date.now() - parseInt(lastActivity);
+
+        // If session expired, clear everything
+        if (elapsedTime >= SESSION_TIMEOUT) {
+          localStorage.removeItem("user");
+          localStorage.removeItem("token");
+          localStorage.removeItem("lastActivity");
+          localStorage.removeItem("sessionStart");
+          localStorage.removeItem("sessionEmail");
+          localStorage.removeItem("lastSessionStart");
+          localStorage.removeItem("lastUserEmail");
+
+          sessionStorage.removeItem('sessionStart');
+          sessionStorage.removeItem('userEmail');
+
+          // IMMEDIATE REDIRECT TO LOGIN
+          navigate("/login");
+          return;
+        } else if (parsedUser.email !== sessionEmail) {
+          // If email mismatch, clear everything
+          localStorage.removeItem("user");
+          localStorage.removeItem("token");
+          localStorage.removeItem("lastActivity");
+          localStorage.removeItem("sessionStart");
+          localStorage.removeItem("sessionEmail");
+          localStorage.removeItem("lastSessionStart");
+          localStorage.removeItem("lastUserEmail");
+          // Also redirect on email mismatch
+          navigate("/login");
+          return;
+        }
+      }
+    };
+
+    checkInitialSession();
+  }, [navigate]);
+
   // Calculate section completion
   const calculateSectionCompletion = (section) => {
     let filledFields = 0;
@@ -1967,31 +2014,42 @@ const Profile = () => {
   useEffect(() => {
     if (!user?.email) return;
 
-    // Set session timestamp when component mounts
-    const sessionStart = Date.now();
-    sessionStorage.setItem('sessionStart', sessionStart.toString());
-    sessionStorage.setItem('userEmail', user.email);
+    const SESSION_TIMEOUT = 60 * 60 * 1000; // 1 hour in milliseconds
+    const CHECK_INTERVAL = 60000; // Check every minute
 
-    // Store current session info in localStorage for cross-tab tracking
-    localStorage.setItem('lastSessionStart', sessionStart.toString());
-    localStorage.setItem('lastUserEmail', user.email);
-    localStorage.setItem('lastActivity', sessionStart.toString()); // Initialize lastActivity
+    // Function to check if session is expired
+    const checkSessionExpiry = () => {
+      const lastActivity = localStorage.getItem('lastActivity');
+      const sessionStart = localStorage.getItem('sessionStart');
+      const sessionEmail = localStorage.getItem('sessionEmail');
+      const currentUser = localStorage.getItem("user");
 
-    // Update activity on mount
-    updateLastActivity();
+      // If no user is logged in, skip
+      if (!currentUser || !sessionEmail || sessionEmail !== user?.email) {
+        return false;
+      }
 
-    // Handle tab/browser close
-    const handleBeforeUnload = () => {
-      localStorage.setItem('lastActivity', Date.now().toString());
+      // Use lastActivity if available, otherwise use sessionStart
+      const lastActiveTime = lastActivity ? parseInt(lastActivity) :
+        sessionStart ? parseInt(sessionStart) : null;
+
+      if (!lastActiveTime) {
+        return false;
+      }
+
+      const elapsedTime = Date.now() - lastActiveTime;
+      return elapsedTime >= SESSION_TIMEOUT;
     };
 
-    // Create a reference to handleLogout to ensure it's available
-    const performLogout = async () => {
+    // Function to perform logout
+    const performLogout = async (message = "Session expired due to inactivity. Please login again.") => {
       try {
-        // Clear all storages first
+        // Clear all storages
         localStorage.removeItem("user");
         localStorage.removeItem("token");
         localStorage.removeItem("lastActivity");
+        localStorage.removeItem("sessionStart");
+        localStorage.removeItem("sessionEmail");
         localStorage.removeItem("lastSessionStart");
         localStorage.removeItem("lastUserEmail");
 
@@ -2008,60 +2066,82 @@ const Profile = () => {
         navigate("/login");
 
         // Show toast only if not already logged out
-        toast.success("Session expired due to inactivity. Please login again.");
+        toast.success(message);
       } catch (error) {
         console.error("Auto-logout error:", error);
       }
     };
 
+    // Set session data on component mount or when user changes
+    const initializeSession = () => {
+      const now = Date.now();
+
+      // Check if there's an existing session for this user
+      const existingSessionStart = localStorage.getItem('sessionStart');
+      const existingSessionEmail = localStorage.getItem('sessionEmail');
+
+      // If this is a new session (browser was closed) or different user, start fresh
+      if (!existingSessionStart || existingSessionEmail !== user.email) {
+        localStorage.setItem('sessionStart', now.toString());
+        localStorage.setItem('sessionEmail', user.email);
+        localStorage.setItem('lastActivity', now.toString());
+      } else {
+        // Session exists, just update lastActivity
+        localStorage.setItem('lastActivity', now.toString());
+      }
+
+      sessionStorage.setItem('sessionStart', now.toString());
+      sessionStorage.setItem('userEmail', user.email);
+    };
+
+    // Initialize session
+    initializeSession();
+
+    // Check for expired session immediately
+    if (checkSessionExpiry()) {
+      performLogout();
+      return;
+    }
+
+    // Update activity on mount
+    updateLastActivity();
+
+    // Handle tab/browser close
+    const handleBeforeUnload = () => {
+      localStorage.setItem('lastActivity', Date.now().toString());
+    };
+
     // Check session expiry every minute
     const sessionCheckInterval = setInterval(() => {
-      const sessionStart = sessionStorage.getItem('sessionStart');
-      const userEmail = sessionStorage.getItem('userEmail');
-      const currentUser = localStorage.getItem("user");
-
-      // Only proceed if user is still logged in
-      if (sessionStart && userEmail && currentUser) {
-        // Get the last activity timestamp
-        const lastActivity = localStorage.getItem('lastActivity');
-
-        // If no lastActivity recorded, use sessionStart
-        const referenceTime = lastActivity ? parseInt(lastActivity) : parseInt(sessionStart);
-
-        // Calculate elapsed minutes
-        const elapsedMinutes = (Date.now() - referenceTime) / (1000 * 60);
-
-        // Auto logout after 1 hour (60 minutes) of inactivity
-        if (elapsedMinutes >= 60) {
-          // Clear interval first to prevent multiple triggers
-          clearInterval(sessionCheckInterval);
-
-          // Perform logout
-          performLogout();
-        }
-      } else {
-        // If no session data, clear interval
+      if (checkSessionExpiry()) {
         clearInterval(sessionCheckInterval);
+        performLogout();
       }
-    }, 60000); // Check every minute
+    }, CHECK_INTERVAL);
 
-    // Check for expired sessions from other tabs
+    // Handle storage events (for cross-tab communication)
     const handleStorageChange = (e) => {
-      if (e.key === 'logout' && e.newValue === 'true') {
-        // Clear interval before logout
+      if (e.key === 'logout' && e.newValue) {
         clearInterval(sessionCheckInterval);
 
         // Clear all storages
         localStorage.removeItem("user");
         localStorage.removeItem("token");
         localStorage.removeItem("lastActivity");
+        localStorage.removeItem("sessionStart");
+        localStorage.removeItem("sessionEmail");
         localStorage.removeItem("lastSessionStart");
         localStorage.removeItem("lastUserEmail");
 
         sessionStorage.removeItem('sessionStart');
         sessionStorage.removeItem('userEmail');
 
-        // Navigate to login
+        navigate("/login");
+      }
+
+      // If user was removed from localStorage (logged out from another tab)
+      if (e.key === 'user' && !e.newValue) {
+        clearInterval(sessionCheckInterval);
         navigate("/login");
       }
     };
@@ -2074,7 +2154,7 @@ const Profile = () => {
       window.removeEventListener('storage', handleStorageChange);
       clearInterval(sessionCheckInterval);
     };
-  }, [user?.email, navigate]); // Add navigate to dependencies
+  }, [user?.email, navigate, updateLastActivity]);
 
   // Activity tracking useEffect
   useEffect(() => {
