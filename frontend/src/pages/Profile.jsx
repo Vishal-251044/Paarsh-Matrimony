@@ -1609,7 +1609,7 @@ const Profile = () => {
 
   // Check for expired session on component mount
   useEffect(() => {
-    const checkInitialSession = () => {
+    const checkInitialSession = async () => { // Make it async
       const lastActivity = localStorage.getItem('lastActivity');
       const sessionEmail = localStorage.getItem('sessionEmail');
       const userData = localStorage.getItem("user");
@@ -1619,8 +1619,20 @@ const Profile = () => {
         const SESSION_TIMEOUT = 60 * 60 * 1000; // 1 hour
         const elapsedTime = Date.now() - parseInt(lastActivity);
 
-        // If session expired, clear everything
+        // If session expired, clear everything and call logout API
         if (elapsedTime >= SESSION_TIMEOUT) {
+          // Call logout API first
+          try {
+            if (parsedUser?.id) {
+              await axios.post(`${BACKEND_URL}/auth/logout`, {
+                user_id: parsedUser.id,
+              }).catch(err => console.error("Auto-logout API error:", err));
+            }
+          } catch (err) {
+            console.error("Auto-logout error:", err);
+          }
+
+          // Then clear all storages
           localStorage.removeItem("user");
           localStorage.removeItem("token");
           localStorage.removeItem("lastActivity");
@@ -1632,7 +1644,16 @@ const Profile = () => {
           sessionStorage.removeItem('sessionStart');
           sessionStorage.removeItem('userEmail');
 
-          // IMMEDIATE REDIRECT TO LOGIN
+          // Broadcast logout to other tabs
+          localStorage.setItem('logout', Date.now().toString());
+          setTimeout(() => {
+            localStorage.removeItem('logout');
+          }, 100);
+
+          // Show toast message
+          toast.info("Session expired due to inactivity. Please login again.");
+
+          // Redirect to login
           navigate("/login");
           return;
         } else if (parsedUser.email !== sessionEmail) {
@@ -1644,6 +1665,7 @@ const Profile = () => {
           localStorage.removeItem("sessionEmail");
           localStorage.removeItem("lastSessionStart");
           localStorage.removeItem("lastUserEmail");
+
           // Also redirect on email mismatch
           navigate("/login");
           return;
@@ -2044,6 +2066,13 @@ const Profile = () => {
     // Function to perform logout
     const performLogout = async (message = "Session expired due to inactivity. Please login again.") => {
       try {
+        // Call logout API first
+        if (user?.id) {
+          await axios.post(`${BACKEND_URL}/auth/logout`, {
+            user_id: user.id,
+          }).catch(err => console.error("Auto-logout API error:", err));
+        }
+
         // Clear all storages
         localStorage.removeItem("user");
         localStorage.removeItem("token");

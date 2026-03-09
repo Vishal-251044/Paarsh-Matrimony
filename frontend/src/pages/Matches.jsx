@@ -3035,6 +3035,17 @@ const Matches = () => {
                                       <h4 className={`font-semibold text-gray-800 text-sm md:text-base truncate ${unreadCount > 0 ? 'font-bold' : ''}`}>
                                         {otherParticipant?.name || 'Unknown'}
                                       </h4>
+                                      {/* Add this simple online/offline indicator */}
+                                      {otherParticipant?.isOnline ? (
+                                        <span className="flex items-center gap-1">
+                                          <FaCircle className="text-[6px] md:text-[8px] text-emerald-500 animate-pulse" />
+                                          <span className="text-[10px] md:text-xs text-emerald-600">Online</span>
+                                        </span>
+                                      ) : (
+                                        <span className="text-[10px] md:text-xs text-gray-400">
+                                          {otherParticipant?.lastSeen ? 'Offline' : ''}
+                                        </span>
+                                      )}
                                       <p className="text-xs md:text-sm text-gray-500 truncate">{otherParticipant?.email}</p>
                                     </div>
                                     <span className="text-[10px] md:text-xs text-gray-400 whitespace-nowrap">
